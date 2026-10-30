@@ -2,7 +2,7 @@
 name = "clipo-core"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.89"
 description = "Shared engine for Clipo: clipboard history model, store and rules. No UI."
 license = "UNLICENSED"
 publish = false
@@ -11,8 +11,18 @@ publish = false
 name = "clipo_core"
 
 [dependencies]
+getrandom = "0.4"
 sha2 = "0.10"
 thiserror = "2"
+zeroize = "1"
+
+# SQLCipher (whole-file encryption, see docs/decisions/0007). Apple targets use
+# CommonCrypto; everything else builds a vendored OpenSSL so no system copy is needed.
+[target.'cfg(target_vendor = "apple")'.dependencies]
+rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher", "cache"] }
+
+[target.'cfg(not(target_vendor = "apple"))'.dependencies]
+rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher-vendored-openssl", "cache"] }
 
 [lints.rust]
 unsafe_code = "deny"
@@ -22,3 +32,6 @@ unreachable_pub = "warn"
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
+
+[dev-dependencies]
+tempfile = "3"

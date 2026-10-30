@@ -1,6 +1,6 @@
 # Decision records
 
-Short records of the Phase 0 decisions. Each states the choice, the reason and what it costs. Change a decision by adding a new record that supersedes the old one.
+Short records of project decisions. Each states the choice, the reason and what it costs. Change a decision by adding a new record that supersedes the old one.
 
 | # | Decision |
 |---|---|
@@ -10,3 +10,4 @@ Short records of the Phase 0 decisions. Each states the choice, the reason and w
 | [0004](0004-defaults.md) | Defaults: hotkey, history size, auto-paste |
 | [0005](0005-repo-layout.md) | One monorepo |
 | [0006](0006-signing.md) | Unsigned builds until certificates exist |
+| [0007](0007-storage-encryption.md) | Storage encryption: SQLCipher, key in the OS credential store |
