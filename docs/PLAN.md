@@ -26,7 +26,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 1.1 | 1 Rust core | Crate setup, data model | Opus 5.5 | high | S2 (with 1.2) | Done |
 | 1.2 | 1 Rust core | Encrypted SQLite store, keychain key interface | Opus 5.5 | xhigh | S2 | Done |
 | 1.3 | 1 Rust core | Dedup, limits, pinning, search, categories, tests | Sonnet 5.5 | high | S3 (with 1.4) | Done |
-| 1.4 | 1 Rust core | Ignore rules, private mode, auto-clear, tests | Sonnet 5.5 | medium | S3 |  |
+| 1.4 | 1 Rust core | Ignore rules, private mode, auto-clear, tests | Sonnet 5.5 | medium | S3 | Done |
 | 1.5 | 1 Rust core | UniFFI bindings for Swift and C#, packaging script | Opus 5.5 | high | S4 |  |
 | 1.6 | 1 Rust core | Core review (correctness, no clipboard content in logs) | Opus 5.5 | high | S5 (fresh) |  |
 | 2.1 | 2 macOS | Xcode project, menu-bar shell, link core | Opus 5.5 | high | S6 |  |

@@ -21,6 +21,9 @@ pub enum CoreError {
     /// A history limit is zero.
     #[error("history limits must be at least 1")]
     InvalidLimits,
+    /// The auto-clear time is zero.
+    #[error("auto-clear time must be longer than zero")]
+    InvalidRules,
     /// Key bytes from the key store are not a valid database key.
     #[error("database key has the wrong length")]
     InvalidKey,

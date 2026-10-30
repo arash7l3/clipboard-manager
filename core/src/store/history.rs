@@ -45,6 +45,12 @@ impl HistoryLimits {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum SkipReason {
+    /// Private mode is on.
+    PrivateMode,
+    /// The source app marked the data as concealed or transient.
+    Concealed,
+    /// The source app is on the ignore list.
+    IgnoredApp,
     /// The content is larger than [`HistoryLimits::max_item_bytes`].
     TooLarge,
 }
@@ -84,6 +90,10 @@ impl Store {
 
     /// Records a clipboard change: the entry point for the platform watchers.
     ///
+    /// Captures refused by the [`CaptureRules`](super::CaptureRules) (private
+    /// mode, concealed data, ignored apps) are skipped first, before anything
+    /// else is done with the content.
+    ///
     /// Content already in the history is not stored twice; the existing item
     /// is moved to the top instead. New content is stored, then the oldest
     /// unpinned items beyond [`HistoryLimits::max_items`] are deleted.
@@ -93,6 +103,9 @@ impl Store {
     /// [`CoreError::InvalidContent`] if the content fails validation, or
     /// [`CoreError::Storage`] on a database failure.
     pub fn record(&mut self, capture: Capture) -> Result<Recorded, CoreError> {
+        if let Some(reason) = self.rules.skip_reason(&capture) {
+            return Ok(Recorded::Skipped(reason));
+        }
         capture.content.validate()?;
         if capture.content.byte_size() > self.limits.max_item_bytes {
             return Ok(Recorded::Skipped(SkipReason::TooLarge));

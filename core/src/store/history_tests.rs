@@ -2,7 +2,7 @@ use super::tests::{app, at, files, image, rich_text, text, Fixture};
 use super::*;
 use crate::model::{Capture, Category, FileRef, ImageContent, ImageFormat, TextContent};
 
-fn capture(content: ItemContent, millis: i64) -> Capture {
+pub(super) fn capture(content: ItemContent, millis: i64) -> Capture {
     Capture {
         content,
         source_app: None,
@@ -11,7 +11,7 @@ fn capture(content: ItemContent, millis: i64) -> Capture {
     }
 }
 
-fn added(recorded: Recorded) -> ClipItem {
+pub(super) fn added(recorded: Recorded) -> ClipItem {
     match recorded {
         Recorded::Added(item) => item,
         other => panic!("expected Added, got {other:?}"),
@@ -25,7 +25,7 @@ fn bumped(recorded: Recorded) -> ClipItem {
     }
 }
 
-fn texts(items: &[ClipItem]) -> Vec<String> {
+pub(super) fn texts(items: &[ClipItem]) -> Vec<String> {
     items
         .iter()
         .map(|item| match &item.content {
@@ -313,7 +313,7 @@ fn mixed(store: &mut Store) -> [ClipItem; 4] {
     ]
 }
 
-fn ids(items: &[ClipItem]) -> Vec<ItemId> {
+pub(super) fn ids(items: &[ClipItem]) -> Vec<ItemId> {
     items.iter().map(|i| i.id).collect()
 }
 
