@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs of the same branch/PR.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  core:
+    name: Rust core
+    runs-on: [self-hosted, macOS, clipboard-manager]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # Steps are guarded so the workflow stays green until the crate exists (Phase 1).
+      - name: Check for Rust crate
+        id: crate
+        run: echo "exists=${{ hashFiles('core/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Rust toolchain
+        if: steps.crate.outputs.exists == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # Caches ~/.cargo registry/git and core/target, keyed on Cargo.lock + toolchain.
+      - name: Cache cargo
+        if: steps.crate.outputs.exists == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: rustfmt
+        if: steps.crate.outputs.exists == 'true'
+        run: cargo fmt --manifest-path core/Cargo.toml --all -- --check
+
+      - name: clippy
+        if: steps.crate.outputs.exists == 'true'
+        run: cargo clippy --manifest-path core/Cargo.toml --all-targets --all-features -- -D warnings
+
+      - name: Test
+        if: steps.crate.outputs.exists == 'true'
+        run: cargo test --manifest-path core/Cargo.toml --all-features
+
+  macos:
+    name: macOS app
+    needs: core
+    runs-on: [self-hosted, macOS, clipboard-manager]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Xcode project
+        id: xcode
+        run: echo "exists=${{ hashFiles('macos/**/project.pbxproj') != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Rust toolchain
+        if: steps.xcode.outputs.exists == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Cache cargo
+        if: steps.xcode.outputs.exists == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # SwiftPM checkouts and Xcode build products.
+      - name: Cache SwiftPM and DerivedData
+        if: steps.xcode.outputs.exists == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ${{ runner.temp }}/DerivedData
+            macos/.build
+          key: swift-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('macos/**/Package.resolved', 'macos/**/project.pbxproj') }}
+          restore-keys: |
+            swift-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: SwiftLint
+        if: steps.xcode.outputs.exists == 'true'
+        run: swiftlint lint --strict --quiet
+        working-directory: macos
+
+      - name: Build and test
+        if: steps.xcode.outputs.exists == 'true'
+        working-directory: macos
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme ClipboardManager \
+            -destination 'platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/DerivedData/SourcePackages" \
+            CODE_SIGNING_ALLOWED=NO
+
+  # Windows (WinUI/WPF) needs a windows-latest or self-hosted Windows runner; add in Phase 3.
