@@ -89,3 +89,54 @@ struct PopupControllerTests {
         #expect(!controller.isShown)
     }
 }
+
+/// Layout in right-to-left languages and what a screen reader finds.
+@MainActor
+struct PopupAccessibilityTests {
+    private func row(_ direction: NSUserInterfaceLayoutDirection) -> HistoryRowView {
+        let view = HistoryRowView()
+        setDirection(direction, on: view)
+        view.frame = NSRect(x: 0, y: 0, width: 320, height: HistoryRowView.height)
+        view.show(Rows.text(1, "first", pinned: true), now: Rows.copiedAt)
+        view.layoutSubtreeIfNeeded()
+        return view
+    }
+
+    /// The direction is per view, not inherited; the app sets it on the whole
+    /// window in a right-to-left language.
+    private func setDirection(_ direction: NSUserInterfaceLayoutDirection, on view: NSView) {
+        view.userInterfaceLayoutDirection = direction
+        for subview in view.subviews {
+            setDirection(direction, on: subview)
+        }
+    }
+
+    /// A subview's frame in the row's own coordinates.
+    private func frame(of subview: NSView, in row: HistoryRowView) -> NSRect {
+        row.convert(subview.bounds, from: subview)
+    }
+
+    @Test func rowPutsTheIconAtTheLeadingEdge() {
+        let ltr = row(.leftToRight)
+        #expect(frame(of: ltr.icon, in: ltr).minX < frame(of: ltr.title, in: ltr).minX)
+
+        let rtl = row(.rightToLeft)
+        #expect(frame(of: rtl.icon, in: rtl).maxX > frame(of: rtl.title, in: rtl).maxX)
+        #expect(frame(of: rtl.icon, in: rtl).maxX <= rtl.bounds.maxX)
+    }
+
+    @Test func rowIsOneElementForScreenReaders() {
+        let view = row(.leftToRight)
+        #expect(view.accessibilityChildren()?.isEmpty == true)
+        #expect(view.accessibilityLabel()?.contains("pinned") == true)
+    }
+
+    @Test func popupControlsHaveLabels() {
+        let controller = PopupController(model: FakeLoader(rows: []).model())
+        controller.loadViewIfNeeded()
+
+        #expect(controller.searchField.accessibilityLabel()?.isEmpty == false)
+        #expect(controller.tabs.accessibilityLabel()?.isEmpty == false)
+        #expect(controller.table.accessibilityLabel()?.isEmpty == false)
+    }
+}

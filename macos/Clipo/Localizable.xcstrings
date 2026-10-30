@@ -196,6 +196,17 @@
         }
       }
     },
+    "Categories" : {
+      "comment" : "Screen-reader label of the popup's tabs",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دسته‌ها"
+          }
+        }
+      }
+    },
     "Choose App…" : {
       "comment" : "Settings button that picks an app to ignore",
       "localizations" : {
