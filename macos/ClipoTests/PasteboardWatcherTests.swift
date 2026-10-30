@@ -90,4 +90,18 @@ struct PasteboardWatcherTests {
 
         #expect(await drain(watcher).isEmpty)
     }
+
+    @Test func ownWriteSkippedByAcknowledging() async {
+        let watcher = watcher()
+        watcher.start()
+
+        board.set("restored by Clipo")
+        watcher.skipCurrent()
+        watcher.poll()
+        board.set("copied by the user")
+        watcher.poll()
+
+        let changes = await drain(watcher)
+        #expect(changes.map(\.content) == [.text("copied by the user", rtf: nil, html: nil)])
+    }
 }

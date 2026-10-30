@@ -26,7 +26,7 @@ Status: accepted
 
 **Consequences.**
 
-- Picking an item only closes the popup until step 2.4 restores it to the clipboard.
+- Picking an item closes the popup and restores it to the clipboard (decision 0012).
 - The link and code hint is a guess from the first 1000 characters. It changes only the icon and the spoken kind, never what is stored or restored.
 - Tab switches tabs inside the popup, so moving keyboard focus between its controls is not possible; the tabs remain reachable with the mouse and VoiceOver.
 - The shortcut is fixed until the Settings window (step 2.5) makes it configurable.

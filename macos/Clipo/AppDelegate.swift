@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recording: Task<Void, Never>?
     private var popup: PopupController?
     private var hotkey: GlobalHotkey?
+    private var explainedAccessibility = false
 
     private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
 
@@ -105,9 +106,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popup?.dismiss()
         let model = PopupModel { query in History.previews(query, in: store) }
         let popup = PopupController(model: model)
-        // Putting the item back on the clipboard comes with step 2.4.
-        popup.onChoose = { _ in }
+        let restorer = ItemRestorer()
+        restorer.load = { id in History.item(id, in: store) }
+        restorer.bump = { id in History.bump(id, in: store) }
+        restorer.didWrite = { [weak self] in self?.watcher?.skipCurrent() }
+        popup.onChoose = { [weak self] row in
+            Task { await self?.restore(row, with: restorer) }
+        }
         return popup
+    }
+
+    /// Puts the picked item on the clipboard. When auto-paste is on but macOS
+    /// has not given Clipo the Accessibility permission, the item stays on the
+    /// clipboard and the user is told why nothing was pasted.
+    private func restore(_ row: ItemPreview, with restorer: ItemRestorer) async {
+        switch await restorer.restore(row) {
+        case .restored, .pasted:
+            break
+        case .needsAccessibility:
+            // Once per launch: afterwards the user knows, and the item is
+            // on the clipboard either way.
+            guard !explainedAccessibility else { return }
+            explainedAccessibility = true
+            Accessibility.explain()
+        case .unavailable:
+            NSSound.beep()
+        }
     }
 
     /// Opens or closes the popup; beeps while the history is not open.
