@@ -7,7 +7,7 @@ enum PopupText {
     /// this only keeps the label from laying out a whole page of text.
     static let maxTitleLength = 300
 
-    static func tabTitle(_ category: Category) -> String {
+    static func tabTitle(_ category: ClipoCore.Category) -> String {
         switch category {
         case .all:
             String(localized: "All", comment: "Popup tab listing every item")

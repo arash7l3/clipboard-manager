@@ -13,7 +13,7 @@ final class PopupModel {
     /// The tabs, in display order.
     let categories = tabCategories()
 
-    private(set) var category: Category = .all
+    private(set) var category: ClipoCore.Category = .all
     private(set) var searchText = ""
     private(set) var rows: [ItemPreview] = []
     /// Index into ``rows``; `nil` only when there are no rows.
@@ -60,7 +60,7 @@ final class PopupModel {
     }
 
     @discardableResult
-    func setCategory(_ category: Category) -> Task<Void, Never> {
+    func setCategory(_ category: ClipoCore.Category) -> Task<Void, Never> {
         self.category = category
         return reload(keepingSelection: false)
     }
