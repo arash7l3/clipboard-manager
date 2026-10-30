@@ -1,0 +1,24 @@
+[package]
+name = "clipo-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Shared engine for Clipo: clipboard history model, store and rules. No UI."
+license = "UNLICENSED"
+publish = false
+
+[lib]
+name = "clipo_core"
+
+[dependencies]
+sha2 = "0.10"
+thiserror = "2"
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"

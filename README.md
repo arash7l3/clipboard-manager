@@ -2,13 +2,13 @@
 
 A menu-bar / system-tray clipboard history app for macOS and Windows with fully native UIs. Local-only, encrypted at rest, no network calls.
 
-Status: early development (Phase 0 done). See the [work plan](docs/PLAN.md) and the [build guide](BUILD-GUIDE.md).
+Status: early development (Phase 0 done, Phase 1 in progress). See the [work plan](docs/PLAN.md) and the [build guide](BUILD-GUIDE.md).
 
 ## Layout
 
 | Path | Contents |
 |---|---|
-| `core/` | Rust engine: history store, dedup, search, ignore rules (planned) |
+| `core/` | Rust engine (`clipo-core`): data model done; store, dedup, search, ignore rules planned |
 | `macos/` | Swift app, SwiftUI + AppKit (planned) |
 | `windows/` | C# app, WinUI 3 (planned) |
 | `docs/` | Work plan and [decision records](docs/decisions/README.md) |
