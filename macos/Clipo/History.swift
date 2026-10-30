@@ -76,6 +76,18 @@ enum History {
         }
     }
 
+    /// What the popup lists for `query`, or `nil` if the store failed. Does
+    /// disk I/O: call it off the main thread.
+    static func previews(_ query: Query, in store: ClipStore) -> [ItemPreview]? {
+        do {
+            return try store.previews(query: query)
+        } catch {
+            // Core errors carry codes and ids, never clipboard content.
+            logger.error("listing history failed: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
     /// ``open(at:keyStore:)`` on the user's history, off the main thread.
     static func openDefault() async -> Opened {
         await Task.detached(priority: .userInitiated) {

@@ -14,3 +14,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0008](0008-bindings-and-packaging.md) | Bindings: UniFFI 0.31 in a separate crate, packaged by a Rust xtask |
 | [0009](0009-macos-app-shell.md) | macOS app: AppKit shell, core as a local package, login keychain |
 | [0010](0010-macos-clipboard-capture.md) | macOS capture: change-count polling, concealed data never read |
+| [0011](0011-macos-popup.md) | macOS popup: Carbon hot key, non-activating panel, previews from the core |

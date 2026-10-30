@@ -247,6 +247,56 @@ fn search_filters_by_tab_text_and_limit() {
 }
 
 #[test]
+fn previews_list_what_the_popup_shows() {
+    let fx = Fixture::new();
+    let link = added(
+        fx.store
+            .record(capture(text("https://example.com"), 1_000))
+            .unwrap(),
+    );
+    let files: Vec<_> = (0..12)
+        .map(|n| FileRef {
+            path: format!("/tmp/{n}"),
+            size_bytes: Some(n),
+        })
+        .collect();
+    added(
+        fx.store
+            .record(capture(ItemContent::Files { files }, 2_000))
+            .unwrap(),
+    );
+    fx.store.set_pinned(link.id, true).unwrap();
+
+    let previews = fx.store.previews(all()).unwrap();
+    assert_eq!(previews.len(), 2);
+    match &previews[0].content {
+        PreviewContent::Files { files, total } => {
+            assert_eq!(files.len(), 10);
+            assert_eq!(*total, 12);
+        }
+        _ => panic!("files first"),
+    }
+    let row = &previews[1];
+    assert_eq!(row.id, link.id);
+    assert!(row.pinned);
+    assert_eq!(row.last_copied_at, at(1_000));
+    assert!(matches!(
+        &row.content,
+        PreviewContent::Text { snippet, truncated: false, hint: TextHint::Link }
+            if snippet == "https://example.com"
+    ));
+
+    let pinned = fx
+        .store
+        .previews(Query {
+            category: Category::Pinned,
+            ..all()
+        })
+        .unwrap();
+    assert_eq!(pinned.iter().map(|p| p.id).collect::<Vec<_>>(), [link.id]);
+}
+
+#[test]
 fn touch_pin_and_delete() {
     let fx = Fixture::new();
     let old = added(fx.store.record(capture(text("old"), 1_000)).unwrap());

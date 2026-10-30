@@ -1,7 +1,9 @@
-//! Data model: history items, their content and the categories shown as tabs.
+//! Data model: history items, their content, their previews and the
+//! categories shown as tabs.
 
 mod content;
 mod item;
+mod preview;
 pub(crate) mod redact;
 mod time;
 
@@ -10,4 +12,5 @@ pub use content::{
     RichTextFormat, TextContent,
 };
 pub use item::{Capture, Category, ClipItem, ItemId, SourceApp};
+pub use preview::{ItemPreview, PreviewContent, TextHint, PREVIEW_FILES, PREVIEW_TEXT_CHARS};
 pub use time::Timestamp;

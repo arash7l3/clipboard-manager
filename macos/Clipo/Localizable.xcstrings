@@ -1,6 +1,28 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ and %lld more" : {
+      "comment" : "Popup row title of several copied files: the first file's name and how many others",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ و %2$lld مورد دیگر"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "comment" : "Popup row details: the app an item was copied from, then how long ago",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%lld items in history" : {
       "comment" : "Menu status: number of stored clipboard items",
       "localizations" : {
@@ -42,6 +64,17 @@
         }
       }
     },
+    ", " : {
+      "comment" : "Separator between the parts of a screen-reader label",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "، "
+          }
+        }
+      }
+    },
     "About Clipo" : {
       "comment" : "Menu item that shows the About panel",
       "localizations" : {
@@ -49,6 +82,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "درباره Clipo"
+          }
+        }
+      }
+    },
+    "All" : {
+      "comment" : "Popup tab listing every item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "همه"
+          }
+        }
+      }
+    },
+    "Clipboard history" : {
+      "comment" : "Screen-reader label of the popup window",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Clipboard items" : {
+      "comment" : "Screen-reader label of the popup's list of items",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "موارد کلیپ‌بورد"
           }
         }
       }
@@ -86,6 +152,28 @@
         }
       }
     },
+    "Code" : {
+      "comment" : "Screen-reader name of copied source code",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "کد"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "comment" : "Popup tab listing copied files",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فایل‌ها"
+          }
+        }
+      }
+    },
     "History unavailable" : {
       "comment" : "Menu status when the history could not be opened",
       "localizations" : {
@@ -93,6 +181,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تاریخچه در دسترس نیست"
+          }
+        }
+      }
+    },
+    "Image" : {
+      "comment" : "Screen-reader name of a copied image",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصویر"
+          }
+        }
+      }
+    },
+    "Image %lld × %lld" : {
+      "comment" : "Popup row title of an image: its width and height in pixels",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصویر %1$lld × %2$lld"
+          }
+        }
+      }
+    },
+    "Images" : {
+      "comment" : "Popup tab listing images",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصویر‌ها"
+          }
+        }
+      }
+    },
+    "Link" : {
+      "comment" : "Screen-reader name of a copied link",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پیوند"
+          }
+        }
+      }
+    },
+    "No items" : {
+      "comment" : "Popup message when a tab is empty",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "موردی نیست"
+          }
+        }
+      }
+    },
+    "No matches" : {
+      "comment" : "Popup message when the search finds nothing",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "موردی پیدا نشد"
           }
         }
       }
@@ -119,6 +273,17 @@
         }
       }
     },
+    "Pinned" : {
+      "comment" : "Popup tab listing pinned items",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سنجاق‌شده"
+          }
+        }
+      }
+    },
     "Quit Clipo" : {
       "comment" : "Menu item that quits the app",
       "localizations" : {
@@ -130,6 +295,39 @@
         }
       }
     },
+    "Search" : {
+      "comment" : "Placeholder of the popup's search field",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جستجو"
+          }
+        }
+      }
+    },
+    "Search clipboard history" : {
+      "comment" : "Screen-reader label of the popup's search field",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جستجو در تاریخچه کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Show Clipboard History" : {
+      "comment" : "Menu item that opens the history popup",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نمایش تاریخچه کلیپ‌بورد"
+          }
+        }
+      }
+    },
     "Start New History" : {
       "comment" : "Alert button that deletes the unreadable history and starts over",
       "localizations" : {
@@ -137,6 +335,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "شروع تاریخچه تازه"
+          }
+        }
+      }
+    },
+    "Text" : {
+      "comment" : "Popup tab listing text items",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متن"
           }
         }
       }
@@ -159,6 +368,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تلاش دوباره"
+          }
+        }
+      }
+    },
+    "now" : {
+      "comment" : "Popup row time of an item copied less than a minute ago",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "همین حالا"
+          }
+        }
+      }
+    },
+    "pinned" : {
+      "comment" : "Screen-reader note that an item is pinned",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سنجاق‌شده"
           }
         }
       }

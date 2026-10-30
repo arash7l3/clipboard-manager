@@ -1,6 +1,9 @@
 use super::tests::{app, at, files, image, rich_text, text, Fixture};
 use super::*;
-use crate::model::{Capture, Category, FileRef, ImageContent, ImageFormat, TextContent};
+use crate::model::{
+    Capture, Category, FileRef, ImageContent, ImageFormat, ItemKind, PreviewContent, TextContent,
+    TextHint, PREVIEW_FILES, PREVIEW_TEXT_CHARS,
+};
 
 pub(super) fn capture(content: ItemContent, millis: i64) -> Capture {
     Capture {
@@ -561,4 +564,169 @@ fn search_text_is_never_run_as_sql() {
     assert_eq!(found(&store, "%"), ["100% sure"]);
     assert_eq!(found(&store, "_"), ["a_b"]);
     assert_eq!(store.count().unwrap(), 2);
+}
+
+// --- Previews ---
+
+#[test]
+fn previews_follow_search_order_and_filters() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let [_, _, _, pinned] = mixed(&mut store);
+    store.set_pinned(pinned.id, true).unwrap();
+    store.record(capture(text("pinned note"), 5)).unwrap();
+
+    for category in Category::ALL {
+        for words in ["", "note", "me", "nothing"] {
+            let query = Query {
+                category,
+                text: words.into(),
+                limit: Some(3),
+            };
+            let previews: Vec<_> = store
+                .previews(&query)
+                .unwrap()
+                .iter()
+                .map(|p| p.id)
+                .collect();
+            assert_eq!(
+                previews,
+                ids(&store.search(&query).unwrap()),
+                "{category:?} {words:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn previews_carry_what_a_row_shows() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let note = added(
+        store
+            .record(Capture {
+                source_app: Some(app()),
+                ..capture(rich_text(), 1)
+            })
+            .unwrap(),
+    );
+    store
+        .record(capture(image(Some(vec![1, 2, 3])), 2))
+        .unwrap();
+    store.record(capture(files(), 3)).unwrap();
+    store.set_pinned(note.id, true).unwrap();
+
+    let previews = store.previews(&Query::default()).unwrap();
+    let [file_row, image_row, text_row] = previews.as_slice() else {
+        panic!("three previews, got {}", previews.len());
+    };
+
+    assert_eq!(
+        file_row.content,
+        PreviewContent::Files {
+            files: vec![
+                FileRef {
+                    path: "/Users/me/b.pdf".into(),
+                    size_bytes: Some(1_234_567),
+                },
+                FileRef {
+                    path: "/Users/me/a folder".into(),
+                    size_bytes: None,
+                },
+            ],
+            total: 2,
+        }
+    );
+    assert_eq!(
+        image_row.content,
+        PreviewContent::Image {
+            format: ImageFormat::Tiff,
+            width: 640,
+            height: 480,
+            thumbnail: Some(vec![1, 2, 3]),
+        }
+    );
+    assert_eq!(
+        text_row.content,
+        PreviewContent::Text {
+            snippet: "سلام world".into(),
+            truncated: false,
+            hint: TextHint::Plain,
+        }
+    );
+    assert!(text_row.pinned);
+    assert_eq!(text_row.source_app, Some(app()));
+    assert_eq!(text_row.last_copied_at, at(1));
+    assert_eq!(text_row.content.kind(), ItemKind::Text);
+}
+
+#[test]
+fn previews_cut_long_text_and_file_lists() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    // Multi-byte characters: the cut counts characters, not bytes.
+    let long = "س".repeat(PREVIEW_TEXT_CHARS + 1);
+    store.record(capture(text(&long), 1)).unwrap();
+    let exact = "a".repeat(PREVIEW_TEXT_CHARS);
+    store.record(capture(text(&exact), 2)).unwrap();
+    let many: Vec<_> = (0..PREVIEW_FILES + 5)
+        .map(|n| FileRef {
+            path: format!("/tmp/{n}"),
+            size_bytes: None,
+        })
+        .collect();
+    store.record(capture(ItemContent::Files(many), 3)).unwrap();
+
+    let previews = store.previews(&Query::default()).unwrap();
+    let PreviewContent::Files { files, total } = &previews[0].content else {
+        panic!("files first");
+    };
+    assert_eq!(files.len(), PREVIEW_FILES);
+    assert_eq!(files[0].path, "/tmp/0");
+    assert_eq!(*total, PREVIEW_FILES + 5);
+
+    let PreviewContent::Text {
+        snippet, truncated, ..
+    } = &previews[1].content
+    else {
+        panic!("exact-length text second");
+    };
+    assert_eq!(snippet, &exact);
+    assert!(!truncated);
+
+    let PreviewContent::Text {
+        snippet, truncated, ..
+    } = &previews[2].content
+    else {
+        panic!("long text last");
+    };
+    assert_eq!(snippet.chars().count(), PREVIEW_TEXT_CHARS);
+    assert!(long.starts_with(snippet.as_str()));
+    assert!(truncated);
+}
+
+#[test]
+fn previews_hint_links_and_code() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store
+        .record(capture(text("https://example.com/path"), 1))
+        .unwrap();
+    store
+        .record(capture(text("if x {\n    y();\n}"), 2))
+        .unwrap();
+    // A link longer than the preview is cut, so it is not called a link.
+    let long_link = format!("https://example.com/{}", "a".repeat(PREVIEW_TEXT_CHARS));
+    store.record(capture(text(&long_link), 3)).unwrap();
+
+    let hints: Vec<_> = store
+        .previews(&Query::default())
+        .unwrap()
+        .into_iter()
+        .map(|p| match p.content {
+            PreviewContent::Text { hint, .. } => hint,
+            other => panic!("text expected, got {other:?}"),
+        })
+        .collect();
+    assert_eq!(hints, [TextHint::Plain, TextHint::Code, TextHint::Link]);
 }

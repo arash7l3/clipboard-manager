@@ -10,6 +10,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: ClipStore?
     private var watcher: PasteboardWatcher?
     private var recording: Task<Void, Never>?
+    private var popup: PopupController?
+    private var hotkey: GlobalHotkey?
 
     private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
 
@@ -19,8 +21,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
 
         statusMenu.onRetry = { [weak self] in self?.openHistory() }
+        statusMenu.onShowHistory = { [weak self] in self?.togglePopup() }
         statusItem = statusMenu.install()
+
+        let hotkey = GlobalHotkey { [weak self] in self?.togglePopup() }
+        statusMenu.showShortcut(hotkey.register(.showHistory) ? .showHistory : nil)
+        self.hotkey = hotkey
+
         openHistory()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        hotkey?.unregister()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
@@ -33,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch await History.openDefault() {
             case let .ready(store, itemCount):
                 self.store = store
+                popup = makePopup(for: store)
                 statusMenu.show(.ready(itemCount: itemCount))
                 startCapturing(into: store)
             case .keyProblem:
@@ -62,19 +75,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.watcher = watcher
         watcher.start()
 
-        let statusMenu = statusMenu
-        recording = Task {
+        recording = Task { [weak self] in
             for await change in watcher.changes {
                 // One change at a time keeps the history in copy order.
-                let itemCount = await Task.detached(priority: .utility) { () -> UInt64? in
-                    guard case .added = ClipboardRecorder.record(change, in: store) else { return nil }
-                    return try? store.count()
+                let outcome = await Task.detached(priority: .utility) { () -> (changed: Bool, itemCount: UInt64?) in
+                    switch ClipboardRecorder.record(change, in: store) {
+                    case .added?: (true, try? store.count())
+                    case .bumped?: (true, nil)
+                    default: (false, nil)
+                    }
                 }.value
-                if let itemCount {
-                    statusMenu.show(.ready(itemCount: itemCount))
+                if outcome.changed {
+                    self?.historyChanged(itemCount: outcome.itemCount)
                 }
             }
         }
+    }
+
+    /// After a copy was stored. `itemCount` is the new count when an item was
+    /// added, `nil` when an existing one moved to the top.
+    private func historyChanged(itemCount: UInt64?) {
+        if let itemCount {
+            statusMenu.show(.ready(itemCount: itemCount))
+        }
+        popup?.historyChanged()
+    }
+
+    private func makePopup(for store: ClipStore) -> PopupController {
+        popup?.dismiss()
+        let model = PopupModel { query in History.previews(query, in: store) }
+        let popup = PopupController(model: model)
+        // Putting the item back on the clipboard comes with step 2.4.
+        popup.onChoose = { _ in }
+        return popup
+    }
+
+    /// Opens or closes the popup; beeps while the history is not open.
+    private func togglePopup() {
+        guard let popup else {
+            NSSound.beep()
+            return
+        }
+        popup.toggle()
     }
 
     private func stopCapturing() {

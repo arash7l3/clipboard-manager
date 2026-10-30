@@ -18,6 +18,7 @@ pub use error::{CoreError, InvalidContent};
 pub use key::{DatabaseKey, KeyStore, KeyStoreError, KEY_LEN};
 pub use model::{
     Capture, Category, ClipItem, ContentHash, FileRef, ImageContent, ImageFormat, ItemContent,
-    ItemId, ItemKind, RichText, RichTextFormat, SourceApp, TextContent, Timestamp,
+    ItemId, ItemKind, ItemPreview, PreviewContent, RichText, RichTextFormat, SourceApp,
+    TextContent, TextHint, Timestamp,
 };
 pub use store::{CaptureRules, HistoryLimits, Query, Recorded, SkipReason, Store};

@@ -6,8 +6,9 @@ use rusqlite::Row;
 
 use crate::error::CoreError;
 use crate::model::{
-    ClipItem, FileRef, ImageContent, ImageFormat, ItemContent, ItemId, ItemKind, RichText,
-    RichTextFormat, SourceApp, TextContent, Timestamp,
+    ClipItem, FileRef, ImageContent, ImageFormat, ItemContent, ItemId, ItemKind, ItemPreview,
+    PreviewContent, RichText, RichTextFormat, SourceApp, TextContent, TextHint, Timestamp,
+    PREVIEW_TEXT_CHARS,
 };
 
 const KIND_TEXT: i64 = 0;
@@ -215,6 +216,104 @@ impl RawItem {
                 name: self.source_app_name,
             }),
             created_at: Timestamp::from_millis(self.created_at),
+            last_copied_at: Timestamp::from_millis(self.last_copied_at),
+        })
+    }
+}
+
+/// Columns selected for a preview, in the order [`RawPreview::from_row`] reads
+/// them. Text is cut in SQL, so a long text is never loaded whole.
+pub(super) fn preview_columns() -> String {
+    format!(
+        "id, kind, pinned, source_app_id, source_app_name, last_copied_at, \
+         substr(text_plain, 1, {PREVIEW_TEXT_CHARS}), length(text_plain) > {PREVIEW_TEXT_CHARS}, \
+         image_format, image_width, image_height, thumbnail, \
+         (SELECT count(*) FROM item_files WHERE item_id = items.id)"
+    )
+}
+
+/// One `items` row as [`preview_columns`] selects it.
+pub(super) struct RawPreview {
+    id: i64,
+    kind: i64,
+    pinned: bool,
+    source_app_id: Option<String>,
+    source_app_name: Option<String>,
+    last_copied_at: i64,
+    snippet: Option<String>,
+    truncated: Option<bool>,
+    image_format: Option<i64>,
+    image_width: Option<i64>,
+    image_height: Option<i64>,
+    thumbnail: Option<Vec<u8>>,
+    file_count: i64,
+}
+
+impl RawPreview {
+    pub(super) fn from_row(row: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: row.get(0)?,
+            kind: row.get(1)?,
+            pinned: row.get(2)?,
+            source_app_id: row.get(3)?,
+            source_app_name: row.get(4)?,
+            last_copied_at: row.get(5)?,
+            snippet: row.get(6)?,
+            truncated: row.get(7)?,
+            image_format: row.get(8)?,
+            image_width: row.get(9)?,
+            image_height: row.get(10)?,
+            thumbnail: row.get(11)?,
+            file_count: row.get(12)?,
+        })
+    }
+
+    pub(super) const fn id(&self) -> i64 {
+        self.id
+    }
+
+    pub(super) const fn is_files(&self) -> bool {
+        self.kind == KIND_FILES
+    }
+
+    /// Builds the preview. `files` is the start of the item's file list,
+    /// loaded by the caller for file items and empty otherwise.
+    pub(super) fn into_preview(self, files: Vec<FileRef>) -> Result<ItemPreview, CoreError> {
+        let content = match self.kind {
+            KIND_TEXT => {
+                let snippet = self.snippet.ok_or_else(|| corrupt("text missing"))?;
+                let truncated = self.truncated.unwrap_or(false);
+                PreviewContent::Text {
+                    hint: TextHint::of(&snippet, truncated),
+                    snippet,
+                    truncated,
+                }
+            }
+            KIND_IMAGE => PreviewContent::Image {
+                format: image_format_from_code(
+                    self.image_format
+                        .ok_or_else(|| corrupt("image format missing"))?,
+                )?,
+                width: dimension(self.image_width)?,
+                height: dimension(self.image_height)?,
+                thumbnail: self.thumbnail,
+            },
+            KIND_FILES if files.is_empty() => return Err(corrupt("file item without files")),
+            KIND_FILES => PreviewContent::Files {
+                files,
+                total: usize::try_from(self.file_count)
+                    .map_err(|_| corrupt("negative file count"))?,
+            },
+            _ => return Err(corrupt("unknown kind")),
+        };
+        Ok(ItemPreview {
+            id: ItemId::from_raw(self.id),
+            content,
+            pinned: self.pinned,
+            source_app: self.source_app_id.map(|id| SourceApp {
+                id,
+                name: self.source_app_name,
+            }),
             last_copied_at: Timestamp::from_millis(self.last_copied_at),
         })
     }

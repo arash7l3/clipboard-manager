@@ -297,20 +297,24 @@ impl Store {
     /// Turns a raw row into an item, loading its files if it has any.
     fn finish(&self, raw: RawItem) -> Result<ClipItem, CoreError> {
         let files = if raw.is_files() {
-            self.files(raw.id())?
+            self.files(raw.id(), None)?
         } else {
             Vec::new()
         };
         raw.into_item(files)
     }
 
-    fn files(&self, item_id: i64) -> Result<Vec<FileRef>, CoreError> {
+    /// The item's files in clipboard order, at most `limit` of them.
+    fn files(&self, item_id: i64, limit: Option<usize>) -> Result<Vec<FileRef>, CoreError> {
+        // A negative limit means none in SQLite.
+        let limit = limit.map_or(-1, |n| i64::try_from(n).unwrap_or(i64::MAX));
         let rows = self
             .conn
             .prepare_cached(
-                "SELECT path, size_bytes FROM item_files WHERE item_id = ?1 ORDER BY position",
+                "SELECT path, size_bytes FROM item_files WHERE item_id = ?1 \
+                 ORDER BY position LIMIT ?2",
             )?
-            .query_map([item_id], codec::file_from_row)?
+            .query_map([item_id, limit], codec::file_from_row)?
             .collect::<Result<Vec<_>, _>>()?;
         rows.into_iter()
             .map(|(path, size)| codec::file_ref(path, size))

@@ -7,7 +7,7 @@ use std::time::SystemTime;
 use clipo_core::{ItemId, Store, Timestamp};
 
 use crate::error::{ClipoError, KeyStoreError};
-use crate::types::{CaptureRules, ClipItem, HistoryLimits, Query, Recorded};
+use crate::types::{CaptureRules, ClipItem, HistoryLimits, ItemPreview, Query, Recorded};
 use crate::Capture;
 
 /// Keeps the database key in the OS credential store. Implemented by each
@@ -114,6 +114,18 @@ impl ClipStore {
     pub fn search(&self, query: Query) -> Result<Vec<ClipItem>, ClipoError> {
         let items = self.lock().search(&query.into())?;
         Ok(items.into_iter().map(ClipItem::from).collect())
+    }
+
+    /// Previews of the items in a tab matching the search text, in the same
+    /// order as [`search`](Self::search). What the popup lists: cheap enough
+    /// for every keystroke.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn previews(&self, query: Query) -> Result<Vec<ItemPreview>, ClipoError> {
+        let previews = self.lock().previews(&query.into())?;
+        Ok(previews.into_iter().map(ItemPreview::from).collect())
     }
 
     /// Number of stored items.
