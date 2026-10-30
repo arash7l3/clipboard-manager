@@ -126,6 +126,10 @@ final class PopupController: NSViewController {
         tabs.action = #selector(tabChosen(_:))
         // Keys stay in the search field; Tab switches tabs from there.
         tabs.refusesFirstResponder = true
+        tabs.setAccessibilityLabel(String(
+            localized: "Categories",
+            comment: "Screen-reader label of the popup's tabs"
+        ))
     }
 
     private func configureTable() {

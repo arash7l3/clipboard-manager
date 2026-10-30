@@ -9,9 +9,9 @@ final class HistoryRowView: NSTableCellView {
     static let height: CGFloat = 44
     static let iconSize: CGFloat = 32
 
-    private let icon = NSImageView()
-    private let title = NSTextField(labelWithString: "")
-    private let detail = NSTextField(labelWithString: "")
+    let icon = NSImageView()
+    let title = NSTextField(labelWithString: "")
+    let detail = NSTextField(labelWithString: "")
     private let pin = NSImageView()
 
     init() {
@@ -71,6 +71,8 @@ final class HistoryRowView: NSTableCellView {
         detail.stringValue = PopupText.detail(item, now: now)
         icon.image = Self.icon(for: item.content)
         pin.isHidden = !item.pinned
+        // One spoken sentence per row; its icon and lines are not read again.
+        setAccessibilityChildren([])
         setAccessibilityLabel(PopupText.accessibilityLabel(item, now: now))
     }
 
