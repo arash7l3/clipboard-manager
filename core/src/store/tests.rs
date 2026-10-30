@@ -56,14 +56,23 @@ impl Fixture {
         Store::open(&self.path, &self.key).unwrap()
     }
 
-    fn file_bytes(&self) -> Vec<u8> {
-        let mut bytes = fs::read(&self.path).unwrap();
+    fn wal_path(&self) -> PathBuf {
         let mut wal = self.path.as_os_str().to_owned();
         wal.push("-wal");
-        if let Ok(more) = fs::read(PathBuf::from(wal)) {
+        PathBuf::from(wal)
+    }
+
+    fn file_bytes(&self) -> Vec<u8> {
+        let mut bytes = fs::read(&self.path).unwrap();
+        if let Ok(more) = fs::read(self.wal_path()) {
             bytes.extend(more);
         }
         bytes
+    }
+
+    /// Size of the WAL, which holds every page written since the last checkpoint.
+    pub(super) fn wal_len(&self) -> u64 {
+        fs::metadata(self.wal_path()).map_or(0, |m| m.len())
     }
 }
 
@@ -442,6 +451,18 @@ fn delete_removes_item_and_its_files() {
     assert_eq!(file_rows, 0);
     // The content can be stored again once deleted.
     store.insert(files(), None, at(2)).unwrap();
+}
+
+#[test]
+fn deleting_empties_the_wal() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let item = store.insert(text(SECRET), None, at(1)).unwrap();
+    assert!(fx.wal_len() > 0, "test needs WAL mode");
+
+    store.delete(item.id).unwrap();
+    // The WAL frames that held the item are gone, not just superseded.
+    assert_eq!(fx.wal_len(), 0);
 }
 
 #[test]

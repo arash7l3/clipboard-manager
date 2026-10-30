@@ -1,5 +1,7 @@
 //! Tab filtering and text search over the history.
 
+use std::fmt;
+
 use rusqlite::functions::FunctionFlags;
 use rusqlite::types::Value;
 use rusqlite::{params_from_iter, Connection};
@@ -7,6 +9,7 @@ use rusqlite::{params_from_iter, Connection};
 use super::codec::{item_columns, kind_code, RawItem};
 use super::Store;
 use crate::error::CoreError;
+use crate::model::redact::Redacted;
 use crate::model::{Category, ClipItem};
 
 /// Name of the SQL function that folds text for matching. See [`fold`].
@@ -18,7 +21,9 @@ const WORD_CLAUSE: &str = " AND (instr(clipo_fold(text_plain), ?) > 0 \
     WHERE item_id = items.id AND instr(clipo_fold(path), ?) > 0))";
 
 /// What the popup asks for: one tab, optionally narrowed by search text.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// `Debug` hides the search text: it is usually part of something copied.
+#[derive(Clone, PartialEq, Eq)]
 pub struct Query {
     /// The tab to list.
     pub category: Category,
@@ -59,6 +64,16 @@ impl Query {
             text: text.into(),
             ..Self::default()
         }
+    }
+}
+
+impl fmt::Debug for Query {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Query")
+            .field("category", &self.category)
+            .field("text", &Redacted(self.text.len()))
+            .field("limit", &self.limit)
+            .finish()
     }
 }
 
@@ -110,14 +125,16 @@ impl Store {
             }
         }
 
-        for word in query.text.split_whitespace() {
+        // A word that folds to nothing (a lone ZWNJ or diacritic) would match
+        // every text and no image, so it is dropped like whitespace.
+        let words = query.text.split_whitespace().map(fold);
+        for word in words.filter(|word| !word.is_empty()) {
             sql.push_str(WORD_CLAUSE);
-            let word = fold(word);
             args.push(Value::Text(word.clone()));
             args.push(Value::Text(word));
         }
 
-        sql.push_str(" ORDER BY last_copied_at DESC, id DESC");
+        sql.push_str(" ORDER BY copy_order DESC");
         if let Some(limit) = query.limit {
             sql.push_str(" LIMIT ?");
             // A limit SQLite cannot hold returns everything anyway.
@@ -136,6 +153,14 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn debug_hides_search_text() {
+        let query = Query::text("hunter2");
+        let out = format!("{query:?}");
+        assert!(!out.contains("hunter2"), "leaked: {out}");
+        assert_eq!(out, "Query { category: All, text: <7 bytes>, limit: None }");
+    }
 
     #[test]
     fn fold_ignores_case() {

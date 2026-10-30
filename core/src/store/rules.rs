@@ -83,7 +83,7 @@ impl Store {
     /// `now`. Returns how many were deleted; zero when auto-clear is off.
     ///
     /// The core has no timer: the apps call this at launch and on a timer.
-    /// Deleted pages are overwritten, so expired content does not linger in the file.
+    /// Expired content is overwritten, as with [`Store::delete`].
     ///
     /// # Errors
     ///
@@ -94,9 +94,13 @@ impl Store {
         };
         let age_millis = i64::try_from(after.as_millis()).unwrap_or(i64::MAX);
         let cutoff = now.as_millis().saturating_sub(age_millis);
-        Ok(self.conn.execute(
+        let deleted = self.conn.execute(
             "DELETE FROM items WHERE pinned = 0 AND last_copied_at <= ?1",
             [cutoff],
-        )?)
+        )?;
+        if deleted > 0 {
+            self.purge_deleted()?;
+        }
+        Ok(deleted)
     }
 }

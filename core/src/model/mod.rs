@@ -2,7 +2,7 @@
 
 mod content;
 mod item;
-mod redact;
+pub(crate) mod redact;
 mod time;
 
 pub use content::{

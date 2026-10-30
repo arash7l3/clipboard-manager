@@ -300,6 +300,17 @@ fn expired_unpinned_items_are_deleted() {
 }
 
 #[test]
+fn expiry_empties_the_wal() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.set_rules(after(MINUTE)).unwrap();
+    store.record(capture(text("old"), 0)).unwrap();
+    assert!(fx.wal_len() > 0, "test needs WAL mode");
+    assert_eq!(store.clear_expired(at(60_000)).unwrap(), 1);
+    assert_eq!(fx.wal_len(), 0);
+}
+
+#[test]
 fn copying_again_postpones_expiry() {
     let fx = Fixture::new();
     let mut store = fx.open();

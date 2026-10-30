@@ -145,11 +145,15 @@ impl Store {
     fn enforce_item_limit(&mut self) -> Result<usize, CoreError> {
         // A limit SQLite cannot hold keeps everything anyway.
         let keep = i64::try_from(self.limits.max_items).unwrap_or(i64::MAX);
-        Ok(self.conn.execute(
+        let deleted = self.conn.execute(
             "DELETE FROM items WHERE pinned = 0 AND id NOT IN \
              (SELECT id FROM items WHERE pinned = 0 \
-              ORDER BY last_copied_at DESC, id DESC LIMIT ?1)",
+              ORDER BY copy_order DESC LIMIT ?1)",
             [keep],
-        )?)
+        )?;
+        if deleted > 0 {
+            self.purge_deleted()?;
+        }
+        Ok(deleted)
     }
 }
