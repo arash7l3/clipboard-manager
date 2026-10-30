@@ -88,6 +88,28 @@ enum History {
         }
     }
 
+    /// The full item with `id`, or `nil` if it is gone or the store failed.
+    /// Does disk I/O: call it off the main thread.
+    static func item(_ id: Int64, in store: ClipStore) -> ClipItem? {
+        do {
+            return try store.get(id: id)
+        } catch {
+            // Core errors carry codes and ids, never clipboard content.
+            logger.error("loading an item failed: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Moves the item with `id` to the top, as if it was copied again. Does
+    /// disk I/O: call it off the main thread.
+    static func bump(_ id: Int64, in store: ClipStore) {
+        do {
+            try store.touch(id: id, at: Date())
+        } catch {
+            logger.error("moving an item to the top failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
     /// ``open(at:keyStore:)`` on the user's history, off the main thread.
     static func openDefault() async -> Opened {
         await Task.detached(priority: .userInitiated) {

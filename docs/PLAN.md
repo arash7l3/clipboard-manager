@@ -32,7 +32,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 2.1 | 2 macOS | Xcode project, menu-bar shell, link core | Opus 5.5 | high | S6 | Done |
 | 2.2 | 2 macOS | Pasteboard watcher, concealed markers, ignore list | Sonnet 5.5 | high | S7 | Done |
 | 2.3 | 2 macOS | Hotkey, popup, tabs, search, thumbnails, keyboard nav | Opus 5.5 | high | S8 (with 2.4) | Done |
-| 2.4 | 2 macOS | Restore, optional auto-paste, Accessibility flow | Sonnet 5.5 | high | S8 |  |
+| 2.4 | 2 macOS | Restore, optional auto-paste, Accessibility flow | Sonnet 5.5 | high | S8 | Done |
 | 2.5 | 2 macOS | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S9 |  |
 | 2.6 | 2 macOS | Verification: run app, RTL, dark mode, accessibility | Sonnet 5.5 | medium | S10 (fresh) |  |
 | 3.1 | 3 Windows | WinUI 3 solution, link core via C# bindings | Opus 5.5 | high | S11 |  |

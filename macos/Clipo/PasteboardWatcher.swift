@@ -80,6 +80,12 @@ final class PasteboardWatcher {
         continuation.finish()
     }
 
+    /// Treats what is on the pasteboard now as seen. Called right after Clipo
+    /// itself wrote an item back, which must not count as a new copy.
+    func skipCurrent() {
+        lastChangeCount = pasteboard.changeCount
+    }
+
     /// Reads the pasteboard if it changed since the last call.
     func poll() {
         let count = pasteboard.changeCount

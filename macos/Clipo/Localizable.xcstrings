@@ -97,6 +97,28 @@
         }
       }
     },
+    "Allow Clipo to paste for you" : {
+      "comment" : "Alert title asking for the Accessibility permission",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "به Clipo اجازه دهید به‌جای شما جای‌گذاری کند"
+          }
+        }
+      }
+    },
+    "Auto-paste presses Command-V in the app you were using, and macOS only allows that after you turn on Clipo in Privacy & Security > Accessibility. Clipo uses it for nothing else. The item is on your clipboard now: press Command-V to paste it yourself." : {
+      "comment" : "Alert text explaining the Accessibility permission needed for auto-paste",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جای‌گذاری خودکار در برنامه‌ای که در آن بودید Command-V را فشار می‌دهد و macOS فقط پس از آنکه Clipo را در «حریم خصوصی و امنیت > دسترس‌پذیری» روشن کنید اجازه‌اش را می‌دهد. Clipo از آن برای هیچ کار دیگری استفاده نمی‌کند. مورد اکنون در کلیپ‌بورد شماست: برای جای‌گذاری، خودتان Command-V را فشار دهید."
+          }
+        }
+      }
+    },
     "Clipboard history" : {
       "comment" : "Screen-reader label of the popup window",
       "localizations" : {
@@ -170,6 +192,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "فایل‌ها"
+          }
+        }
+      }
+    },
+    "Grant Access…" : {
+      "comment" : "Alert button that asks macOS for the Accessibility permission",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اعطای دسترسی…"
           }
         }
       }
