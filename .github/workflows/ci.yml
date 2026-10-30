@@ -27,11 +27,16 @@ jobs:
         id: crate
         run: echo "exists=${{ hashFiles('core/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
 
-      - name: Install Rust toolchain
+      # Uses the Rust installed on the runner: no network call per run.
+      # Update it on the Mac with `rustup update`.
+      - name: Use installed Rust toolchain
         if: steps.crate.outputs.exists == 'true'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+        run: |
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustc --version
+          cargo fmt --version
+          cargo clippy --version
 
       # Caches ~/.cargo registry/git and core/target, keyed on Cargo.lock + toolchain.
       - name: Cache cargo
@@ -39,6 +44,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: core
+          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
+          cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: rustfmt
@@ -65,17 +72,24 @@ jobs:
         id: xcode
         run: echo "exists=${{ hashFiles('macos/**/project.pbxproj') != '' }}" >> "$GITHUB_OUTPUT"
 
-      - name: Install Rust toolchain
+      # Uses the Rust installed on the runner; adds a missing target only if needed.
+      - name: Use installed Rust toolchain
         if: steps.xcode.outputs.exists == 'true'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+        run: |
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustc --version
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            rustup target list --installed | grep -qx "$target" || rustup target add "$target"
+          done
 
       - name: Cache cargo
         if: steps.xcode.outputs.exists == 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: core
+          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
+          cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # SwiftPM checkouts and Xcode build products.
