@@ -1,0 +1,24 @@
+# Rust
+core/target/
+**/*.rs.bk
+
+# Xcode / Swift
+macos/**/xcuserdata/
+macos/**/DerivedData/
+macos/.build/
+*.xcuserstate
+
+# Visual Studio / C#
+windows/**/bin/
+windows/**/obj/
+windows/.vs/
+*.user
+
+# Generated UniFFI bindings
+core/generated/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
