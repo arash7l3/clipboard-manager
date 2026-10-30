@@ -35,14 +35,14 @@ impl KeyStore for MemoryKeyStore {
     }
 }
 
-struct Fixture {
+pub(super) struct Fixture {
     _dir: TempDir,
-    path: PathBuf,
+    pub(super) path: PathBuf,
     key: DatabaseKey,
 }
 
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let dir = TempDir::new().unwrap();
         let path = dir.path().join("nested").join("history.db");
         Self {
@@ -52,7 +52,7 @@ impl Fixture {
         }
     }
 
-    fn open(&self) -> Store {
+    pub(super) fn open(&self) -> Store {
         Store::open(&self.path, &self.key).unwrap()
     }
 
@@ -67,18 +67,18 @@ impl Fixture {
     }
 }
 
-fn at(millis: i64) -> Timestamp {
+pub(super) fn at(millis: i64) -> Timestamp {
     Timestamp::from_millis(millis)
 }
 
-fn text(plain: &str) -> ItemContent {
+pub(super) fn text(plain: &str) -> ItemContent {
     ItemContent::Text(TextContent {
         plain: plain.into(),
         rich: None,
     })
 }
 
-fn rich_text() -> ItemContent {
+pub(super) fn rich_text() -> ItemContent {
     ItemContent::Text(TextContent {
         plain: "سلام world".into(),
         rich: Some(RichText {
@@ -88,7 +88,7 @@ fn rich_text() -> ItemContent {
     })
 }
 
-fn image(thumbnail: Option<Vec<u8>>) -> ItemContent {
+pub(super) fn image(thumbnail: Option<Vec<u8>>) -> ItemContent {
     ItemContent::Image(ImageContent {
         format: ImageFormat::Tiff,
         width: 640,
@@ -98,7 +98,7 @@ fn image(thumbnail: Option<Vec<u8>>) -> ItemContent {
     })
 }
 
-fn files() -> ItemContent {
+pub(super) fn files() -> ItemContent {
     ItemContent::Files(vec![
         FileRef {
             path: "/Users/me/b.pdf".into(),
@@ -111,7 +111,7 @@ fn files() -> ItemContent {
     ])
 }
 
-fn app() -> SourceApp {
+pub(super) fn app() -> SourceApp {
     SourceApp {
         id: "com.apple.Safari".into(),
         name: Some("Safari".into()),

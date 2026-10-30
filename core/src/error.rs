@@ -18,6 +18,9 @@ pub enum CoreError {
     /// An item with identical content is already stored.
     #[error("an item with the same content already exists")]
     DuplicateContent,
+    /// A history limit is zero.
+    #[error("history limits must be at least 1")]
+    InvalidLimits,
     /// Key bytes from the key store are not a valid database key.
     #[error("database key has the wrong length")]
     InvalidKey,

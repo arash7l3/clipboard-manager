@@ -19,10 +19,10 @@ zeroize = "1"
 # SQLCipher (whole-file encryption, see docs/decisions/0007). Apple targets use
 # CommonCrypto; everything else builds a vendored OpenSSL so no system copy is needed.
 [target.'cfg(target_vendor = "apple")'.dependencies]
-rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher", "cache"] }
+rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher", "cache", "functions"] }
 
 [target.'cfg(not(target_vendor = "apple"))'.dependencies]
-rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher-vendored-openssl", "cache"] }
+rusqlite = { version = "0.41", default-features = false, features = ["bundled-sqlcipher-vendored-openssl", "cache", "functions"] }
 
 [lints.rust]
 unsafe_code = "deny"
