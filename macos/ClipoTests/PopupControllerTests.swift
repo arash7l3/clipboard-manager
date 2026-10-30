@@ -95,11 +95,20 @@ struct PopupControllerTests {
 struct PopupAccessibilityTests {
     private func row(_ direction: NSUserInterfaceLayoutDirection) -> HistoryRowView {
         let view = HistoryRowView()
-        view.userInterfaceLayoutDirection = direction
+        setDirection(direction, on: view)
         view.frame = NSRect(x: 0, y: 0, width: 320, height: HistoryRowView.height)
         view.show(Rows.text(1, "first", pinned: true), now: Rows.copiedAt)
         view.layoutSubtreeIfNeeded()
         return view
+    }
+
+    /// The direction is per view, not inherited; the app sets it on the whole
+    /// window in a right-to-left language.
+    private func setDirection(_ direction: NSUserInterfaceLayoutDirection, on view: NSView) {
+        view.userInterfaceLayoutDirection = direction
+        for subview in view.subviews {
+            setDirection(direction, on: subview)
+        }
     }
 
     /// A subview's frame in the row's own coordinates.
