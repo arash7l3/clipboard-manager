@@ -19,33 +19,33 @@ Step-by-step plan derived from [BUILD-GUIDE.md](../BUILD-GUIDE.md). Refer to a s
 
 Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for regular implementation; Haiku 5.5 for trivial scaffolding.
 
-| ID | Phase | Step | Model | Effort | Session |
-|---|---|---|---|---|---|
-| 0.1 | 0 Setup | Decision records in `docs/` | Sonnet 5.5 | low | S1 (with 0.2) |
-| 0.2 | 0 Setup | Repo skeleton, `.gitignore`, README, Clipo icon | Haiku 5.5 | low | S1 |
-| 1.1 | 1 Rust core | Crate setup, data model | Opus 5.5 | high | S2 (with 1.2) |
-| 1.2 | 1 Rust core | Encrypted SQLite store, keychain key interface | Opus 5.5 | xhigh | S2 |
-| 1.3 | 1 Rust core | Dedup, limits, pinning, search, categories, tests | Sonnet 5.5 | high | S3 (with 1.4) |
-| 1.4 | 1 Rust core | Ignore rules, private mode, auto-clear, tests | Sonnet 5.5 | medium | S3 |
-| 1.5 | 1 Rust core | UniFFI bindings for Swift and C#, packaging script | Opus 5.5 | high | S4 |
-| 1.6 | 1 Rust core | Core review (correctness, no clipboard content in logs) | Opus 5.5 | high | S5 (fresh) |
-| 2.1 | 2 macOS | Xcode project, menu-bar shell, link core | Opus 5.5 | high | S6 |
-| 2.2 | 2 macOS | Pasteboard watcher, concealed markers, ignore list | Sonnet 5.5 | high | S7 |
-| 2.3 | 2 macOS | Hotkey, popup, tabs, search, thumbnails, keyboard nav | Opus 5.5 | high | S8 (with 2.4) |
-| 2.4 | 2 macOS | Restore, optional auto-paste, Accessibility flow | Sonnet 5.5 | high | S8 |
-| 2.5 | 2 macOS | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S9 |
-| 2.6 | 2 macOS | Verification: run app, RTL, dark mode, accessibility | Sonnet 5.5 | medium | S10 (fresh) |
-| 3.1 | 3 Windows | WinUI 3 solution, link core via C# bindings | Opus 5.5 | high | S11 |
-| 3.2 | 3 Windows | Clipboard listener, tray icon, RegisterHotKey | Sonnet 5.5 | high | S12 (with 3.3) |
-| 3.3 | 3 Windows | Popup, tabs, search, thumbnails, restore, auto-paste | Opus 5.5 | high | S12 |
-| 3.4 | 3 Windows | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S13 |
-| 4.1 | 4 Extras | Core: snippets, export/import, plain-text, source app | Sonnet 5.5 | high | S14 |
-| 4.2 | 4 Extras | macOS UI for extras, quick-paste shortcuts | Sonnet 5.5 | medium | S15 |
-| 4.3 | 4 Extras | Windows UI for extras | Sonnet 5.5 | medium | S16 |
-| 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 |
-| 5.2 | 5 Packaging | macOS signing, notarization, dmg | Opus 5.5 | high | S18 |
-| 5.3 | 5 Packaging | Windows MSIX installer and signing | Sonnet 5.5 | high | S19 |
-| 5.4 | 5 Packaging | Final security and privacy review | Opus 5.5 | xhigh | S20 (fresh) |
+| ID | Phase | Step | Model | Effort | Session | Status |
+|---|---|---|---|---|---|---|
+| 0.1 | 0 Setup | Decision records in `docs/` | Sonnet 5.5 | low | S1 (with 0.2) | Done |
+| 0.2 | 0 Setup | Repo skeleton, `.gitignore`, README, Clipo icon | Haiku 5.5 | low | S1 | Done |
+| 1.1 | 1 Rust core | Crate setup, data model | Opus 5.5 | high | S2 (with 1.2) |  |
+| 1.2 | 1 Rust core | Encrypted SQLite store, keychain key interface | Opus 5.5 | xhigh | S2 |  |
+| 1.3 | 1 Rust core | Dedup, limits, pinning, search, categories, tests | Sonnet 5.5 | high | S3 (with 1.4) |  |
+| 1.4 | 1 Rust core | Ignore rules, private mode, auto-clear, tests | Sonnet 5.5 | medium | S3 |  |
+| 1.5 | 1 Rust core | UniFFI bindings for Swift and C#, packaging script | Opus 5.5 | high | S4 |  |
+| 1.6 | 1 Rust core | Core review (correctness, no clipboard content in logs) | Opus 5.5 | high | S5 (fresh) |  |
+| 2.1 | 2 macOS | Xcode project, menu-bar shell, link core | Opus 5.5 | high | S6 |  |
+| 2.2 | 2 macOS | Pasteboard watcher, concealed markers, ignore list | Sonnet 5.5 | high | S7 |  |
+| 2.3 | 2 macOS | Hotkey, popup, tabs, search, thumbnails, keyboard nav | Opus 5.5 | high | S8 (with 2.4) |  |
+| 2.4 | 2 macOS | Restore, optional auto-paste, Accessibility flow | Sonnet 5.5 | high | S8 |  |
+| 2.5 | 2 macOS | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S9 |  |
+| 2.6 | 2 macOS | Verification: run app, RTL, dark mode, accessibility | Sonnet 5.5 | medium | S10 (fresh) |  |
+| 3.1 | 3 Windows | WinUI 3 solution, link core via C# bindings | Opus 5.5 | high | S11 |  |
+| 3.2 | 3 Windows | Clipboard listener, tray icon, RegisterHotKey | Sonnet 5.5 | high | S12 (with 3.3) |  |
+| 3.3 | 3 Windows | Popup, tabs, search, thumbnails, restore, auto-paste | Opus 5.5 | high | S12 |  |
+| 3.4 | 3 Windows | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S13 |  |
+| 4.1 | 4 Extras | Core: snippets, export/import, plain-text, source app | Sonnet 5.5 | high | S14 |  |
+| 4.2 | 4 Extras | macOS UI for extras, quick-paste shortcuts | Sonnet 5.5 | medium | S15 |  |
+| 4.3 | 4 Extras | Windows UI for extras | Sonnet 5.5 | medium | S16 |  |
+| 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 |  |
+| 5.2 | 5 Packaging | macOS signing, notarization, dmg | Opus 5.5 | high | S18 |  |
+| 5.3 | 5 Packaging | Windows MSIX installer and signing | Sonnet 5.5 | high | S19 |  |
+| 5.4 | 5 Packaging | Final security and privacy review | Opus 5.5 | xhigh | S20 (fresh) |  |
 
 ## Session rules
 
@@ -53,6 +53,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 - Work on different tools or files gets its own session.
 - Reviews and verification run in fresh sessions.
 - Each session ends with a PR merged to `main`; the next starts from a clean `main`.
+- After finishing a step, set its Status cell to `Done` in the same PR.
 
 ## Notes
 
