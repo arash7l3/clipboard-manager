@@ -1,0 +1,168 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld items in history" : {
+      "comment" : "Menu status: number of stored clipboard items",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item in history"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items in history"
+                }
+              }
+            }
+          }
+        },
+        "fa" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld مورد در تاریخچه"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld مورد در تاریخچه"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "About Clipo" : {
+      "comment" : "Menu item that shows the About panel",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "درباره Clipo"
+          }
+        }
+      }
+    },
+    "Clipo can't open your clipboard history" : {
+      "comment" : "Alert title when the history's encryption key is missing or wrong",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipo نمی‌تواند تاریخچه کلیپ‌بورد شما را باز کند"
+          }
+        }
+      }
+    },
+    "Clipo clipboard history" : {
+      "comment" : "Screen-reader label of the menu-bar icon",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه کلیپ‌بورد Clipo"
+          }
+        }
+      }
+    },
+    "Clipo history key" : {
+      "comment" : "Name of the keychain item that holds the history's encryption key",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "کلید تاریخچه Clipo"
+          }
+        }
+      }
+    },
+    "History unavailable" : {
+      "comment" : "Menu status when the history could not be opened",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه در دسترس نیست"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "comment" : "Alert button that keeps the unreadable history for now",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فعلاً نه"
+          }
+        }
+      }
+    },
+    "Opening history…" : {
+      "comment" : "Menu status while the history opens",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "در حال باز کردن تاریخچه…"
+          }
+        }
+      }
+    },
+    "Quit Clipo" : {
+      "comment" : "Menu item that quits the app",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروج از Clipo"
+          }
+        }
+      }
+    },
+    "Start New History" : {
+      "comment" : "Alert button that deletes the unreadable history and starts over",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شروع تاریخچه تازه"
+          }
+        }
+      }
+    },
+    "The key that encrypts it is missing from your keychain or doesn't match. You can start a new, empty history. The old history can't be recovered." : {
+      "comment" : "Alert text when the history's encryption key is missing or wrong",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "کلیدی که آن را رمزگذاری می‌کند در جاکلیدی شما نیست یا با آن جور نیست. می‌توانید تاریخچه‌ای تازه و خالی شروع کنید. تاریخچه قبلی دیگر بازیابی نمی‌شود."
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "comment" : "Menu item that retries opening the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تلاش دوباره"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

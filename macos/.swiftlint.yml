@@ -1,0 +1,31 @@
+# SwiftLint for the macOS app. CI runs `swiftlint lint --strict` from macos/,
+# so every warning fails the build.
+included:
+  - Clipo
+  - ClipoTests
+
+opt_in_rules:
+  - closure_spacing
+  - contains_over_first_not_nil
+  - empty_count
+  - empty_string
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - modifier_order
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - vertical_whitespace_closing_braces
+  - yoda_condition
+
+line_length:
+  warning: 120
+  ignores_urls: true
+
+identifier_name:
+  excluded:
+    - id
