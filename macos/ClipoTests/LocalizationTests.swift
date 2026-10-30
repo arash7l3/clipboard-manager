@@ -26,6 +26,15 @@ struct LocalizationTests {
         #expect(String(format: format, "a.pdf", 3) == "a.pdf و 3 مورد دیگر")
     }
 
+    @Test func farsiTableTranslatesSettings() throws {
+        let path = try #require(app.path(forResource: "fa", ofType: "lproj"))
+        let farsi = try #require(Bundle(path: path))
+        #expect(farsi.localizedString(forKey: "Settings…", value: nil, table: nil) == "تنظیمات…")
+        #expect(farsi.localizedString(forKey: "Start Clipo at login", value: nil, table: nil)
+            == "اجرای Clipo هنگام ورود به سیستم")
+        #expect(farsi.localizedString(forKey: "Dark", value: nil, table: nil) == "تیره")
+    }
+
     @Test func itemCountUsesPluralRules() throws {
         let path = try #require(app.path(forResource: "en", ofType: "lproj"))
         let english = try #require(Bundle(path: path))

@@ -18,10 +18,13 @@ final class StatusMenu: NSObject {
     var onRetry: (@MainActor () -> Void)?
     /// Called when the user picks "Show Clipboard History".
     var onShowHistory: (@MainActor () -> Void)?
+    /// Called when the user picks "Settings…".
+    var onShowSettings: (@MainActor () -> Void)?
 
     let statusLine = NSMenuItem()
     let retryItem = NSMenuItem()
     let showHistoryItem = NSMenuItem()
+    let settingsItem = NSMenuItem()
     let aboutItem = NSMenuItem()
     let quitItem = NSMenuItem()
 
@@ -44,6 +47,11 @@ final class StatusMenu: NSObject {
         showHistoryItem.target = self
         showHistoryItem.action = #selector(showHistory)
 
+        settingsItem.title = String(localized: "Settings…", comment: "Menu item that opens the Settings window")
+        settingsItem.target = self
+        settingsItem.action = #selector(showSettings)
+        settingsItem.keyEquivalent = ","
+
         aboutItem.title = String(localized: "About Clipo", comment: "Menu item that shows the About panel")
         aboutItem.target = self
         aboutItem.action = #selector(showAbout)
@@ -52,7 +60,9 @@ final class StatusMenu: NSObject {
         quitItem.action = #selector(NSApplication.terminate(_:))
         quitItem.keyEquivalent = "q"
 
-        menu.items = [statusLine, retryItem, showHistoryItem, .separator(), aboutItem, .separator(), quitItem]
+        menu.items = [
+            statusLine, retryItem, showHistoryItem, .separator(), settingsItem, aboutItem, .separator(), quitItem
+        ]
         show(.opening)
     }
 
@@ -111,6 +121,10 @@ final class StatusMenu: NSObject {
 
     @objc private func showHistory() {
         onShowHistory?()
+    }
+
+    @objc private func showSettings() {
+        onShowSettings?()
     }
 
     @objc private func showAbout() {

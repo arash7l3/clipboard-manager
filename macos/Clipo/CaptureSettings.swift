@@ -7,8 +7,10 @@ import Foundation
 /// it opens the history.
 enum CaptureSettings {
     /// Key in `UserDefaults` of the user's own ignored apps: an array of bundle
-    /// identifiers. The Settings window (step 2.5) edits it.
+    /// identifiers. The Settings window edits it.
     static let ignoredAppsKey = "ignoredApps"
+    /// Key in `UserDefaults`: a Bool, capture paused while on.
+    static let privateModeKey = "privateMode"
 
     /// Password managers and the like, ignored out of the box. Most of them
     /// also mark what they copy as concealed; this covers the ones that don't.
@@ -33,9 +35,36 @@ enum CaptureSettings {
         return (defaultIgnoredApps + own).filter { seen.insert($0.lowercased()).inserted }
     }
 
-    /// The rules to give the core. Private mode starts off.
+    /// Only the apps the user added.
+    static func ownIgnoredApps(defaults: UserDefaults = .standard) -> [String] {
+        defaults.stringArray(forKey: ignoredAppsKey) ?? []
+    }
+
+    /// Adds `identifier` to the user's ignored apps. Returns false, changing
+    /// nothing, when it is blank or the built-in list or the user's already
+    /// has it.
+    @discardableResult
+    static func addIgnoredApp(_ identifier: String, defaults: UserDefaults = .standard) -> Bool {
+        let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        let known = Set(ignoredApps(defaults: defaults).map { $0.lowercased() })
+        guard !trimmed.isEmpty, !known.contains(trimmed.lowercased()) else { return false }
+        defaults.set(ownIgnoredApps(defaults: defaults) + [trimmed], forKey: ignoredAppsKey)
+        return true
+    }
+
+    static func removeIgnoredApp(_ identifier: String, defaults: UserDefaults = .standard) {
+        let kept = ownIgnoredApps(defaults: defaults).filter { $0.caseInsensitiveCompare(identifier) != .orderedSame }
+        defaults.set(kept, forKey: ignoredAppsKey)
+    }
+
+    /// The rules to give the core. Private mode and auto-clear are off unless
+    /// the user turned them on.
     static func rules(defaults: UserDefaults = .standard) -> CaptureRules {
-        CaptureRules(privateMode: false, ignoredApps: ignoredApps(defaults: defaults), autoClearAfter: nil)
+        CaptureRules(
+            privateMode: defaults.bool(forKey: privateModeKey),
+            ignoredApps: ignoredApps(defaults: defaults),
+            autoClearAfter: HistorySettings.autoClearAfter(defaults: defaults)
+        )
     }
 
     /// Whether a copy made in `app` may be read at all under `rules`: the

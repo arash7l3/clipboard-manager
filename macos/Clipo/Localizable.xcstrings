@@ -86,6 +86,50 @@
         }
       }
     },
+    "Add" : {
+      "comment" : "Settings button that adds an app to the ignore list",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افزودن"
+          }
+        }
+      }
+    },
+    "After 1 day" : {
+      "comment" : "Settings choice: auto-clear after one day",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پس از ۱ روز"
+          }
+        }
+      }
+    },
+    "After 30 days" : {
+      "comment" : "Settings choice: auto-clear after thirty days",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پس از ۳۰ روز"
+          }
+        }
+      }
+    },
+    "After 7 days" : {
+      "comment" : "Settings choice: auto-clear after seven days",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پس از ۷ روز"
+          }
+        }
+      }
+    },
     "All" : {
       "comment" : "Popup tab listing every item",
       "localizations" : {
@@ -93,6 +137,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "همه"
+          }
+        }
+      }
+    },
+    "Allow Clipo in System Settings > General > Login Items." : {
+      "comment" : "Settings note: the user must approve the login item in System Settings",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipo را در تنظیمات سیستم > عمومی > موارد ورود مجاز کنید."
           }
         }
       }
@@ -108,6 +163,17 @@
         }
       }
     },
+    "Appearance" : {
+      "comment" : "Settings picker: light, dark or system look",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ظاهر"
+          }
+        }
+      }
+    },
     "Auto-paste presses Command-V in the app you were using, and macOS only allows that after you turn on Clipo in Privacy & Security > Accessibility. Clipo uses it for nothing else. The item is on your clipboard now: press Command-V to paste it yourself." : {
       "comment" : "Alert text explaining the Accessibility permission needed for auto-paste",
       "localizations" : {
@@ -115,6 +181,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "جای‌گذاری خودکار در برنامه‌ای که در آن بودید Command-V را فشار می‌دهد و macOS فقط پس از آنکه Clipo را در «حریم خصوصی و امنیت > دسترس‌پذیری» روشن کنید اجازه‌اش را می‌دهد. Clipo از آن برای هیچ کار دیگری استفاده نمی‌کند. مورد اکنون در کلیپ‌بورد شماست: برای جای‌گذاری، خودتان Command-V را فشار دهید."
+          }
+        }
+      }
+    },
+    "Bundle identifier" : {
+      "comment" : "Settings placeholder: bundle identifier of an app to ignore",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شناسهٔ بسته"
+          }
+        }
+      }
+    },
+    "Choose App…" : {
+      "comment" : "Settings button that picks an app to ignore",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انتخاب برنامه…"
           }
         }
       }
@@ -137,6 +225,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "موارد کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Clipo Settings" : {
+      "comment" : "Title of the Settings window",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنظیمات Clipo"
           }
         }
       }
@@ -185,6 +284,17 @@
         }
       }
     },
+    "Dark" : {
+      "comment" : "Settings choice: dark appearance",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تیره"
+          }
+        }
+      }
+    },
     "Files" : {
       "comment" : "Popup tab listing copied files",
       "localizations" : {
@@ -196,6 +306,17 @@
         }
       }
     },
+    "General" : {
+      "comment" : "Settings tab: start at login, language, appearance, shortcut",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عمومی"
+          }
+        }
+      }
+    },
     "Grant Access…" : {
       "comment" : "Alert button that asks macOS for the Accessibility permission",
       "localizations" : {
@@ -203,6 +324,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "اعطای دسترسی…"
+          }
+        }
+      }
+    },
+    "History" : {
+      "comment" : "Settings tab: how much history is kept",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه"
           }
         }
       }
@@ -251,6 +383,39 @@
         }
       }
     },
+    "Items to keep" : {
+      "comment" : "Settings picker: how many items the history holds",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعداد موردهای نگه‌داری‌شده"
+          }
+        }
+      }
+    },
+    "Language" : {
+      "comment" : "Settings picker: language of Clipo's text",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "زبان"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "comment" : "Settings choice: light appearance",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "روشن"
+          }
+        }
+      }
+    },
     "Link" : {
       "comment" : "Screen-reader name of a copied link",
       "localizations" : {
@@ -258,6 +423,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "پیوند"
+          }
+        }
+      }
+    },
+    "Match System" : {
+      "comment" : "Settings choice: follow the system's setting",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطابق سیستم"
+          }
+        }
+      }
+    },
+    "Needs the Accessibility permission. Off, an item is only put back on the clipboard." : {
+      "comment" : "Settings note under the auto-paste switch",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "به مجوز دسترسی‌پذیری نیاز دارد. وقتی خاموش است، مورد فقط به کلیپ‌بورد برمی‌گردد."
+          }
+        }
+      }
+    },
+    "Never" : {
+      "comment" : "Settings choice: auto-clear is off",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هرگز"
+          }
+        }
+      }
+    },
+    "Never store copies from these apps" : {
+      "comment" : "Settings header of the ignored apps list",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هرگز از این برنامه‌ها کپی ذخیره نشود"
           }
         }
       }
@@ -295,6 +504,28 @@
         }
       }
     },
+    "Open Login Items Settings" : {
+      "comment" : "Settings button that opens System Settings at Login Items",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باز کردن تنظیمات موارد ورود"
+          }
+        }
+      }
+    },
+    "Open history with" : {
+      "comment" : "Settings picker: the shortcut that opens the popup",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باز کردن تاریخچه با"
+          }
+        }
+      }
+    },
     "Opening history…" : {
       "comment" : "Menu status while the history opens",
       "localizations" : {
@@ -302,6 +533,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "در حال باز کردن تاریخچه…"
+          }
+        }
+      }
+    },
+    "Password managers such as 1Password and Bitwarden are always ignored." : {
+      "comment" : "Settings note under the ignored apps list",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مدیرهای گذرواژه مانند 1Password و Bitwarden همیشه نادیده گرفته می‌شوند."
+          }
+        }
+      }
+    },
+    "Paste automatically after choosing an item" : {
+      "comment" : "Settings switch: auto-paste",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "چسباندن خودکار پس از انتخاب مورد"
           }
         }
       }
@@ -317,6 +570,39 @@
         }
       }
     },
+    "Pinned items are never removed to make room." : {
+      "comment" : "Settings note under the history size",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "موردهای سنجاق‌شده هرگز برای باز کردن جا حذف نمی‌شوند."
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "comment" : "Settings tab: private mode and ignored apps",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حریم خصوصی"
+          }
+        }
+      }
+    },
+    "Private mode" : {
+      "comment" : "Settings switch: pause capturing",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حالت خصوصی"
+          }
+        }
+      }
+    },
     "Quit Clipo" : {
       "comment" : "Menu item that quits the app",
       "localizations" : {
@@ -324,6 +610,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "خروج از Clipo"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "comment" : "Settings button that removes an app from the ignore list",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف"
+          }
+        }
+      }
+    },
+    "Remove unpinned items" : {
+      "comment" : "Settings picker: auto-clear time",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف موردهای سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Restart" : {
+      "comment" : "Settings button that restarts Clipo",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "راه‌اندازی دوباره"
+          }
+        }
+      }
+    },
+    "Restart Clipo to change the language." : {
+      "comment" : "Settings note after another language was picked",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "برای تغییر زبان، Clipo را دوباره راه‌اندازی کنید."
           }
         }
       }
@@ -350,6 +680,17 @@
         }
       }
     },
+    "Settings…" : {
+      "comment" : "Menu item that opens the Settings window",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنظیمات…"
+          }
+        }
+      }
+    },
     "Show Clipboard History" : {
       "comment" : "Menu item that opens the history popup",
       "localizations" : {
@@ -357,6 +698,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "نمایش تاریخچه کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Start Clipo at login" : {
+      "comment" : "Settings switch: open Clipo when the user logs in",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اجرای Clipo هنگام ورود به سیستم"
           }
         }
       }
@@ -401,6 +753,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تلاش دوباره"
+          }
+        }
+      }
+    },
+    "While on, nothing you copy is stored. Existing history is kept." : {
+      "comment" : "Settings note under the private mode switch",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وقتی روشن است، هیچ چیزی که کپی می‌کنید ذخیره نمی‌شود. تاریخچهٔ موجود حفظ می‌شود."
+          }
+        }
+      }
+    },
+    "macOS did not let Clipo change its login item." : {
+      "comment" : "Settings note when the login item could not be changed",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS اجازه نداد Clipo مورد ورود خودکار را تغییر دهد."
           }
         }
       }
