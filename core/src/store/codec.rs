@@ -14,7 +14,7 @@ const KIND_TEXT: i64 = 0;
 const KIND_IMAGE: i64 = 1;
 const KIND_FILES: i64 = 2;
 
-const fn kind_code(kind: ItemKind) -> i64 {
+pub(super) const fn kind_code(kind: ItemKind) -> i64 {
     match kind {
         ItemKind::Text => KIND_TEXT,
         ItemKind::Image => KIND_IMAGE,

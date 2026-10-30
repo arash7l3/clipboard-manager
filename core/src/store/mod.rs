@@ -6,7 +6,9 @@
 //! `docs/decisions/0007-storage-encryption.md`.
 
 mod codec;
+mod history;
 mod schema;
+mod search;
 
 use std::fs;
 use std::io;
@@ -19,6 +21,8 @@ use crate::error::CoreError;
 use crate::key::{load_key, DatabaseKey, KeyStore};
 use crate::model::{ClipItem, ContentHash, FileRef, ItemContent, ItemId, SourceApp, Timestamp};
 use codec::{item_columns, ItemColumns, RawItem};
+pub use history::{HistoryLimits, Recorded, SkipReason, DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEM_BYTES};
+pub use search::Query;
 
 /// How long a write waits for a lock held by another connection.
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
@@ -29,6 +33,7 @@ const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
 /// share it between threads.
 pub struct Store {
     conn: Connection,
+    limits: HistoryLimits,
 }
 
 impl Store {
@@ -73,8 +78,12 @@ impl Store {
         let mut conn = Connection::open(path)?;
         unlock(&conn, key)?;
         configure(&conn)?;
+        search::register_functions(&conn)?;
         schema::migrate(&mut conn)?;
-        Ok(Self { conn })
+        Ok(Self {
+            conn,
+            limits: HistoryLimits::default(),
+        })
     }
 
     /// Deletes the database at `path` with its WAL, shared-memory and journal
@@ -98,7 +107,8 @@ impl Store {
 
     /// Stores new content as an unpinned item copied at `at`.
     ///
-    /// Does not merge duplicates: callers check [`Store::find_by_hash`] first.
+    /// Low-level: no duplicate merging and no limits. Watchers use
+    /// [`Store::record`].
     ///
     /// # Errors
     ///
@@ -236,19 +246,6 @@ impl Store {
         expect_one(changed, id)
     }
 
-    /// Pins or unpins the item.
-    ///
-    /// # Errors
-    ///
-    /// [`CoreError::ItemNotFound`] if no item has this id.
-    pub fn set_pinned(&mut self, id: ItemId, pinned: bool) -> Result<(), CoreError> {
-        let changed = self.conn.execute(
-            "UPDATE items SET pinned = ?2 WHERE id = ?1",
-            params![id.as_raw(), pinned],
-        )?;
-        expect_one(changed, id)
-    }
-
     /// Deletes the item and its files. Freed pages are overwritten
     /// (`secure_delete`), so the content does not linger in the file.
     ///
@@ -373,5 +370,7 @@ fn expect_one(changed: usize, id: ItemId) -> Result<(), CoreError> {
     }
 }
 
+#[cfg(test)]
+mod history_tests;
 #[cfg(test)]
 mod tests;
