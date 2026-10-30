@@ -106,18 +106,42 @@ jobs:
             rustup target list --installed | grep -qx "$target" || rustup target add "$target"
           done
 
+      # The Xcode project links core/dist/apple/ClipoCore as a local package,
+      # so it has to exist before Xcode resolves packages.
+      - name: Package the core
+        if: steps.xcode.outputs.exists == 'true'
+        working-directory: core
+        run: cargo xtask package macos
+
+      # Homebrew's bin folders may be missing from the runner service's PATH.
+      # Installed once if missing; it stays on the self-hosted runner.
       - name: SwiftLint
         if: steps.xcode.outputs.exists == 'true'
-        run: swiftlint lint --strict --quiet
         working-directory: macos
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+        run: |
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          if ! command -v swiftlint >/dev/null; then
+            if ! command -v brew >/dev/null; then
+              echo "::error::SwiftLint and Homebrew are missing on the runner; install SwiftLint on the Mac"
+              exit 1
+            fi
+            brew install swiftlint
+          fi
+          swiftlint version
+          swiftlint lint --strict --quiet
 
       - name: Build and test
         if: steps.xcode.outputs.exists == 'true'
         working-directory: macos
         run: |
           set -o pipefail
+          xcodebuild -version
           xcodebuild test \
-            -scheme ClipboardManager \
+            -project Clipo.xcodeproj \
+            -scheme Clipo \
             -destination 'platform=macOS' \
             -derivedDataPath "$HOME/Library/Caches/clipo-ci/DerivedData" \
             -clonedSourcePackagesDirPath "$HOME/Library/Caches/clipo-ci/DerivedData/SourcePackages" \
