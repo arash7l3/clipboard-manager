@@ -44,6 +44,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: core
+          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
+          cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: rustfmt
@@ -86,6 +88,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: core
+          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
+          cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # SwiftPM checkouts and Xcode build products.
