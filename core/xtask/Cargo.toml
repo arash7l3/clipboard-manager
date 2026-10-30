@@ -1,0 +1,18 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+description = "Build tasks: generate the Swift and C# bindings and package the core for the apps."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow = "1"
+camino = "1"
+cargo_metadata = "0.19"
+uniffi_bindgen.workspace = true
+uniffi-bindgen-cs.workspace = true
+
+[lints]
+workspace = true

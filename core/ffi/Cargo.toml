@@ -1,0 +1,25 @@
+[package]
+name = "clipo-ffi"
+version = "0.1.0"
+description = "UniFFI exports of clipo-core for the Swift (macOS) and C# (Windows) apps."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "clipo_ffi"
+# staticlib for the macOS XCFramework, cdylib for the Windows DLL and for
+# reading the UniFFI metadata when generating bindings.
+crate-type = ["lib", "staticlib", "cdylib"]
+
+[dependencies]
+clipo-core.workspace = true
+thiserror = "2"
+uniffi.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

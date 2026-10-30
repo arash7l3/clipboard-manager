@@ -1,2 +1,2 @@
 # Product names used in prose, not code identifiers.
-doc-valid-idents = ["SQLCipher", "CommonCrypto", ".."]
+doc-valid-idents = ["SQLCipher", "CommonCrypto", "UniFFI", "XCFramework", ".."]

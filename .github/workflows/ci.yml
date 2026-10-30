@@ -22,7 +22,7 @@ jobs:
   core:
     name: Rust core
     runs-on: [self-hosted, macOS, clipboard-manager]
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +32,8 @@ jobs:
         run: echo "exists=${{ hashFiles('core/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
 
       # Uses the Rust installed on the runner: no network call per run.
-      # Update it on the Mac with `rustup update`.
+      # Update it on the Mac with `rustup update`. The Apple targets are for
+      # the universal library in the Swift smoke test; added only if missing.
       - name: Use installed Rust toolchain
         if: steps.crate.outputs.exists == 'true'
         run: |
@@ -42,6 +43,9 @@ jobs:
           rustc --version
           cargo fmt --version
           cargo clippy --version
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            rustup target list --installed | grep -qx "$target" || rustup target add "$target"
+          done
 
       - name: rustfmt
         if: steps.crate.outputs.exists == 'true'
@@ -49,11 +53,34 @@ jobs:
 
       - name: clippy
         if: steps.crate.outputs.exists == 'true'
-        run: cargo clippy --manifest-path core/Cargo.toml --all-targets --all-features -- -D warnings
+        run: cargo clippy --manifest-path core/Cargo.toml --workspace --all-targets --all-features -- -D warnings
 
       - name: Test
         if: steps.crate.outputs.exists == 'true'
-        run: cargo test --manifest-path core/Cargo.toml --all-features
+        run: cargo test --manifest-path core/Cargo.toml --workspace --all-features
+
+      # Swift and C# bindings both generate (the Phase 1 exit check).
+      - name: Generate bindings
+        if: steps.crate.outputs.exists == 'true'
+        working-directory: core
+        run: cargo xtask bindings
+
+      # Packages the universal static library and runs Swift code against it.
+      - name: Swift smoke test
+        if: steps.crate.outputs.exists == 'true'
+        working-directory: core
+        run: cargo xtask smoke swift
+
+      # The Mac runner may not have .NET; the Windows job (Phase 3) will.
+      - name: C# smoke test
+        if: steps.crate.outputs.exists == 'true'
+        working-directory: core
+        run: |
+          if command -v dotnet >/dev/null; then
+            cargo xtask smoke csharp
+          else
+            echo "::notice::dotnet is not installed on this runner; C# smoke test skipped"
+          fi
 
   macos:
     name: macOS app

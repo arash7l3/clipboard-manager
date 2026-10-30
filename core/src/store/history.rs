@@ -43,7 +43,6 @@ impl HistoryLimits {
 
 /// Why a capture was not stored.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum SkipReason {
     /// Private mode is on.
     PrivateMode,
@@ -57,7 +56,6 @@ pub enum SkipReason {
 
 /// What [`Store::record`] did with a capture.
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum Recorded {
     /// New content, stored as a new item.
     Added(ClipItem),
@@ -145,7 +143,8 @@ impl Store {
 
     /// Deletes the oldest unpinned items beyond the limit. Returns how many.
     fn enforce_item_limit(&mut self) -> Result<usize, CoreError> {
-        let keep = super::codec::to_i64(self.limits.max_items, "item limit")?;
+        // A limit SQLite cannot hold keeps everything anyway.
+        let keep = i64::try_from(self.limits.max_items).unwrap_or(i64::MAX);
         Ok(self.conn.execute(
             "DELETE FROM items WHERE pinned = 0 AND id NOT IN \
              (SELECT id FROM items WHERE pinned = 0 \

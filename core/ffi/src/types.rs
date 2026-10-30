@@ -1,0 +1,486 @@
+//! FFI mirrors of the core's model and store types, with conversions.
+//!
+//! Content-bearing types do not implement `Debug` (see the crate docs).
+
+use std::time::{Duration, SystemTime};
+
+use clipo_core::Timestamp;
+
+/// Saturating `usize` to `u64`; never loses anything on supported targets.
+fn to_u64(n: usize) -> u64 {
+    u64::try_from(n).unwrap_or(u64::MAX)
+}
+
+/// Saturating `u64` to `usize`: a limit past `usize::MAX` means "no limit".
+fn to_usize(n: u64) -> usize {
+    usize::try_from(n).unwrap_or(usize::MAX)
+}
+
+/// The app a capture came from: a bundle identifier on macOS, an executable
+/// name or AUMID on Windows.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SourceApp {
+    /// Stable identifier, matched against the ignore list.
+    pub id: String,
+    /// Display name, if known.
+    #[uniffi(default = None)]
+    pub name: Option<String>,
+}
+
+/// Text and an optional rich representation of the same text.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct TextContent {
+    /// Plain-text form; never empty. Used for search and dedup.
+    pub plain: String,
+    /// RTF or HTML form, restored alongside the plain text.
+    #[uniffi(default = None)]
+    pub rich: Option<RichText>,
+}
+
+/// A rich-text representation.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct RichText {
+    /// Markup language of `data`.
+    pub format: RichTextFormat,
+    /// The markup itself.
+    pub data: String,
+}
+
+/// Rich-text markup languages.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum RichTextFormat {
+    /// Rich Text Format.
+    Rtf,
+    /// HTML fragment.
+    Html,
+}
+
+/// An image and its thumbnail.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ImageContent {
+    /// Encoding of `data`.
+    pub format: ImageFormat,
+    /// Width in pixels.
+    pub width: u32,
+    /// Height in pixels.
+    pub height: u32,
+    /// The encoded image.
+    pub data: Vec<u8>,
+    /// Small PNG preview made by the app, if any.
+    #[uniffi(default = None)]
+    pub thumbnail: Option<Vec<u8>>,
+}
+
+/// Image encodings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum ImageFormat {
+    /// PNG.
+    Png,
+    /// TIFF (the macOS pasteboard's native format).
+    Tiff,
+    /// JPEG.
+    Jpeg,
+    /// BMP / DIB (the Windows clipboard's native format).
+    Bmp,
+}
+
+/// A file or folder reference. Clipo stores the path, not the file.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct FileRef {
+    /// Absolute path; never empty.
+    pub path: String,
+    /// Size at capture time, if known.
+    #[uniffi(default = None)]
+    pub size_bytes: Option<u64>,
+}
+
+/// What was copied.
+#[derive(Clone, PartialEq, Eq, uniffi::Enum)]
+pub enum ItemContent {
+    /// Text, possibly with a rich form.
+    Text {
+        /// The text.
+        text: TextContent,
+    },
+    /// An image.
+    Image {
+        /// The image.
+        image: ImageContent,
+    },
+    /// One or more files.
+    Files {
+        /// The files, in clipboard order; never empty.
+        files: Vec<FileRef>,
+    },
+}
+
+/// One clipboard change, as handed to [`ClipStore::record`](crate::ClipStore::record).
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Capture {
+    /// What was copied.
+    pub content: ItemContent,
+    /// Where it was copied from, if known.
+    #[uniffi(default = None)]
+    pub source_app: Option<SourceApp>,
+    /// When the watcher saw the change.
+    pub captured_at: SystemTime,
+    /// The source marked the data as concealed or transient
+    /// (`org.nspasteboard.ConcealedType`, `ExcludeClipboardContentFromMonitorProcessing`).
+    #[uniffi(default = false)]
+    pub concealed: bool,
+}
+
+/// A stored history item.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ClipItem {
+    /// Store-assigned id, stable for the item's lifetime.
+    pub id: i64,
+    /// What was copied.
+    pub content: ItemContent,
+    /// Pinned items are kept past the history limit and auto-clear.
+    pub pinned: bool,
+    /// Where it was first copied from, if known.
+    pub source_app: Option<SourceApp>,
+    /// When the content was first copied.
+    pub created_at: SystemTime,
+    /// When the content was last copied; history is sorted by this.
+    pub last_copied_at: SystemTime,
+}
+
+/// The popup tabs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum Category {
+    /// Every item.
+    All,
+    /// Text items.
+    Text,
+    /// Image items.
+    Images,
+    /// File items.
+    Files,
+    /// Pinned items of any kind.
+    Pinned,
+}
+
+/// A tab and search text, as typed in the popup.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Query {
+    /// The tab to list.
+    pub category: Category,
+    /// Words that must all appear in an item's text or file paths, ignoring
+    /// case and Persian/Arabic letter variants. Empty lists the whole tab.
+    #[uniffi(default = "")]
+    pub text: String,
+    /// At most this many results, newest first.
+    #[uniffi(default = None)]
+    pub limit: Option<u64>,
+}
+
+/// History size limits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+pub struct HistoryLimits {
+    /// Unpinned items kept; the oldest are evicted past this. At least 1.
+    pub max_items: u64,
+    /// Larger captures are skipped. At least 1.
+    pub max_item_bytes: u64,
+}
+
+/// What is captured and how long it is kept.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct CaptureRules {
+    /// Capture nothing while on.
+    #[uniffi(default = false)]
+    pub private_mode: bool,
+    /// Source app ids never captured, compared case-insensitively.
+    #[uniffi(default = [])]
+    pub ignored_apps: Vec<String>,
+    /// Unpinned items older than this are deleted by
+    /// [`ClipStore::clear_expired`](crate::ClipStore::clear_expired).
+    /// `None` keeps them; zero is rejected.
+    #[uniffi(default = None)]
+    pub auto_clear_after: Option<Duration>,
+}
+
+/// Why a capture was not stored.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum SkipReason {
+    /// Private mode is on.
+    PrivateMode,
+    /// The source marked the data as concealed or transient.
+    Concealed,
+    /// The source app is on the ignore list.
+    IgnoredApp,
+    /// The content is larger than [`HistoryLimits::max_item_bytes`].
+    TooLarge,
+}
+
+/// What [`ClipStore::record`](crate::ClipStore::record) did with a capture.
+#[derive(Clone, PartialEq, Eq, uniffi::Enum)]
+pub enum Recorded {
+    /// New content, stored as a new item.
+    Added {
+        /// The new item.
+        item: ClipItem,
+    },
+    /// Content already in history; that item moved to the top.
+    Bumped {
+        /// The existing item, with its new copy time.
+        item: ClipItem,
+    },
+    /// Nothing was stored.
+    Skipped {
+        /// Why.
+        reason: SkipReason,
+    },
+}
+
+// Core to FFI.
+
+impl From<clipo_core::SourceApp> for SourceApp {
+    fn from(app: clipo_core::SourceApp) -> Self {
+        Self {
+            id: app.id,
+            name: app.name,
+        }
+    }
+}
+
+impl From<clipo_core::RichTextFormat> for RichTextFormat {
+    fn from(format: clipo_core::RichTextFormat) -> Self {
+        match format {
+            clipo_core::RichTextFormat::Rtf => Self::Rtf,
+            clipo_core::RichTextFormat::Html => Self::Html,
+        }
+    }
+}
+
+impl From<clipo_core::ImageFormat> for ImageFormat {
+    fn from(format: clipo_core::ImageFormat) -> Self {
+        match format {
+            clipo_core::ImageFormat::Png => Self::Png,
+            clipo_core::ImageFormat::Tiff => Self::Tiff,
+            clipo_core::ImageFormat::Jpeg => Self::Jpeg,
+            clipo_core::ImageFormat::Bmp => Self::Bmp,
+        }
+    }
+}
+
+impl From<clipo_core::FileRef> for FileRef {
+    fn from(file: clipo_core::FileRef) -> Self {
+        Self {
+            path: file.path,
+            size_bytes: file.size_bytes,
+        }
+    }
+}
+
+impl From<clipo_core::ItemContent> for ItemContent {
+    fn from(content: clipo_core::ItemContent) -> Self {
+        match content {
+            clipo_core::ItemContent::Text(text) => Self::Text {
+                text: TextContent {
+                    plain: text.plain,
+                    rich: text.rich.map(|rich| RichText {
+                        format: rich.format.into(),
+                        data: rich.data,
+                    }),
+                },
+            },
+            clipo_core::ItemContent::Image(image) => Self::Image {
+                image: ImageContent {
+                    format: image.format.into(),
+                    width: image.width,
+                    height: image.height,
+                    data: image.data,
+                    thumbnail: image.thumbnail,
+                },
+            },
+            clipo_core::ItemContent::Files(files) => Self::Files {
+                files: files.into_iter().map(FileRef::from).collect(),
+            },
+        }
+    }
+}
+
+impl From<clipo_core::ClipItem> for ClipItem {
+    fn from(item: clipo_core::ClipItem) -> Self {
+        Self {
+            id: item.id.as_raw(),
+            content: item.content.into(),
+            pinned: item.pinned,
+            source_app: item.source_app.map(SourceApp::from),
+            created_at: item.created_at.to_system_time(),
+            last_copied_at: item.last_copied_at.to_system_time(),
+        }
+    }
+}
+
+impl From<clipo_core::Category> for Category {
+    fn from(category: clipo_core::Category) -> Self {
+        match category {
+            clipo_core::Category::All => Self::All,
+            clipo_core::Category::Text => Self::Text,
+            clipo_core::Category::Images => Self::Images,
+            clipo_core::Category::Files => Self::Files,
+            clipo_core::Category::Pinned => Self::Pinned,
+        }
+    }
+}
+
+impl From<clipo_core::HistoryLimits> for HistoryLimits {
+    fn from(limits: clipo_core::HistoryLimits) -> Self {
+        Self {
+            max_items: to_u64(limits.max_items),
+            max_item_bytes: to_u64(limits.max_item_bytes),
+        }
+    }
+}
+
+impl From<clipo_core::CaptureRules> for CaptureRules {
+    fn from(rules: clipo_core::CaptureRules) -> Self {
+        Self {
+            private_mode: rules.private_mode,
+            ignored_apps: rules.ignored_apps,
+            auto_clear_after: rules.auto_clear_after,
+        }
+    }
+}
+
+impl From<clipo_core::SkipReason> for SkipReason {
+    fn from(reason: clipo_core::SkipReason) -> Self {
+        match reason {
+            clipo_core::SkipReason::PrivateMode => Self::PrivateMode,
+            clipo_core::SkipReason::Concealed => Self::Concealed,
+            clipo_core::SkipReason::IgnoredApp => Self::IgnoredApp,
+            clipo_core::SkipReason::TooLarge => Self::TooLarge,
+        }
+    }
+}
+
+impl From<clipo_core::Recorded> for Recorded {
+    fn from(recorded: clipo_core::Recorded) -> Self {
+        match recorded {
+            clipo_core::Recorded::Added(item) => Self::Added { item: item.into() },
+            clipo_core::Recorded::Bumped(item) => Self::Bumped { item: item.into() },
+            clipo_core::Recorded::Skipped(reason) => Self::Skipped {
+                reason: reason.into(),
+            },
+        }
+    }
+}
+
+// FFI to core.
+
+impl From<SourceApp> for clipo_core::SourceApp {
+    fn from(app: SourceApp) -> Self {
+        Self {
+            id: app.id,
+            name: app.name,
+        }
+    }
+}
+
+impl From<RichTextFormat> for clipo_core::RichTextFormat {
+    fn from(format: RichTextFormat) -> Self {
+        match format {
+            RichTextFormat::Rtf => Self::Rtf,
+            RichTextFormat::Html => Self::Html,
+        }
+    }
+}
+
+impl From<ImageFormat> for clipo_core::ImageFormat {
+    fn from(format: ImageFormat) -> Self {
+        match format {
+            ImageFormat::Png => Self::Png,
+            ImageFormat::Tiff => Self::Tiff,
+            ImageFormat::Jpeg => Self::Jpeg,
+            ImageFormat::Bmp => Self::Bmp,
+        }
+    }
+}
+
+impl From<FileRef> for clipo_core::FileRef {
+    fn from(file: FileRef) -> Self {
+        Self {
+            path: file.path,
+            size_bytes: file.size_bytes,
+        }
+    }
+}
+
+impl From<ItemContent> for clipo_core::ItemContent {
+    fn from(content: ItemContent) -> Self {
+        match content {
+            ItemContent::Text { text } => Self::Text(clipo_core::TextContent {
+                plain: text.plain,
+                rich: text.rich.map(|rich| clipo_core::RichText {
+                    format: rich.format.into(),
+                    data: rich.data,
+                }),
+            }),
+            ItemContent::Image { image } => Self::Image(clipo_core::ImageContent {
+                format: image.format.into(),
+                width: image.width,
+                height: image.height,
+                data: image.data,
+                thumbnail: image.thumbnail,
+            }),
+            ItemContent::Files { files } => {
+                Self::Files(files.into_iter().map(clipo_core::FileRef::from).collect())
+            }
+        }
+    }
+}
+
+impl From<Capture> for clipo_core::Capture {
+    fn from(capture: Capture) -> Self {
+        Self {
+            content: capture.content.into(),
+            source_app: capture.source_app.map(clipo_core::SourceApp::from),
+            captured_at: Timestamp::from(capture.captured_at),
+            concealed: capture.concealed,
+        }
+    }
+}
+
+impl From<Category> for clipo_core::Category {
+    fn from(category: Category) -> Self {
+        match category {
+            Category::All => Self::All,
+            Category::Text => Self::Text,
+            Category::Images => Self::Images,
+            Category::Files => Self::Files,
+            Category::Pinned => Self::Pinned,
+        }
+    }
+}
+
+impl From<Query> for clipo_core::Query {
+    fn from(query: Query) -> Self {
+        Self {
+            category: query.category.into(),
+            text: query.text,
+            limit: query.limit.map(to_usize),
+        }
+    }
+}
+
+impl From<HistoryLimits> for clipo_core::HistoryLimits {
+    fn from(limits: HistoryLimits) -> Self {
+        Self {
+            max_items: to_usize(limits.max_items),
+            max_item_bytes: to_usize(limits.max_item_bytes),
+        }
+    }
+}
+
+impl From<CaptureRules> for clipo_core::CaptureRules {
+    fn from(rules: CaptureRules) -> Self {
+        Self {
+            private_mode: rules.private_mode,
+            ignored_apps: rules.ignored_apps,
+            auto_clear_after: rules.auto_clear_after,
+        }
+    }
+}

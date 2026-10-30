@@ -1,0 +1,22 @@
+<!-- Smoke test for the C# bindings. Run with `cargo xtask smoke csharp`. -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Whatever .NET the installed SDK ships, so no targeting pack is downloaded. -->
+    <TargetFramework>net$(BundledNETCoreAppTargetFrameworkVersion)</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The generated bindings use unsafe code for the FFI calls. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Written by `cargo xtask smoke csharp`. -->
+    <Compile Include="../../../generated/csharp/ClipoCore.cs" />
+    <!-- The native library, from the CLIPO_NATIVE_LIBRARY environment variable. -->
+    <None Include="$(CLIPO_NATIVE_LIBRARY)" Condition="'$(CLIPO_NATIVE_LIBRARY)' != ''"
+          Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

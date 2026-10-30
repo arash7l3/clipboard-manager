@@ -231,6 +231,21 @@ fn lowering_the_limit_deletes_surplus_now() {
 }
 
 #[test]
+fn huge_limits_mean_no_limit() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let huge = HistoryLimits {
+        max_items: usize::MAX,
+        max_item_bytes: usize::MAX,
+    };
+    store.set_limits(huge).unwrap();
+    assert_eq!(store.limits(), huge);
+    store.record(capture(text("a"), 1)).unwrap();
+    store.record(capture(text("b"), 2)).unwrap();
+    assert_eq!(texts(&store.list().unwrap()), ["b", "a"]);
+}
+
+#[test]
 fn evicted_files_leave_no_file_rows() {
     let fx = Fixture::new();
     let mut store = fx.open();
@@ -370,6 +385,11 @@ fn limit_keeps_the_newest() {
     };
     assert_eq!(ids(&store.search(&none).unwrap()), []);
     assert_eq!(store.search(&Query::default()).unwrap().len(), 4);
+    let huge = Query {
+        limit: Some(usize::MAX),
+        ..Query::default()
+    };
+    assert_eq!(store.search(&huge).unwrap().len(), 4);
 }
 
 // --- Search ---
