@@ -14,8 +14,12 @@ windows/**/obj/
 windows/.vs/
 *.user
 
-# Generated UniFFI bindings
+# Generated UniFFI bindings and packages (cargo xtask)
 core/generated/
+core/dist/
+core/ffi/smoke/**/.build/
+core/ffi/smoke/**/bin/
+core/ffi/smoke/**/obj/
 
 # OS and editor
 .DS_Store

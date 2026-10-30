@@ -4,7 +4,7 @@ use rusqlite::functions::FunctionFlags;
 use rusqlite::types::Value;
 use rusqlite::{params_from_iter, Connection};
 
-use super::codec::{item_columns, kind_code, to_i64, RawItem};
+use super::codec::{item_columns, kind_code, RawItem};
 use super::Store;
 use crate::error::CoreError;
 use crate::model::{Category, ClipItem};
@@ -120,7 +120,8 @@ impl Store {
         sql.push_str(" ORDER BY last_copied_at DESC, id DESC");
         if let Some(limit) = query.limit {
             sql.push_str(" LIMIT ?");
-            args.push(Value::Integer(to_i64(limit, "limit")?));
+            // A limit SQLite cannot hold returns everything anyway.
+            args.push(Value::Integer(i64::try_from(limit).unwrap_or(i64::MAX)));
         }
 
         let raws = self

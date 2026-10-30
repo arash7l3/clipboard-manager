@@ -1,0 +1,3 @@
+[alias]
+# Bindings and packaging tasks; run `cargo xtask` from core/ for help.
+xtask = "run --quiet --package xtask --bin xtask --"

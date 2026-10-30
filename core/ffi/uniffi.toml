@@ -1,0 +1,15 @@
+# Names of the generated bindings. Read by `cargo xtask bindings`.
+
+[bindings.swift]
+# `import ClipoCore` in the macOS app; the C header module is ClipoCoreFFI.
+module_name = "ClipoCore"
+ffi_module_name = "ClipoCoreFFI"
+ffi_module_filename = "ClipoCoreFFI"
+
+[bindings.csharp]
+namespace = "Clipo.Core"
+# Loads clipo_ffi.dll (libclipo_ffi.so / .dylib when testing elsewhere).
+cdylib_name = "clipo_ffi"
+global_methods_class_name = "ClipoCore"
+# Public so a separate class library or test project can use the bindings.
+access_modifier = "public"
