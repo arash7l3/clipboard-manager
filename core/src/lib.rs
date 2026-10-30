@@ -20,4 +20,4 @@ pub use model::{
     Capture, Category, ClipItem, ContentHash, FileRef, ImageContent, ImageFormat, ItemContent,
     ItemId, ItemKind, RichText, RichTextFormat, SourceApp, TextContent, Timestamp,
 };
-pub use store::{HistoryLimits, Query, Recorded, SkipReason, Store};
+pub use store::{CaptureRules, HistoryLimits, Query, Recorded, SkipReason, Store};

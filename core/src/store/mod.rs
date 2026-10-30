@@ -7,6 +7,7 @@
 
 mod codec;
 mod history;
+mod rules;
 mod schema;
 mod search;
 
@@ -22,6 +23,7 @@ use crate::key::{load_key, DatabaseKey, KeyStore};
 use crate::model::{ClipItem, ContentHash, FileRef, ItemContent, ItemId, SourceApp, Timestamp};
 use codec::{item_columns, ItemColumns, RawItem};
 pub use history::{HistoryLimits, Recorded, SkipReason, DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEM_BYTES};
+pub use rules::CaptureRules;
 pub use search::Query;
 
 /// How long a write waits for a lock held by another connection.
@@ -34,6 +36,7 @@ const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
 pub struct Store {
     conn: Connection,
     limits: HistoryLimits,
+    rules: CaptureRules,
 }
 
 impl Store {
@@ -83,6 +86,7 @@ impl Store {
         Ok(Self {
             conn,
             limits: HistoryLimits::default(),
+            rules: CaptureRules::default(),
         })
     }
 
@@ -372,5 +376,7 @@ fn expect_one(changed: usize, id: ItemId) -> Result<(), CoreError> {
 
 #[cfg(test)]
 mod history_tests;
+#[cfg(test)]
+mod rules_tests;
 #[cfg(test)]
 mod tests;
