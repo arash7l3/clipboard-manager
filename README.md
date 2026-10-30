@@ -8,7 +8,7 @@ Status: early development (Phase 0 done, Phase 1 in progress). See the [work pla
 
 | Path | Contents |
 |---|---|
-| `core/` | Rust engine (`clipo-core`): data model done; store, dedup, search, ignore rules planned |
+| `core/` | Rust engine (`clipo-core`): data model and encrypted store done; dedup, search, ignore rules planned |
 | `macos/` | Swift app, SwiftUI + AppKit (planned) |
 | `windows/` | C# app, WinUI 3 (planned) |
 | `docs/` | Work plan and [decision records](docs/decisions/README.md) |
