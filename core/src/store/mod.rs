@@ -109,7 +109,7 @@ impl Store {
         Ok(())
     }
 
-    /// Stores new content as an unpinned item copied at `at`.
+    /// Stores new content as an unpinned item copied at `at`, first in the history.
     ///
     /// Low-level: no duplicate merging and no limits. Watchers use
     /// [`Store::record`].
@@ -132,8 +132,9 @@ impl Store {
         let inserted = tx.execute(
             "INSERT INTO items (kind, content_hash, source_app_id, source_app_name, \
              created_at, last_copied_at, byte_size, text_plain, rich_format, rich_data, \
-             image_format, image_width, image_height, image_data, thumbnail) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+             image_format, image_width, image_height, image_data, thumbnail, copy_order) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, \
+             (SELECT coalesce(max(copy_order), 0) + 1 FROM items))",
             params![
                 columns.kind,
                 hash.as_bytes().as_slice(),
@@ -205,7 +206,7 @@ impl Store {
         raw.map(|raw| self.finish(raw)).transpose()
     }
 
-    /// All items, most recently copied first.
+    /// All items, most recently copied first (see [`ClipItem::last_copied_at`]).
     ///
     /// # Errors
     ///
@@ -216,7 +217,7 @@ impl Store {
             .prepare_cached(concat!(
                 "SELECT ",
                 item_columns!(),
-                " FROM items ORDER BY last_copied_at DESC, id DESC"
+                " FROM items ORDER BY copy_order DESC"
             ))?
             .query_map([], RawItem::from_row)?
             .collect::<Result<Vec<_>, _>>()?;
@@ -237,21 +238,24 @@ impl Store {
             .map(ItemId::from_raw))
     }
 
-    /// Records that the item was copied again at `at`, moving it to the top.
+    /// Records that the item was copied again at `at`, moving it to the top
+    /// whatever `at` is.
     ///
     /// # Errors
     ///
     /// [`CoreError::ItemNotFound`] if no item has this id.
     pub fn touch(&mut self, id: ItemId, at: Timestamp) -> Result<(), CoreError> {
         let changed = self.conn.execute(
-            "UPDATE items SET last_copied_at = ?2 WHERE id = ?1",
+            "UPDATE items SET last_copied_at = ?2, \
+             copy_order = (SELECT max(copy_order) + 1 FROM items) WHERE id = ?1",
             params![id.as_raw(), at.as_millis()],
         )?;
         expect_one(changed, id)
     }
 
-    /// Deletes the item and its files. Freed pages are overwritten
-    /// (`secure_delete`), so the content does not linger in the file.
+    /// Deletes the item and its files. The content is overwritten in the
+    /// database file and dropped from the WAL, so it cannot be recovered even
+    /// with the key.
     ///
     /// # Errors
     ///
@@ -260,7 +264,8 @@ impl Store {
         let changed = self
             .conn
             .execute("DELETE FROM items WHERE id = ?1", [id.as_raw()])?;
-        expect_one(changed, id)
+        expect_one(changed, id)?;
+        self.purge_deleted()
     }
 
     /// Number of stored items.
@@ -273,6 +278,20 @@ impl Store {
             .conn
             .query_row("SELECT count(*) FROM items", [], |row| row.get(0))?;
         usize::try_from(count).map_err(|_| CoreError::Storage("item count out of range".into()))
+    }
+
+    /// Makes deleted content unrecoverable from the files. `secure_delete`
+    /// zeroes freed pages, but in WAL mode the zeroed pages go to the WAL,
+    /// whose older frames still hold the deleted rows until they are reused.
+    /// A truncating checkpoint writes the zeroed pages into the database and
+    /// empties the WAL. Call after every delete; it is cheap because the WAL
+    /// only holds the writes since the last call.
+    fn purge_deleted(&self) -> Result<(), CoreError> {
+        // Answers (busy, frames, checkpointed). Only another connection can
+        // make it busy, and the store holds the only one.
+        self.conn
+            .query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))?;
+        Ok(())
     }
 
     /// Turns a raw row into an item, loading its files if it has any.

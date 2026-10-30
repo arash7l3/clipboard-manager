@@ -12,7 +12,7 @@ Status: accepted
 
 **Safeguards.**
 - Opening fails unless SQLCipher answers `PRAGMA cipher_version`, so a build with plain SQLite cannot silently store data in the clear.
-- `secure_delete` overwrites freed pages, and temporary data stays in memory.
+- `secure_delete` overwrites freed pages, and temporary data stays in memory. After every delete a truncating WAL checkpoint writes the zeroed pages into the database and empties the WAL, whose older frames would otherwise still hold the deleted rows.
 - On Unix the database file is created readable by its owner only.
 - The core never replaces a key on its own. If the key is missing or wrong, opening fails and the app asks the user before deleting the history.
 

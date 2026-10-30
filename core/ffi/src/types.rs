@@ -143,7 +143,8 @@ pub struct ClipItem {
     pub source_app: Option<SourceApp>,
     /// When the content was first copied.
     pub created_at: SystemTime,
-    /// When the content was last copied; history is sorted by this.
+    /// When the content was last copied. History is sorted by when copies
+    /// were recorded, newest first, even if the clock went back.
     pub last_copied_at: SystemTime,
 }
 
@@ -162,8 +163,9 @@ pub enum Category {
     Pinned,
 }
 
-/// A tab and search text, as typed in the popup.
-#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+/// A tab and search text, as typed in the popup. No `Debug`: the search text
+/// is usually part of something copied.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
 pub struct Query {
     /// The tab to list.
     pub category: Category,

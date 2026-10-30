@@ -88,6 +88,35 @@ fn repeated_copy_moves_the_item_to_the_top() {
 }
 
 #[test]
+fn copies_after_the_clock_went_back_still_come_first() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.set_limits(limits(2)).unwrap();
+    store.record(capture(text("a"), 100)).unwrap();
+    store.record(capture(text("b"), 200)).unwrap();
+
+    // Older than both items: still added on top, and not evicted.
+    let c = added(store.record(capture(text("c"), 50)).unwrap());
+    assert_eq!(texts(&store.list().unwrap()), ["c", "b"]);
+    assert_eq!(store.get(c.id).unwrap(), Some(c));
+
+    // A repeated copy goes to the top whatever its time, and keeps that time.
+    let b = bumped(store.record(capture(text("b"), 10)).unwrap());
+    assert_eq!(b.last_copied_at, at(10));
+    assert_eq!(texts(&store.list().unwrap()), ["b", "c"]);
+}
+
+#[test]
+fn copies_in_the_same_millisecond_keep_their_order() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.record(capture(text("a"), 5)).unwrap();
+    store.record(capture(text("b"), 5)).unwrap();
+    store.record(capture(text("a"), 5)).unwrap();
+    assert_eq!(texts(&store.list().unwrap()), ["a", "b"]);
+}
+
+#[test]
 fn duplicate_keeps_original_source_pin_and_rich_form() {
     let fx = Fixture::new();
     let mut store = fx.open();
@@ -183,6 +212,17 @@ fn copying_again_protects_an_item_from_eviction() {
     store.record(capture(text("a"), 3)).unwrap();
     store.record(capture(text("c"), 4)).unwrap();
     assert_eq!(texts(&store.list().unwrap()), ["c", "a"]);
+}
+
+#[test]
+fn eviction_empties_the_wal() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.set_limits(limits(1)).unwrap();
+    store.record(capture(text("a"), 1)).unwrap();
+    assert!(fx.wal_len() > 0, "test needs WAL mode");
+    store.record(capture(text("b"), 2)).unwrap();
+    assert_eq!(fx.wal_len(), 0);
 }
 
 #[test]
@@ -443,6 +483,20 @@ fn search_is_unicode_aware() {
     assert_eq!(found(&store, "كتاب"), ["می\u{200C}خواهم کتاب ۱۲۳"]);
     assert_eq!(found(&store, "میخواهم"), ["می\u{200C}خواهم کتاب ۱۲۳"]);
     assert_eq!(found(&store, "123"), ["می\u{200C}خواهم کتاب ۱۲۳"]);
+}
+
+#[test]
+fn words_that_fold_to_nothing_are_ignored() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.record(capture(text("hello"), 1)).unwrap();
+    store.record(capture(image(None), 2)).unwrap();
+
+    // A lone ZWNJ, tatweel or diacritic is like whitespace: the image stays.
+    for blank in ["\u{200C}", "\u{0640}", "\u{064E}"] {
+        assert_eq!(found(&store, blank), ["Image", "hello"]);
+        assert_eq!(found(&store, &format!("hel {blank}")), ["hello"]);
+    }
 }
 
 #[test]

@@ -71,8 +71,10 @@ pub struct ClipItem {
     pub source_app: Option<SourceApp>,
     /// When the item was first captured.
     pub created_at: Timestamp,
-    /// When the same content was most recently copied. History is ordered by
-    /// this, newest first, so a duplicate copy moves the item to the top.
+    /// When the same content was most recently copied. History lists items
+    /// in the order these copies were recorded, newest first, so a duplicate
+    /// copy moves the item to the top. That order does not follow the clock:
+    /// a copy recorded after the clock went back still comes first.
     pub last_copied_at: Timestamp,
 }
 
