@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recording: Task<Void, Never>?
     private var popup: PopupController?
     private var hotkey: GlobalHotkey?
+    private let settings = SettingsCoordinator()
+    private let settingsWindow = SettingsWindowController()
     private var explainedAccessibility = false
 
     private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
@@ -23,11 +25,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusMenu.onRetry = { [weak self] in self?.openHistory() }
         statusMenu.onShowHistory = { [weak self] in self?.togglePopup() }
+        statusMenu.onShowSettings = { [weak self] in self?.settingsWindow.show() }
         statusItem = statusMenu.install()
 
         let hotkey = GlobalHotkey { [weak self] in self?.togglePopup() }
-        statusMenu.showShortcut(hotkey.register(.showHistory) ? .showHistory : nil)
+        let combo = InterfaceSettings.hotkey().combo
+        statusMenu.showShortcut(hotkey.register(combo) ? combo : nil)
         self.hotkey = hotkey
+
+        settings.onHotkeyChange = { [weak self] choice in self?.moveHotkey(to: choice) ?? false }
+        settings.onHistoryTrimmed = { [weak self] count in self?.historyChanged(itemCount: count) }
+        settings.start()
 
         openHistory()
     }
@@ -49,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 popup = makePopup(for: store)
                 statusMenu.show(.ready(itemCount: itemCount))
                 startCapturing(into: store)
+                settings.attach(store)
             case .keyProblem:
                 statusMenu.show(.unavailable)
                 offerNewHistory()
@@ -93,13 +102,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// After a copy was stored. `itemCount` is the new count when an item was
-    /// added, `nil` when an existing one moved to the top.
+    /// After a copy was stored or the settings trimmed the history.
+    /// `itemCount` is the new count when it is known, `nil` when an existing
+    /// item only moved to the top.
     private func historyChanged(itemCount: UInt64?) {
         if let itemCount {
             statusMenu.show(.ready(itemCount: itemCount))
         }
         popup?.historyChanged()
+    }
+
+    /// Moves the global shortcut. When another app holds the new one, the
+    /// old one is registered again and the caller is told it failed.
+    private func moveHotkey(to combo: KeyCombo) -> Bool {
+        guard let hotkey else { return false }
+        let previous = hotkey.combo
+        if hotkey.register(combo) {
+            statusMenu.showShortcut(combo)
+            return true
+        }
+        NSSound.beep()
+        let restored = previous.flatMap { hotkey.register($0) ? $0 : nil }
+        statusMenu.showShortcut(restored)
+        return false
     }
 
     private func makePopup(for store: ClipStore) -> PopupController {

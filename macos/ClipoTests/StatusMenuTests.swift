@@ -54,6 +54,19 @@ struct StatusMenuTests {
         #expect(!menu.validateMenuItem(menu.showHistoryItem))
     }
 
+    @Test func settingsItemCallsBack() throws {
+        let menu = StatusMenu()
+        #expect(menu.menu.items.contains(menu.settingsItem))
+        #expect(menu.settingsItem.keyEquivalent == ",")
+        #expect(menu.validateMenuItem(menu.settingsItem))
+
+        var shown = 0
+        menu.onShowSettings = { shown += 1 }
+        let action = try #require(menu.settingsItem.action)
+        _ = NSApp.sendAction(action, to: menu.settingsItem.target, from: menu.settingsItem)
+        #expect(shown == 1)
+    }
+
     @Test func shortcutShowsOnlyWhenRegistered() {
         let menu = StatusMenu()
         menu.showShortcut(.showHistory)
