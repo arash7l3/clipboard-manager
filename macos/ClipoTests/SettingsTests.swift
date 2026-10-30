@@ -4,8 +4,11 @@ import ClipoCore
 import Foundation
 import Testing
 
-private func freshDefaults() throws -> UserDefaults {
-    let suite = "io.github.arash7l3.Clipo.tests.\(UUID().uuidString)"
+private func uniqueSuite() -> String {
+    "io.github.arash7l3.Clipo.tests.\(UUID().uuidString)"
+}
+
+private func freshDefaults(suite: String = uniqueSuite()) throws -> UserDefaults {
     let defaults = try #require(UserDefaults(suiteName: suite))
     defaults.removePersistentDomain(forName: suite)
     return defaults
@@ -38,7 +41,8 @@ struct InterfaceSettingsTests {
     }
 
     @Test func languageIsAppliedThroughAppleLanguages() throws {
-        let defaults = try freshDefaults()
+        let suite = uniqueSuite()
+        let defaults = try freshDefaults(suite: suite)
         InterfaceSettings.applyLanguage(.farsi, defaults: defaults)
         #expect(defaults.stringArray(forKey: InterfaceSettings.appleLanguagesKey) == ["fa"])
 
@@ -46,7 +50,9 @@ struct InterfaceSettingsTests {
         #expect(defaults.stringArray(forKey: InterfaceSettings.appleLanguagesKey) == ["en"])
 
         InterfaceSettings.applyLanguage(.system, defaults: defaults)
-        #expect(defaults.object(forKey: InterfaceSettings.appleLanguagesKey) == nil)
+        // A suite also reads the system-wide languages; look at its own domain.
+        let own = defaults.persistentDomain(forName: suite)
+        #expect(own?[InterfaceSettings.appleLanguagesKey] == nil)
     }
 
     @Test func everyShortcutIsDistinctAndUsesTwoModifiers() {
@@ -77,7 +83,7 @@ struct HistorySettingsTests {
         let defaults = try freshDefaults()
         #expect(HistorySettings.autoClearAfter(defaults: defaults) == nil)
         defaults.set(7, forKey: HistorySettings.autoClearDaysKey)
-        #expect(HistorySettings.autoClearAfter(defaults: defaults) == 7 * 86_400)
+        #expect(HistorySettings.autoClearAfter(defaults: defaults) == TimeInterval(7 * 86_400))
         defaults.set(-3, forKey: HistorySettings.autoClearDaysKey)
         #expect(HistorySettings.autoClearAfter(defaults: defaults) == nil)
     }
