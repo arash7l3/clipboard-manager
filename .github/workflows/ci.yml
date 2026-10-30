@@ -14,6 +14,10 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
 
+# No GitHub cache actions: the self-hosted Mac keeps ~/.cargo between runs, and
+# build output goes to ~/Library/Caches/clipo-ci, outside the work folder that
+# checkout cleans. Nothing is uploaded or downloaded for caching.
+
 jobs:
   core:
     name: Rust core
@@ -34,19 +38,10 @@ jobs:
         run: |
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.cargo/bin:$PATH"
+          echo "CARGO_TARGET_DIR=$HOME/Library/Caches/clipo-ci/target" >> "$GITHUB_ENV"
           rustc --version
           cargo fmt --version
           cargo clippy --version
-
-      # Caches ~/.cargo registry/git and core/target, keyed on Cargo.lock + toolchain.
-      - name: Cache cargo
-        if: steps.crate.outputs.exists == 'true'
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: core
-          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
-          cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: rustfmt
         if: steps.crate.outputs.exists == 'true'
@@ -78,32 +73,11 @@ jobs:
         run: |
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/.cargo/bin:$PATH"
+          echo "CARGO_TARGET_DIR=$HOME/Library/Caches/clipo-ci/target" >> "$GITHUB_ENV"
           rustc --version
           for target in aarch64-apple-darwin x86_64-apple-darwin; do
             rustup target list --installed | grep -qx "$target" || rustup target add "$target"
           done
-
-      - name: Cache cargo
-        if: steps.xcode.outputs.exists == 'true'
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: core
-          # Never touch ~/.cargo/bin: it holds the runner's rustc/cargo/rustup.
-          cache-bin: false
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-
-      # SwiftPM checkouts and Xcode build products.
-      - name: Cache SwiftPM and DerivedData
-        if: steps.xcode.outputs.exists == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/org.swift.swiftpm
-            ${{ runner.temp }}/DerivedData
-            macos/.build
-          key: swift-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('macos/**/Package.resolved', 'macos/**/project.pbxproj') }}
-          restore-keys: |
-            swift-${{ runner.os }}-${{ runner.arch }}-
 
       - name: SwiftLint
         if: steps.xcode.outputs.exists == 'true'
@@ -118,8 +92,8 @@ jobs:
           xcodebuild test \
             -scheme ClipboardManager \
             -destination 'platform=macOS' \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
-            -clonedSourcePackagesDirPath "$RUNNER_TEMP/DerivedData/SourcePackages" \
+            -derivedDataPath "$HOME/Library/Caches/clipo-ci/DerivedData" \
+            -clonedSourcePackagesDirPath "$HOME/Library/Caches/clipo-ci/DerivedData/SourcePackages" \
             CODE_SIGNING_ALLOWED=NO
 
   # Windows (WinUI/WPF) needs a windows-latest or self-hosted Windows runner; add in Phase 3.
