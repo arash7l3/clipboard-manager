@@ -16,11 +16,17 @@ final class StatusMenu: NSObject {
     let menu = NSMenu()
     /// Called when the user picks "Try Again" after the history failed to open.
     var onRetry: (@MainActor () -> Void)?
+    /// Called when the user picks "Show Clipboard History".
+    var onShowHistory: (@MainActor () -> Void)?
 
     let statusLine = NSMenuItem()
     let retryItem = NSMenuItem()
+    let showHistoryItem = NSMenuItem()
     let aboutItem = NSMenuItem()
     let quitItem = NSMenuItem()
+
+    /// The history is open, so the popup has something to show.
+    private(set) var isReady = false
 
     override init() {
         super.init()
@@ -31,6 +37,13 @@ final class StatusMenu: NSObject {
         retryItem.target = self
         retryItem.action = #selector(retry)
 
+        showHistoryItem.title = String(
+            localized: "Show Clipboard History",
+            comment: "Menu item that opens the history popup"
+        )
+        showHistoryItem.target = self
+        showHistoryItem.action = #selector(showHistory)
+
         aboutItem.title = String(localized: "About Clipo", comment: "Menu item that shows the About panel")
         aboutItem.target = self
         aboutItem.action = #selector(showAbout)
@@ -39,7 +52,7 @@ final class StatusMenu: NSObject {
         quitItem.action = #selector(NSApplication.terminate(_:))
         quitItem.keyEquivalent = "q"
 
-        menu.items = [statusLine, retryItem, .separator(), aboutItem, .separator(), quitItem]
+        menu.items = [statusLine, retryItem, showHistoryItem, .separator(), aboutItem, .separator(), quitItem]
         show(.opening)
     }
 
@@ -78,15 +91,38 @@ final class StatusMenu: NSObject {
             )
         }
         retryItem.isHidden = status != .unavailable
+        if case .ready = status {
+            isReady = true
+        } else {
+            isReady = false
+        }
+    }
+
+    /// Shows `combo` next to "Show Clipboard History", or nothing when the
+    /// global shortcut could not be registered.
+    func showShortcut(_ combo: KeyCombo?) {
+        showHistoryItem.keyEquivalent = combo?.character ?? ""
+        showHistoryItem.keyEquivalentModifierMask = combo?.modifiers ?? []
     }
 
     @objc private func retry() {
         onRetry?()
     }
 
+    @objc private func showHistory() {
+        onShowHistory?()
+    }
+
     @objc private func showAbout() {
         // A menu-bar app is not active by default; bring the panel to the front.
         NSApp.activate()
         NSApp.orderFrontStandardAboutPanel(nil)
+    }
+}
+
+extension StatusMenu: NSMenuItemValidation {
+    /// "Show Clipboard History" is available only while the history is open.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        menuItem !== showHistoryItem || isReady
     }
 }

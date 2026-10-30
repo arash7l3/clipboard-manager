@@ -148,6 +148,66 @@ pub struct ClipItem {
     pub last_copied_at: SystemTime,
 }
 
+/// What a text item looks like, for its icon and screen-reader label.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum TextHint {
+    /// Ordinary text.
+    Plain,
+    /// A single web, mail or file link and nothing else.
+    Link,
+    /// Several lines that look like source code.
+    Code,
+}
+
+/// The part of an item's content a popup row shows.
+#[derive(Clone, PartialEq, Eq, uniffi::Enum)]
+pub enum PreviewContent {
+    /// The start of the item's plain text.
+    Text {
+        /// The first characters of the text (1000 at most).
+        snippet: String,
+        /// The text goes on past `snippet`.
+        truncated: bool,
+        /// What the text looks like.
+        hint: TextHint,
+    },
+    /// An image's size and thumbnail.
+    Image {
+        /// Encoding of the full image.
+        format: ImageFormat,
+        /// Width in pixels.
+        width: u32,
+        /// Height in pixels.
+        height: u32,
+        /// Small PNG preview made by the app, if any.
+        thumbnail: Option<Vec<u8>>,
+    },
+    /// The first files of the item.
+    Files {
+        /// The first files (10 at most), in clipboard order; never empty.
+        files: Vec<FileRef>,
+        /// Number of files in the item.
+        total: u64,
+    },
+}
+
+/// A history item as the popup lists it: long text cut, images as their
+/// thumbnail, long file lists cut. Load the full item with
+/// [`ClipStore::get`](crate::ClipStore::get) when it is picked.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ItemPreview {
+    /// Store-assigned id, stable for the item's lifetime.
+    pub id: i64,
+    /// What the row shows.
+    pub content: PreviewContent,
+    /// Pinned items are kept past the history limit and auto-clear.
+    pub pinned: bool,
+    /// Where it was first copied from, if known.
+    pub source_app: Option<SourceApp>,
+    /// When the content was last copied.
+    pub last_copied_at: SystemTime,
+}
+
 /// The popup tabs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Category {
@@ -313,6 +373,59 @@ impl From<clipo_core::ClipItem> for ClipItem {
             source_app: item.source_app.map(SourceApp::from),
             created_at: item.created_at.to_system_time(),
             last_copied_at: item.last_copied_at.to_system_time(),
+        }
+    }
+}
+
+impl From<clipo_core::TextHint> for TextHint {
+    fn from(hint: clipo_core::TextHint) -> Self {
+        match hint {
+            clipo_core::TextHint::Plain => Self::Plain,
+            clipo_core::TextHint::Link => Self::Link,
+            clipo_core::TextHint::Code => Self::Code,
+        }
+    }
+}
+
+impl From<clipo_core::PreviewContent> for PreviewContent {
+    fn from(content: clipo_core::PreviewContent) -> Self {
+        match content {
+            clipo_core::PreviewContent::Text {
+                snippet,
+                truncated,
+                hint,
+            } => Self::Text {
+                snippet,
+                truncated,
+                hint: hint.into(),
+            },
+            clipo_core::PreviewContent::Image {
+                format,
+                width,
+                height,
+                thumbnail,
+            } => Self::Image {
+                format: format.into(),
+                width,
+                height,
+                thumbnail,
+            },
+            clipo_core::PreviewContent::Files { files, total } => Self::Files {
+                files: files.into_iter().map(FileRef::from).collect(),
+                total: to_u64(total),
+            },
+        }
+    }
+}
+
+impl From<clipo_core::ItemPreview> for ItemPreview {
+    fn from(preview: clipo_core::ItemPreview) -> Self {
+        Self {
+            id: preview.id.as_raw(),
+            content: preview.content.into(),
+            pinned: preview.pinned,
+            source_app: preview.source_app.map(SourceApp::from),
+            last_copied_at: preview.last_copied_at.to_system_time(),
         }
     }
 }

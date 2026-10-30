@@ -6,11 +6,11 @@ use rusqlite::functions::FunctionFlags;
 use rusqlite::types::Value;
 use rusqlite::{params_from_iter, Connection};
 
-use super::codec::{item_columns, kind_code, RawItem};
+use super::codec::{item_columns, kind_code, preview_columns, RawItem, RawPreview};
 use super::Store;
 use crate::error::CoreError;
 use crate::model::redact::Redacted;
-use crate::model::{Category, ClipItem};
+use crate::model::{Category, ClipItem, ItemPreview, PREVIEW_FILES};
 
 /// Name of the SQL function that folds text for matching. See [`fold`].
 const FOLD_FN: &str = "clipo_fold";
@@ -112,35 +112,8 @@ impl Store {
     ///
     /// [`CoreError::Storage`] on a database failure or a corrupt row.
     pub fn search(&self, query: &Query) -> Result<Vec<ClipItem>, CoreError> {
-        // Every value is bound, never spliced into the SQL.
-        let mut sql = String::from(concat!("SELECT ", item_columns!(), " FROM items WHERE 1"));
-        let mut args: Vec<Value> = Vec::new();
-
-        match query.category {
-            Category::All => {}
-            Category::Pinned => sql.push_str(" AND pinned = 1"),
-            Category::Text | Category::Images | Category::Files => {
-                sql.push_str(" AND kind = ?");
-                args.push(Value::Integer(query.category.kind().map_or(-1, kind_code)));
-            }
-        }
-
-        // A word that folds to nothing (a lone ZWNJ or diacritic) would match
-        // every text and no image, so it is dropped like whitespace.
-        let words = query.text.split_whitespace().map(fold);
-        for word in words.filter(|word| !word.is_empty()) {
-            sql.push_str(WORD_CLAUSE);
-            args.push(Value::Text(word.clone()));
-            args.push(Value::Text(word));
-        }
-
-        sql.push_str(" ORDER BY copy_order DESC");
-        if let Some(limit) = query.limit {
-            sql.push_str(" LIMIT ?");
-            // A limit SQLite cannot hold returns everything anyway.
-            args.push(Value::Integer(i64::try_from(limit).unwrap_or(i64::MAX)));
-        }
-
+        let (filter, args) = filter(query);
+        let sql = format!(concat!("SELECT ", item_columns!(), " FROM items{}"), filter);
         let raws = self
             .conn
             .prepare(&sql)?
@@ -148,6 +121,66 @@ impl Store {
             .collect::<Result<Vec<_>, _>>()?;
         raws.into_iter().map(|raw| self.finish(raw)).collect()
     }
+
+    /// Previews of the items matching `query`, in the same order as
+    /// [`search`](Self::search). Cheap enough to run on every keystroke: no
+    /// full image, rich text or long text is loaded.
+    ///
+    /// # Errors
+    ///
+    /// [`CoreError::Storage`] on a database failure or a corrupt row.
+    pub fn previews(&self, query: &Query) -> Result<Vec<ItemPreview>, CoreError> {
+        let (filter, args) = filter(query);
+        let sql = format!("SELECT {} FROM items{filter}", preview_columns());
+        let raws = self
+            .conn
+            .prepare(&sql)?
+            .query_map(params_from_iter(&args), RawPreview::from_row)?
+            .collect::<Result<Vec<_>, _>>()?;
+        raws.into_iter()
+            .map(|raw| {
+                let files = if raw.is_files() {
+                    self.files(raw.id(), Some(PREVIEW_FILES))?
+                } else {
+                    Vec::new()
+                };
+                raw.into_preview(files)
+            })
+            .collect()
+    }
+}
+
+/// The `WHERE`, `ORDER BY` and `LIMIT` clauses for `query`, and the values to
+/// bind to them. Every value is bound, never spliced into the SQL.
+fn filter(query: &Query) -> (String, Vec<Value>) {
+    let mut sql = String::from(" WHERE 1");
+    let mut args: Vec<Value> = Vec::new();
+
+    match query.category {
+        Category::All => {}
+        Category::Pinned => sql.push_str(" AND pinned = 1"),
+        Category::Text | Category::Images | Category::Files => {
+            sql.push_str(" AND kind = ?");
+            args.push(Value::Integer(query.category.kind().map_or(-1, kind_code)));
+        }
+    }
+
+    // A word that folds to nothing (a lone ZWNJ or diacritic) would match
+    // every text and no image, so it is dropped like whitespace.
+    let words = query.text.split_whitespace().map(fold);
+    for word in words.filter(|word| !word.is_empty()) {
+        sql.push_str(WORD_CLAUSE);
+        args.push(Value::Text(word.clone()));
+        args.push(Value::Text(word));
+    }
+
+    sql.push_str(" ORDER BY copy_order DESC");
+    if let Some(limit) = query.limit {
+        sql.push_str(" LIMIT ?");
+        // A limit SQLite cannot hold returns everything anyway.
+        args.push(Value::Integer(i64::try_from(limit).unwrap_or(i64::MAX)));
+    }
+    (sql, args)
 }
 
 #[cfg(test)]

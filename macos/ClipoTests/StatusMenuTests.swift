@@ -35,6 +35,35 @@ struct StatusMenuTests {
         #expect(menu.retryItem.isHidden)
     }
 
+    @Test func showHistoryIsEnabledOnlyWhenReady() throws {
+        let menu = StatusMenu()
+        #expect(menu.menu.items.contains(menu.showHistoryItem))
+        #expect(!menu.validateMenuItem(menu.showHistoryItem))
+        #expect(menu.validateMenuItem(menu.aboutItem))
+
+        menu.show(.ready(itemCount: 0))
+        #expect(menu.validateMenuItem(menu.showHistoryItem))
+
+        var shown = 0
+        menu.onShowHistory = { shown += 1 }
+        let action = try #require(menu.showHistoryItem.action)
+        _ = NSApp.sendAction(action, to: menu.showHistoryItem.target, from: menu.showHistoryItem)
+        #expect(shown == 1)
+
+        menu.show(.unavailable)
+        #expect(!menu.validateMenuItem(menu.showHistoryItem))
+    }
+
+    @Test func shortcutShowsOnlyWhenRegistered() {
+        let menu = StatusMenu()
+        menu.showShortcut(.showHistory)
+        #expect(menu.showHistoryItem.keyEquivalent == "v")
+        #expect(menu.showHistoryItem.keyEquivalentModifierMask == [.command, .shift])
+
+        menu.showShortcut(nil)
+        #expect(menu.showHistoryItem.keyEquivalent.isEmpty)
+    }
+
     @Test func menuBarSymbolExists() {
         #expect(NSImage(systemSymbolName: StatusMenu.symbolName, accessibilityDescription: nil) != nil)
     }
