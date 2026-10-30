@@ -30,7 +30,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 1.5 | 1 Rust core | UniFFI bindings for Swift and C#, packaging script | Opus 5.5 | high | S4 | Done |
 | 1.6 | 1 Rust core | Core review (correctness, no clipboard content in logs) | Opus 5.5 | high | S5 (fresh) | Done |
 | 2.1 | 2 macOS | Xcode project, menu-bar shell, link core | Opus 5.5 | high | S6 | Done |
-| 2.2 | 2 macOS | Pasteboard watcher, concealed markers, ignore list | Sonnet 5.5 | high | S7 |  |
+| 2.2 | 2 macOS | Pasteboard watcher, concealed markers, ignore list | Sonnet 5.5 | high | S7 | Done |
 | 2.3 | 2 macOS | Hotkey, popup, tabs, search, thumbnails, keyboard nav | Opus 5.5 | high | S8 (with 2.4) |  |
 | 2.4 | 2 macOS | Restore, optional auto-paste, Accessibility flow | Sonnet 5.5 | high | S8 |  |
 | 2.5 | 2 macOS | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S9 |  |

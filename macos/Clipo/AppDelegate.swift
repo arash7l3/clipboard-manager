@@ -1,5 +1,6 @@
 import AppKit
 import ClipoCore
+import os
 
 /// Owns the menu-bar item and the open history.
 @MainActor
@@ -7,6 +8,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusMenu = StatusMenu()
     private var statusItem: NSStatusItem?
     private var store: ClipStore?
+    private var watcher: PasteboardWatcher?
+    private var recording: Task<Void, Never>?
+
+    private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Unit tests are hosted in the app. They build what they test
@@ -29,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case let .ready(store, itemCount):
                 self.store = store
                 statusMenu.show(.ready(itemCount: itemCount))
+                startCapturing(into: store)
             case .keyProblem:
                 statusMenu.show(.unavailable)
                 offerNewHistory()
@@ -36,6 +42,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 statusMenu.show(.unavailable)
             }
         }
+    }
+
+    /// Applies the capture rules and records every clipboard change from now
+    /// on. Without the rules the ignore list would not hold, so a failure to
+    /// set them means nothing is captured.
+    private func startCapturing(into store: ClipStore) {
+        stopCapturing()
+        do {
+            try store.setRules(rules: CaptureSettings.rules())
+        } catch {
+            Self.logger.error("capture rules were refused: \(String(describing: error), privacy: .public)")
+            return
+        }
+
+        let watcher = PasteboardWatcher(shouldRead: { app in
+            CaptureSettings.allowsReading(from: app, under: store.rules())
+        })
+        self.watcher = watcher
+        watcher.start()
+
+        let statusMenu = statusMenu
+        recording = Task {
+            for await change in watcher.changes {
+                // One change at a time keeps the history in copy order.
+                let itemCount = await Task.detached(priority: .utility) { () -> UInt64? in
+                    guard case .added = ClipboardRecorder.record(change, in: store) else { return nil }
+                    return try? store.count()
+                }.value
+                if let itemCount {
+                    statusMenu.show(.ready(itemCount: itemCount))
+                }
+            }
+        }
+    }
+
+    private func stopCapturing() {
+        watcher?.stop()
+        watcher = nil
+        recording?.cancel()
+        recording = nil
     }
 
     /// The core never replaces a key by itself: the user decides whether to
