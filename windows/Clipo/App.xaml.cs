@@ -80,6 +80,7 @@ public partial class App : Application
         _popup = popup;
         popup.Chosen += (_, choice) => _ = RestoreAsync(choice);
         popup.PinRequested += (_, pin) => _ = PinAsync(pin);
+        popup.ClearRequested += (_, category) => _ = ClearAsync(category);
         popup.StartCategory = last => _settings.StartCategory(last);
         popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
@@ -98,6 +99,7 @@ public partial class App : Application
         shell.SettingsRequested += (_, _) => ShowSettings();
         shell.AutoPasteToggled += (_, _) => SetAutoPaste(!_settings.AutoPaste);
         shell.PrivateModeToggled += (_, _) => SetPrivateMode(!_settings.PrivateMode);
+        shell.ClearHistoryRequested += (_, _) => _ = ConfirmClearHistoryAsync();
         shell.SnippetChosen += (_, snippet) => _ = PasteSnippetAsync(snippet);
         shell.QuitRequested += (_, _) => Quit();
         shell.Watcher.Recorded += OnRecorded;
@@ -185,6 +187,36 @@ public partial class App : Application
         // Unpinning may have evicted items, so the count and the rows change.
         _ = TrimAsync();
         _popup?.HistoryChanged();
+    }
+
+    /// <summary>Deletes the unpinned items of <paramref name="category"/>; a failure beeps.</summary>
+    private async Task ClearAsync(Category category)
+    {
+        if (await History.ClearAsync(_store, category) is null)
+        {
+            Desktop.Beep();
+        }
+        _ = TrimAsync();
+        _popup?.HistoryChanged();
+    }
+
+    /// <summary>Clear History from the tray menu: asks in the status window first.</summary>
+    private async Task ConfirmClearHistoryAsync()
+    {
+        if (_window is not { } window)
+        {
+            return;
+        }
+        if (_store is null)
+        {
+            // Not open: the status window says why.
+            window.ShowWindow();
+            return;
+        }
+        if (await window.ConfirmClearHistoryAsync())
+        {
+            await ClearAsync(Category.All);
+        }
     }
 
     private async Task PasteSnippetAsync(Snippet snippet)

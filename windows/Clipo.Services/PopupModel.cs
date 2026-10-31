@@ -49,6 +49,9 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     /// <summary>A load is under way; <see cref="Rows"/> answer an earlier question.</summary>
     public bool IsLoading { get; private set; }
 
+    /// <summary>The current tab has a Clear button: every tab but Pinned, whose items clearing never touches.</summary>
+    public bool CanClear => Category != Category.Pinned;
+
     public ItemPreview? SelectedRow => Selection is { } index ? Rows[index] : null;
 
     /// <summary>The row Ctrl+<paramref name="number"/> picks (1 is the first row), or <c>null</c> if the number has no row.</summary>

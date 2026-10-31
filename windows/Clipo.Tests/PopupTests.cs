@@ -146,6 +146,18 @@ public sealed class PopupModelTests
     }
 
     [Fact]
+    public async Task EveryTabButPinnedCanBeCleared()
+    {
+        var model = new PopupModel(new FakeLoader().Load, TimeSpan.Zero);
+
+        foreach (var category in PopupModel.Categories)
+        {
+            await model.SetCategoryAsync(category);
+            Assert.Equal(category != Category.Pinned, model.CanClear);
+        }
+    }
+
+    [Fact]
     public async Task RefreshKeepsTheSelectedItem()
     {
         var loader = new FakeLoader { Rows = Rows(1, 2, 3) };
@@ -323,6 +335,16 @@ public sealed class PopupTextTests
     public void EmptyListSaysWhy(bool failed, bool searching, string expected)
     {
         Assert.Equal(expected, s_text.EmptyList(failed, searching));
+    }
+
+    [Theory]
+    [InlineData(Category.All, "Clear all unpinned items")]
+    [InlineData(Category.Text, "Clear unpinned text")]
+    [InlineData(Category.Images, "Clear unpinned images")]
+    [InlineData(Category.Files, "Clear unpinned files")]
+    public void ClearButtonNamesTheTab(Category category, string expected)
+    {
+        Assert.Equal(expected, s_text.ClearTab(category));
     }
 
     [Fact]

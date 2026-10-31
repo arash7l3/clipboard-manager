@@ -19,6 +19,7 @@ internal sealed class Shell : IDisposable
     private const int AutoPasteId = 3;
     private const int QuitId = 4;
     private const int PrivateModeId = 5;
+    private const int ClearHistoryId = 6;
 
     /// <summary>Snippet menu items are numbered from here, in list order.</summary>
     private const int SnippetBaseId = 100;
@@ -60,6 +61,9 @@ internal sealed class Shell : IDisposable
 
     /// <summary>The user picked a snippet in the tray menu's Snippets submenu.</summary>
     public event EventHandler<Snippet>? SnippetChosen;
+
+    /// <summary>The user picked Clear History in the tray menu; nothing is deleted until they confirm.</summary>
+    public event EventHandler? ClearHistoryRequested;
 
     /// <summary>The user picked Private Mode in the tray menu.</summary>
     public event EventHandler? PrivateModeToggled;
@@ -148,6 +152,8 @@ internal sealed class Shell : IDisposable
             new MenuEntry(AutoPasteId, s_strings.GetString("MenuAutoPaste"), IsChecked: AutoPaste),
             new MenuEntry(PrivateModeId, s_strings.GetString("MenuPrivateMode"), IsChecked: PrivateMode),
             MenuEntry.Separator,
+            new MenuEntry(ClearHistoryId, s_strings.GetString("MenuClearHistory")),
+            MenuEntry.Separator,
             new MenuEntry(QuitId, s_strings.GetString("MenuQuit")),
         };
 
@@ -165,6 +171,9 @@ internal sealed class Shell : IDisposable
                 break;
             case PrivateModeId:
                 PrivateModeToggled?.Invoke(this, EventArgs.Empty);
+                break;
+            case ClearHistoryId:
+                ClearHistoryRequested?.Invoke(this, EventArgs.Empty);
                 break;
             case QuitId:
                 QuitRequested?.Invoke(this, EventArgs.Empty);

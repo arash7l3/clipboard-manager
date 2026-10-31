@@ -325,6 +325,21 @@ fn touch_pin_and_delete() {
 }
 
 #[test]
+fn clear_empties_a_tab_but_keeps_pins() {
+    let fx = Fixture::new();
+    let keep = added(fx.store.record(capture(text("keep"), 1_000)).unwrap());
+    added(fx.store.record(capture(text("drop"), 2_000)).unwrap());
+    fx.store.set_pinned(keep.id, true).unwrap();
+
+    assert_eq!(fx.store.clear(Category::Images).unwrap(), 0);
+    assert_eq!(fx.store.clear(Category::Pinned).unwrap(), 0);
+    assert_eq!(fx.store.clear(Category::Text).unwrap(), 1);
+    assert_eq!(fx.store.clear(Category::All).unwrap(), 0);
+    assert_eq!(fx.store.count().unwrap(), 1);
+    assert!(fx.store.get(keep.id).unwrap().is_some());
+}
+
+#[test]
 fn limits_evict_and_reject_zero() {
     let fx = Fixture::new();
     assert_eq!(fx.store.limits(), default_history_limits());

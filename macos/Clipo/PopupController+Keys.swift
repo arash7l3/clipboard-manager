@@ -21,8 +21,10 @@ extension PopupController: NSSearchFieldDelegate {
         }
         switch command {
         case #selector(NSResponder.insertTab(_:)):
+            disarmClear()
             model.moveCategory(by: 1)
         case #selector(NSResponder.insertBacktab(_:)):
+            disarmClear()
             model.moveCategory(by: -1)
         case #selector(NSResponder.insertNewline(_:)):
             chooseSelected()

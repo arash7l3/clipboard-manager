@@ -89,6 +89,15 @@ struct PopupModelTests {
         #expect(loader.queries == [Query(category: .pinned, text: "")])
     }
 
+    @Test func everyTabButPinnedCanBeCleared() async {
+        let model = FakeLoader(rows: three).model()
+
+        for category in model.categories {
+            await model.setCategory(category).value
+            #expect(model.canClear == (category != .pinned))
+        }
+    }
+
     @Test func resetDropsOldRowsAtOnce() async {
         let model = FakeLoader(rows: three).model()
         await model.reset().value

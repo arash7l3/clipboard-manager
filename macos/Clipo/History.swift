@@ -135,6 +135,21 @@ enum History {
         }.value
     }
 
+    /// Clears `category`'s tab, off the main thread: deletes its unpinned
+    /// items. Returns how many items the history holds afterwards, or `nil`
+    /// if clearing failed.
+    static func clear(_ category: ClipoCore.Category, in store: ClipStore) async -> UInt64? {
+        await Task.detached(priority: .userInitiated) {
+            do {
+                _ = try store.clear(category: category)
+                return try store.count()
+            } catch {
+                logger.error("clearing a tab failed: \(String(describing: error), privacy: .public)")
+                return nil
+            }
+        }.value
+    }
+
     /// ``open(at:keyStore:)`` on the user's history, off the main thread.
     static func openDefault() async -> Opened {
         await Task.detached(priority: .userInitiated) {

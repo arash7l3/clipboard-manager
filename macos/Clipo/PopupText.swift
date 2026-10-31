@@ -22,6 +22,33 @@ enum PopupText {
         }
     }
 
+    /// The Clear button's tooltip and screen-reader label on `category`'s tab.
+    static func clearTab(_ category: ClipoCore.Category) -> String {
+        switch category {
+        case .text:
+            String(localized: "Clear unpinned text", comment: "Clear button tooltip on the Text tab")
+        case .images:
+            String(localized: "Clear unpinned images", comment: "Clear button tooltip on the Images tab")
+        case .files:
+            String(localized: "Clear unpinned files", comment: "Clear button tooltip on the Files tab")
+        case .all, .pinned:
+            String(localized: "Clear all unpinned items", comment: "Clear button tooltip on the All tab")
+        }
+    }
+
+    /// The Clear button's title after the first click, asking for a second.
+    static var clearConfirmTitle: String {
+        String(localized: "Clear?", comment: "Clear button label after the first click, asking for a second")
+    }
+
+    /// The Clear button's tooltip and screen-reader label after the first click.
+    static var clearConfirmLabel: String {
+        String(
+            localized: "Click again to clear. Pinned items are kept.",
+            comment: "Clear button tooltip after the first click"
+        )
+    }
+
     /// One line describing the content: the first line of a text, an image's
     /// size, or the first file's name.
     static func title(_ content: PreviewContent) -> String {

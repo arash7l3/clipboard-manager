@@ -41,6 +41,12 @@ final class PopupModel {
         self.load = load
     }
 
+    /// The current tab has a Clear button: every tab but Pinned, whose items
+    /// clearing never touches.
+    var canClear: Bool {
+        category != .pinned
+    }
+
     var selectedRow: ItemPreview? {
         selection.map { rows[$0] }
     }

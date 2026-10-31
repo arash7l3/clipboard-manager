@@ -1,8 +1,9 @@
 //! History policy: duplicate merging, size and count limits, pinning.
 
+use super::codec::kind_code;
 use super::Store;
 use crate::error::CoreError;
-use crate::model::{Capture, ClipItem, ItemId};
+use crate::model::{Capture, Category, ClipItem, ItemId};
 
 /// Default number of unpinned items kept (see `docs/decisions/0004-defaults.md`).
 pub const DEFAULT_MAX_ITEMS: usize = 200;
@@ -139,6 +140,31 @@ impl Store {
             self.enforce_item_limit()?;
         }
         Ok(())
+    }
+
+    /// Clears a tab: deletes the unpinned items listed under `category`.
+    /// Returns how many were deleted. Pinned items and snippets are never
+    /// touched, so clearing [`Category::Pinned`] deletes nothing. Content is
+    /// overwritten, as with [`Store::delete`].
+    ///
+    /// # Errors
+    ///
+    /// [`CoreError::Storage`] on a database failure.
+    pub fn clear(&mut self, category: Category) -> Result<usize, CoreError> {
+        let deleted = match category.kind() {
+            Some(kind) => self.conn.execute(
+                "DELETE FROM items WHERE pinned = 0 AND kind = ?1",
+                [kind_code(kind)],
+            )?,
+            None if category == Category::All => self
+                .conn
+                .execute("DELETE FROM items WHERE pinned = 0", [])?,
+            None => 0,
+        };
+        if deleted > 0 {
+            self.purge_deleted()?;
+        }
+        Ok(deleted)
     }
 
     /// Deletes the oldest unpinned items beyond the limit. Returns how many.

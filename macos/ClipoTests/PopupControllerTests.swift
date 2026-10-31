@@ -130,6 +130,38 @@ struct PopupControllerTests {
         #expect(controller.model.category == .pinned)
     }
 
+    @Test func clearAsksForASecondClick() async throws {
+        let controller = await loaded(rows)
+        #expect(!controller.clearButton.isHidden)
+
+        try click(controller.clearButton)
+        #expect(controller.clearConfirmation.isArmed)
+        #expect(controller.clearButton.title == PopupText.clearConfirmTitle)
+
+        let cleared: ClipoCore.Category = try await withCheckedThrowingContinuation { done in
+            controller.onClear = { category in done.resume(returning: category) }
+            do {
+                try click(controller.clearButton)
+            } catch {
+                done.resume(throwing: error)
+            }
+        }
+        #expect(cleared == .all)
+        #expect(!controller.clearConfirmation.isArmed)
+        #expect(controller.clearButton.title.isEmpty)
+    }
+
+    @Test func switchingTabsDisarmsClearAndPinnedHasNone() async throws {
+        let controller = await loaded(rows)
+        try click(controller.clearButton)
+
+        controller.handle(#selector(NSResponder.insertTab(_:)))
+        #expect(!controller.clearConfirmation.isArmed)
+
+        await controller.model.setCategory(.pinned).value
+        #expect(controller.clearButton.isHidden)
+    }
+
     @Test func escapeIsHandledAndTypingIsNot() async {
         let controller = await loaded(rows)
 
@@ -202,5 +234,13 @@ struct PopupAccessibilityTests {
         #expect(controller.searchField.accessibilityLabel()?.isEmpty == false)
         #expect(controller.tabs.accessibilityLabel()?.isEmpty == false)
         #expect(controller.table.accessibilityLabel()?.isEmpty == false)
+        #expect(controller.clearButton.accessibilityLabel()?.isEmpty == false)
     }
+}
+
+/// Sends `button`'s action the way a click does.
+@MainActor
+private func click(_ button: NSButton) throws {
+    let action = try #require(button.action)
+    _ = NSApp.sendAction(action, to: button.target, from: button)
 }

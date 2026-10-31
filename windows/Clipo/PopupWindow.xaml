@@ -24,14 +24,31 @@
         <TextBox x:Name="SearchBox" x:Uid="SearchBox" IsSpellCheckEnabled="False"
                  TextChanged="OnSearchChanged" PreviewKeyDown="OnSearchKeyDown" />
 
-        <!-- Tab and Shift+Tab in the search field switch tabs, so the bar never takes the keyboard. -->
-        <SelectorBar x:Name="Tabs" x:Uid="Tabs" Grid.Row="1" IsTabStop="False" SelectionChanged="OnTabChanged">
-            <SelectorBarItem x:Uid="TabAll" IsSelected="True" />
-            <SelectorBarItem x:Uid="TabText" />
-            <SelectorBarItem x:Uid="TabImages" />
-            <SelectorBarItem x:Uid="TabFiles" />
-            <SelectorBarItem x:Uid="TabPinned" />
-        </SelectorBar>
+        <Grid Grid.Row="1" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Tab and Shift+Tab in the search field switch tabs, so the bar never takes the keyboard. -->
+            <SelectorBar x:Name="Tabs" x:Uid="Tabs" IsTabStop="False" SelectionChanged="OnTabChanged">
+                <SelectorBarItem x:Uid="TabAll" IsSelected="True" />
+                <SelectorBarItem x:Uid="TabText" />
+                <SelectorBarItem x:Uid="TabImages" />
+                <SelectorBarItem x:Uid="TabFiles" />
+                <SelectorBarItem x:Uid="TabPinned" />
+            </SelectorBar>
+
+            <!-- Clears the tab; the first click arms it and a second one within a few seconds clears. -->
+            <Button x:Name="ClearButton" Grid.Column="1" VerticalAlignment="Center" MinWidth="40"
+                    IsTabStop="False" AllowFocusOnInteraction="False" Click="OnClearClick">
+                <Grid>
+                    <FontIcon x:Name="ClearIcon" Glyph="&#xE74D;" FontSize="14" />
+                    <TextBlock x:Name="ClearConfirm" x:Uid="ClearConfirm" Visibility="Collapsed"
+                               Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                </Grid>
+            </Button>
+        </Grid>
 
         <!-- Shown while private mode is on, so nothing is copied into the history unawares. -->
         <TextBlock x:Name="PrivateNote" x:Uid="PrivateNote" Grid.Row="2" Style="{StaticResource CaptionTextBlockStyle}"

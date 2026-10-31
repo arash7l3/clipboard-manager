@@ -27,3 +27,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0021](0021-pinning.md) | Pinning from the popup: Cmd/Ctrl+P and a row context menu |
 | [0022](0022-start-tab-and-private-indicator.md) | Start tab setting, and private mode in the menus with a visible indicator |
 | [0023](0023-macos-dmg-and-signing.md) | macOS dmg: one script, Developer ID when available, ad-hoc until then |
+| [0024](0024-clearing-a-tab.md) | Clearing a tab: a Clear button with inline confirmation, and Clear History in the menus |

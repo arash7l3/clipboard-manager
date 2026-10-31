@@ -10,7 +10,8 @@ using Windows.Graphics;
 namespace Clipo;
 
 /// <summary>
-/// Shows the state of the history, and asks before starting a new one.
+/// Shows the state of the history, and asks before starting a new one or
+/// clearing it.
 /// Closing the window hides it, because the app lives in the tray.
 /// </summary>
 public sealed partial class MainWindow : Window
@@ -77,17 +78,25 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>Asks whether to delete the unreadable history and start a new one.</summary>
-    public async Task<bool> ConfirmStartOverAsync()
+    public Task<bool> ConfirmStartOverAsync() =>
+        ConfirmAsync("KeyProblemTitle", "KeyProblemText", "StartNewHistory", "NotNow");
+
+    /// <summary>Asks whether to delete every unpinned item, after Clear History in the tray menu.</summary>
+    public Task<bool> ConfirmClearHistoryAsync() =>
+        ConfirmAsync("ClearHistoryTitle", "ClearHistoryText", "ClearHistoryButton", "Cancel");
+
+    /// <summary>Shows the window with a dialog of these strings; <c>true</c> if the user picked <paramref name="primary"/>.</summary>
+    private async Task<bool> ConfirmAsync(string title, string text, string primary, string close)
     {
         ShowWindow();
         await LoadedAsync();
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
-            Title = s_strings.GetString("KeyProblemTitle"),
-            Content = s_strings.GetString("KeyProblemText"),
-            PrimaryButtonText = s_strings.GetString("StartNewHistory"),
-            CloseButtonText = s_strings.GetString("NotNow"),
+            Title = s_strings.GetString(title),
+            Content = s_strings.GetString(text),
+            PrimaryButtonText = s_strings.GetString(primary),
+            CloseButtonText = s_strings.GetString(close),
             // The safe choice is the default.
             DefaultButton = ContentDialogButton.Close,
         };

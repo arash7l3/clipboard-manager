@@ -36,6 +36,21 @@ struct StatusMenuTests {
         #expect(menu.retryItem.isHidden)
     }
 
+    @Test func clearHistoryIsEnabledOnlyWhenReadyAndCallsBack() throws {
+        let menu = StatusMenu()
+        #expect(menu.menu.items.contains(menu.clearHistoryItem))
+        #expect(!menu.validateMenuItem(menu.clearHistoryItem))
+
+        menu.show(.ready(itemCount: 1))
+        #expect(menu.validateMenuItem(menu.clearHistoryItem))
+
+        var asked = 0
+        menu.onClearHistory = { asked += 1 }
+        let action = try #require(menu.clearHistoryItem.action)
+        _ = NSApp.sendAction(action, to: menu.clearHistoryItem.target, from: menu.clearHistoryItem)
+        #expect(asked == 1)
+    }
+
     @Test func showHistoryIsEnabledOnlyWhenReady() throws {
         let menu = StatusMenu()
         #expect(menu.menu.items.contains(menu.showHistoryItem))

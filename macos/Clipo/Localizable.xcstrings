@@ -251,6 +251,105 @@
         }
       }
     },
+    "Clear History" : {
+      "comment" : "Alert button that clears the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن تاریخچه"
+          }
+        }
+      }
+    },
+    "Clear History…" : {
+      "comment" : "Menu item that deletes every unpinned item, after asking",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن تاریخچه…"
+          }
+        }
+      }
+    },
+    "Clear all unpinned items" : {
+      "comment" : "Clear button tooltip on the All tab",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن همه موردهای سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Clear the clipboard history?" : {
+      "comment" : "Alert title before clearing the history from the menu",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه کلیپ‌بورد پاک شود؟"
+          }
+        }
+      }
+    },
+    "Clear unpinned files" : {
+      "comment" : "Clear button tooltip on the Files tab",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن فایل‌های سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Clear unpinned images" : {
+      "comment" : "Clear button tooltip on the Images tab",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن تصویرهای سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Clear unpinned text" : {
+      "comment" : "Clear button tooltip on the Text tab",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک کردن متن‌های سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Clear?" : {
+      "comment" : "Clear button label after the first click, asking for a second",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پاک شود؟"
+          }
+        }
+      }
+    },
+    "Click again to clear. Pinned items are kept." : {
+      "comment" : "Clear button tooltip after the first click",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "برای پاک کردن دوباره کلیک کنید. موردهای سنجاق‌شده می‌مانند."
+          }
+        }
+      }
+    },
     "Clipboard history" : {
       "comment" : "Screen-reader label of the popup window",
       "localizations" : {
@@ -390,6 +489,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ویرایش"
+          }
+        }
+      }
+    },
+    "Every item that isn't pinned is deleted. Pinned items and snippets are kept. This can't be undone." : {
+      "comment" : "Alert text before clearing the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "همه موردهای سنجاق‌نشده حذف می‌شوند. موردهای سنجاق‌شده و متن‌های آماده می‌مانند. این کار برگشت‌پذیر نیست."
           }
         }
       }

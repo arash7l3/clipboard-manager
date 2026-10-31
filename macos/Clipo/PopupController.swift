@@ -6,8 +6,9 @@ import ClipoCore
 /// The search field keeps the keyboard the whole time. Typing searches;
 /// Up, Down, Page Up, Page Down, Home and End move the selection; Tab and
 /// Shift+Tab switch tabs; Enter picks the selected item; Esc closes. Cmd+P,
-/// or Pin in a row's context menu, pins or unpins an item. A click on a row
-/// picks it, and a click outside the popup closes it.
+/// or Pin in a row's context menu, pins or unpins an item. The button beside
+/// the tabs clears the tab after a second click. A click on a row picks it,
+/// and a click outside the popup closes it.
 @MainActor
 final class PopupController: NSViewController {
     let model: PopupModel
@@ -20,11 +21,17 @@ final class PopupController: NSViewController {
     /// Called with the item and whether it should now be pinned. The popup
     /// stays open and lists the rows again once this returns.
     var onSetPinned: (@MainActor (ItemPreview, Bool) async -> Void)?
+    /// Called with the tab to clear after the user clicked Clear twice. The
+    /// popup stays open and lists the rows again once this returns.
+    var onClear: (@MainActor (ClipoCore.Category) async -> Void)?
     /// The current time, for "copied 5 min. ago".
     var now: () -> Date = Date.init
 
     let searchField = NSSearchField()
     let tabs = NSSegmentedControl()
+    let clearButton = NSButton(title: "", target: nil, action: nil)
+    var clearConfirmation = ClearConfirmation()
+    var clearTimeout: Task<Void, Never>?
     let table = NSTableView()
     let emptyLabel = NSTextField(labelWithString: "")
     private let scrollView = NSScrollView()
@@ -71,6 +78,7 @@ final class PopupController: NSViewController {
     func show(at cursor: NSPoint) {
         loadViewIfNeeded()
         searchField.stringValue = ""
+        disarmClear()
         model.reset(to: PopupSettings.startTab().category(lastUsed: model.category))
         showPrivateNote(UserDefaults.standard.bool(forKey: CaptureSettings.privateModeKey))
         if let visible = PopupPlacement.visibleFrame(around: cursor) {
@@ -93,6 +101,7 @@ final class PopupController: NSViewController {
         guard isShown, !isDismissing else { return }
         isDismissing = true
         defer { isDismissing = false }
+        disarmClear()
         panel.orderOut(nil)
     }
 
@@ -108,6 +117,7 @@ final class PopupController: NSViewController {
     override func loadView() {
         configureSearchField()
         configureTabs()
+        configureClearButton()
         configureTable()
         emptyLabel.textColor = .secondaryLabelColor
         emptyLabel.alignment = .center
@@ -194,11 +204,11 @@ final class PopupController: NSViewController {
         scrollView.drawsBackground = false
     }
 
-    /// Search field, then tabs, then the list filling the rest; leading and
+    /// Search field, then tabs with the Clear button, then the list filling the rest; leading and
     /// trailing edges so the layout mirrors in right-to-left languages.
     private func layOut() -> NSView {
         let root = NSView(frame: NSRect(origin: .zero, size: PopupPanel.defaultSize))
-        for subview in [searchField, tabs, privateNote, scrollView, emptyLabel] {
+        for subview in [searchField, tabs, clearButton, privateNote, scrollView, emptyLabel] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(subview)
         }
@@ -209,7 +219,9 @@ final class PopupController: NSViewController {
             searchField.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
             tabs.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 8),
             tabs.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: margin),
-            tabs.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
+            tabs.trailingAnchor.constraint(equalTo: clearButton.leadingAnchor, constant: -8),
+            clearButton.centerYAnchor.constraint(equalTo: tabs.centerYAnchor),
+            clearButton.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
             privateNote.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 6),
             privateNote.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: margin),
             privateNote.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
@@ -237,6 +249,7 @@ final class PopupController: NSViewController {
         if let index = model.categories.firstIndex(of: model.category) {
             tabs.selectedSegment = index
         }
+        showClearButton()
         emptyLabel.stringValue = PopupText.emptyList(failed: model.failed, searching: !model.searchText.isEmpty)
         emptyLabel.isHidden = !model.rows.isEmpty || model.isLoading
         showSelection()
@@ -282,6 +295,7 @@ final class PopupController: NSViewController {
     @objc private func tabChosen(_ sender: NSSegmentedControl) {
         let index = sender.selectedSegment
         guard model.categories.indices.contains(index) else { return }
+        disarmClear()
         model.setCategory(model.categories[index])
         _ = view.window?.makeFirstResponder(searchField)
     }

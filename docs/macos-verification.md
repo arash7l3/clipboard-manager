@@ -60,3 +60,10 @@ Record anything that fails as a new step in `PLAN.md`.
 - [ ] Menu-bar menu > Private Mode toggles the check mark, matches the Settings > Privacy check box, and turns the icon orange with a crossed-out eye (and back).
 - [ ] While private mode is on the popup shows the orange note, the list sits below it, and copies are not recorded.
 - [ ] Farsi: the new labels are translated and the note is not cut off.
+
+## Clearing (step 4.6), still to try on a Mac
+
+- [ ] The trash button beside the tabs: one click shows a red "Clear?" and the popup stays open; a second click within 3 s clears the tab; waiting, switching tabs or closing the popup puts the trash icon back.
+- [ ] Clearing Images (or Text, Files) leaves the other kinds and every pinned item; the Pinned tab has no button.
+- [ ] Menu-bar menu > Clear History… asks first; Cancel changes nothing; Clear History leaves only pinned items and the snippets, and the item count in the menu updates.
+- [ ] Farsi: the tooltips, "Clear?" and the alert are translated, and the button sits at the left end of the tab row.
