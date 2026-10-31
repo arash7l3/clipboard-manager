@@ -30,3 +30,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0024](0024-clearing-a-tab.md) | Clearing a tab: a Clear button with inline confirmation, and Clear History in the menus |
 | [0025](0025-windows-msix.md) | Windows MSIX: built by the app's own project, signed afterwards, test-signed until there is a certificate |
 | [0026](0026-security-review.md) | Security review: history out of backups, forks off the Mac, clean signed builds, export stays unencrypted |
+| [0027](0027-github-releases.md) | Releases: a `v*` tag attaches the dmg and the MSIX to a GitHub release |
