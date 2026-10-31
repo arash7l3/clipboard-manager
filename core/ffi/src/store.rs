@@ -8,7 +8,8 @@ use clipo_core::{ItemId, SnippetId, Store, Timestamp};
 
 use crate::error::{ClipoError, KeyStoreError};
 use crate::types::{
-    CaptureRules, ClipItem, HistoryLimits, ImportSummary, ItemPreview, Query, Recorded, Snippet,
+    CaptureRules, Category, ClipItem, HistoryLimits, ImportSummary, ItemPreview, Query, Recorded,
+    Snippet,
 };
 use crate::Capture;
 
@@ -159,6 +160,18 @@ impl ClipStore {
     /// [`ClipoError::ItemNotFound`] if no item has this id.
     pub fn set_pinned(&self, id: i64, pinned: bool) -> Result<(), ClipoError> {
         Ok(self.lock().set_pinned(ItemId::from_raw(id), pinned)?)
+    }
+
+    /// Clears a tab: deletes the unpinned items listed under `category` and
+    /// returns how many. Pinned items and snippets are kept, so clearing
+    /// [`Category::Pinned`] deletes nothing.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn clear(&self, category: Category) -> Result<u64, ClipoError> {
+        let cleared = self.lock().clear(category.into())?;
+        Ok(u64::try_from(cleared).unwrap_or(u64::MAX))
     }
 
     /// Deletes the item. Its content is overwritten in the file.

@@ -512,4 +512,48 @@
     <value>آخرین تب استفاده‌شده</value>
     <comment>Start tab choice: open on the tab that was last open, until Clipo quits</comment>
   </data>
+  <data name="ClearAll" xml:space="preserve">
+    <value>پاک کردن همه موردهای سنجاق‌نشده</value>
+    <comment>Clear button tooltip on the All tab</comment>
+  </data>
+  <data name="ClearText" xml:space="preserve">
+    <value>پاک کردن متن‌های سنجاق‌نشده</value>
+    <comment>Clear button tooltip on the Text tab</comment>
+  </data>
+  <data name="ClearImages" xml:space="preserve">
+    <value>پاک کردن تصویرهای سنجاق‌نشده</value>
+    <comment>Clear button tooltip on the Images tab</comment>
+  </data>
+  <data name="ClearFiles" xml:space="preserve">
+    <value>پاک کردن فایل‌های سنجاق‌نشده</value>
+    <comment>Clear button tooltip on the Files tab</comment>
+  </data>
+  <data name="ClearConfirm.Text" xml:space="preserve">
+    <value>پاک شود؟</value>
+    <comment>Clear button label after the first click, asking for a second</comment>
+  </data>
+  <data name="ClearConfirmName" xml:space="preserve">
+    <value>برای پاک کردن دوباره کلیک کنید. موردهای سنجاق‌شده می‌مانند.</value>
+    <comment>Clear button tooltip after the first click</comment>
+  </data>
+  <data name="MenuClearHistory" xml:space="preserve">
+    <value>پاک کردن تاریخچه…</value>
+    <comment>Tray menu item that deletes every unpinned item, after asking</comment>
+  </data>
+  <data name="ClearHistoryTitle" xml:space="preserve">
+    <value>تاریخچه کلیپ‌بورد پاک شود؟</value>
+    <comment>Dialog title before clearing the history from the tray menu</comment>
+  </data>
+  <data name="ClearHistoryText" xml:space="preserve">
+    <value>همه موردهای سنجاق‌نشده حذف می‌شوند. موردهای سنجاق‌شده و متن‌های آماده می‌مانند. این کار برگشت‌پذیر نیست.</value>
+    <comment>Dialog text before clearing the history</comment>
+  </data>
+  <data name="ClearHistoryButton" xml:space="preserve">
+    <value>پاک کردن تاریخچه</value>
+    <comment>Dialog button that clears the history</comment>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>انصراف</value>
+    <comment>Dialog button that changes nothing</comment>
+  </data>
 </root>

@@ -730,3 +730,72 @@ fn previews_hint_links_and_code() {
         .collect();
     assert_eq!(hints, [TextHint::Plain, TextHint::Code, TextHint::Link]);
 }
+
+// --- Clearing a tab ---
+
+/// Text "a" (pinned), text "b", an image, files, and one snippet.
+fn tab_mix(store: &mut Store) -> ClipItem {
+    let keep = added(store.record(capture(text("a"), 1)).unwrap());
+    store.set_pinned(keep.id, true).unwrap();
+    store.record(capture(text("b"), 2)).unwrap();
+    store.record(capture(image(None), 3)).unwrap();
+    store.record(capture(files(), 4)).unwrap();
+    store.add_snippet("title", "body", at(5)).unwrap();
+    keep
+}
+
+#[test]
+fn clearing_all_keeps_pinned_items_and_snippets() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let keep = tab_mix(&mut store);
+    assert_eq!(store.clear(Category::All).unwrap(), 3);
+    assert_eq!(ids(&store.list().unwrap()), [keep.id]);
+    assert_eq!(store.snippets("").unwrap().len(), 1);
+    assert_eq!(store.clear(Category::All).unwrap(), 0);
+}
+
+#[test]
+fn clearing_a_kind_tab_deletes_only_that_kind() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    tab_mix(&mut store);
+    assert_eq!(store.clear(Category::Images).unwrap(), 1);
+    assert_eq!(
+        listed_kinds(&store),
+        [ItemKind::Files, ItemKind::Text, ItemKind::Text]
+    );
+    assert_eq!(store.clear(Category::Text).unwrap(), 1);
+    assert_eq!(listed_kinds(&store), [ItemKind::Files, ItemKind::Text]);
+    assert_eq!(store.clear(Category::Files).unwrap(), 1);
+    assert_eq!(texts(&store.list().unwrap()), ["a"]);
+}
+
+#[test]
+fn clearing_the_pinned_tab_deletes_nothing() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    tab_mix(&mut store);
+    assert_eq!(store.clear(Category::Pinned).unwrap(), 0);
+    assert_eq!(store.count().unwrap(), 4);
+}
+
+#[test]
+fn clearing_overwrites_content_and_file_rows() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    store.record(capture(files(), 1)).unwrap();
+    store.record(capture(text("cleared"), 2)).unwrap();
+    assert!(fx.wal_len() > 0, "test needs WAL mode");
+    assert_eq!(store.clear(Category::All).unwrap(), 2);
+    assert_eq!(fx.wal_len(), 0);
+    let rows: i64 = store
+        .conn
+        .query_row("SELECT count(*) FROM item_files", [], |row| row.get(0))
+        .unwrap();
+    assert_eq!(rows, 0);
+}
+
+fn listed_kinds(store: &Store) -> Vec<ItemKind> {
+    store.list().unwrap().iter().map(ClipItem::kind).collect()
+}

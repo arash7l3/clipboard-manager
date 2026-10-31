@@ -24,12 +24,17 @@ final class StatusMenu: NSObject {
     /// Called when the user picks "Settings…".
     var onShowSettings: (@MainActor () -> Void)?
 
+    /// Called when the user picks "Clear History…"; nothing is deleted until
+    /// they confirm.
+    var onClearHistory: (@MainActor () -> Void)?
+
     /// Called with the snippet the user picked from the Snippets submenu.
     var onPasteSnippet: (@MainActor (Snippet) -> Void)?
 
     let statusLine = NSMenuItem()
     let snippetsItem = NSMenuItem()
     let privateModeItem = NSMenuItem()
+    let clearHistoryItem = NSMenuItem()
     let snippetsMenu = NSMenu()
     let retryItem = NSMenuItem()
     let showHistoryItem = NSMenuItem()
@@ -74,6 +79,13 @@ final class StatusMenu: NSObject {
         privateModeItem.target = self
         privateModeItem.action = #selector(togglePrivateMode)
 
+        clearHistoryItem.title = String(
+            localized: "Clear History…",
+            comment: "Menu item that deletes every unpinned item, after asking"
+        )
+        clearHistoryItem.target = self
+        clearHistoryItem.action = #selector(clearHistory)
+
         settingsItem.title = String(localized: "Settings…", comment: "Menu item that opens the Settings window")
         settingsItem.target = self
         settingsItem.action = #selector(showSettings)
@@ -89,7 +101,7 @@ final class StatusMenu: NSObject {
 
         menu.items = [
             statusLine, retryItem, showHistoryItem, snippetsItem, privateModeItem, .separator(),
-            settingsItem, aboutItem, .separator(), quitItem
+            clearHistoryItem, .separator(), settingsItem, aboutItem, .separator(), quitItem
         ]
         show(.opening)
     }
@@ -208,6 +220,10 @@ final class StatusMenu: NSObject {
         onShowHistory?()
     }
 
+    @objc private func clearHistory() {
+        onClearHistory?()
+    }
+
     @objc private func showSettings() {
         onShowSettings?()
     }
@@ -220,8 +236,9 @@ final class StatusMenu: NSObject {
 }
 
 extension StatusMenu: NSMenuItemValidation {
-    /// "Show Clipboard History" is available only while the history is open.
+    /// "Show Clipboard History" and "Clear History…" are available only while
+    /// the history is open.
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        menuItem !== showHistoryItem || isReady
+        (menuItem !== showHistoryItem && menuItem !== clearHistoryItem) || isReady
     }
 }

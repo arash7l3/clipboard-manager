@@ -59,6 +59,26 @@ public sealed class HistoryTests : IDisposable
     }
 
     [Fact]
+    public async Task ClearingATabKeepsPinnedItems()
+    {
+        using var store = OpenReady(DatabasePath(), new MemoryKeyStore(), expectedCount: 0);
+        var keep = Assert.IsType<Recorded.Added>(store.Record(new Capture(new ItemContent.Text(new TextContent("keep")), DateTime.UtcNow)));
+        store.Record(new Capture(new ItemContent.Text(new TextContent("drop")), DateTime.UtcNow));
+        store.SetPinned(keep.Item.Id, true);
+
+        Assert.Equal(0UL, await History.ClearAsync(store, Category.Images));
+        Assert.Equal(0UL, await History.ClearAsync(store, Category.Pinned));
+        Assert.Equal(1UL, await History.ClearAsync(store, Category.All));
+        Assert.Equal(1UL, store.Count());
+    }
+
+    [Fact]
+    public async Task ClearingWithoutAnOpenHistoryFails()
+    {
+        Assert.Null(await History.ClearAsync(null, Category.All));
+    }
+
+    [Fact]
     public async Task PinningWithoutAnOpenHistoryOrAnUnknownItemFails()
     {
         using var store = OpenReady(DatabasePath(), new MemoryKeyStore(), expectedCount: 0);

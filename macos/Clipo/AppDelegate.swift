@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.onShowHistory = { [weak self] in self?.togglePopup() }
         statusMenu.onShowSettings = { [weak self] in self?.settingsWindow.show() }
         statusMenu.onPasteSnippet = { [weak self] snippet in self?.paste(snippet) }
+        statusMenu.onClearHistory = { [weak self] in self?.confirmClearHistory() }
         extras.onSnippetsChange = { [weak self] in
             guard let self else { return }
             statusMenu.showSnippets(extras.snippets)
@@ -158,8 +159,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSSound.beep()
             }
         }
+        popup.onClear = { [weak self] category in await self?.clear(category, in: store) }
         snippetRestorer = restorer
         return popup
+    }
+
+    /// Deletes the unpinned items of `category`'s tab; a failure beeps.
+    private func clear(_ category: ClipoCore.Category, in store: ClipStore) async {
+        guard let itemCount = await History.clear(category, in: store) else {
+            NSSound.beep()
+            return
+        }
+        historyChanged(itemCount: itemCount)
+    }
+
+    /// "Clear History…" in the menu: asks first, then clears every unpinned item.
+    private func confirmClearHistory() {
+        guard let store else {
+            NSSound.beep()
+            return
+        }
+        NSApp.activate()
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(
+            localized: "Clear the clipboard history?",
+            comment: "Alert title before clearing the history from the menu"
+        )
+        alert.informativeText = String(
+            localized: """
+            Every item that isn't pinned is deleted. Pinned items and snippets are kept. \
+            This can't be undone.
+            """,
+            comment: "Alert text before clearing the history"
+        )
+        alert.addButton(withTitle: String(localized: "Clear History", comment: "Alert button that clears the history"))
+        alert.addButton(withTitle: String(localized: "Cancel", comment: "Alert button that cancels"))
+        alert.buttons.first?.hasDestructiveAction = true
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await clear(.all, in: store) }
     }
 
     /// Pastes a snippet picked from the menu. The menu does not take focus

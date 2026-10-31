@@ -123,6 +123,23 @@ public static class History
         }
     });
 
+    /// <summary>
+    /// Clears the <paramref name="category"/> tab in <paramref name="store"/>, off the calling thread:
+    /// deletes its unpinned items. Returns how many, or <c>null</c> if it failed.
+    /// </summary>
+    public static Task<ulong?> ClearAsync(ClipStore? store, Category category) => Task.Run(() =>
+    {
+        try
+        {
+            return store?.Clear(category);
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"clearing {category} failed: {Describe(e)}");
+            return null;
+        }
+    });
+
     /// <summary><see cref="Open"/> on the user's history, off the calling thread.</summary>
     [SupportedOSPlatform("windows")]
     public static Task<OpenResult> OpenDefaultAsync() => Task.Run(() =>

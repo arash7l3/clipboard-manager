@@ -4,6 +4,7 @@ using Clipo.Services;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -21,8 +22,9 @@ namespace Clipo;
 /// switch tabs; Enter picks the selected item; Esc closes. Ctrl+1 to Ctrl+9
 /// pick the first nine rows. Holding Shift while picking, with Enter or a
 /// click, pastes without formatting. Ctrl+P, or Pin in a row's right-click
-/// menu, pins or unpins an item. A click on a row picks it, and clicking
-/// anywhere else closes the popup.
+/// menu, pins or unpins an item. The button beside the tabs clears the tab
+/// after a second click. A click on a row picks it, and clicking anywhere
+/// else closes the popup.
 /// </summary>
 public sealed partial class PopupWindow : Window
 {
@@ -37,6 +39,8 @@ public sealed partial class PopupWindow : Window
     private readonly PopupModel _model;
     private readonly PopupText _text = new(s_strings.GetString, CultureInfo.CurrentCulture);
     private readonly bool _rightToLeft = CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
+    private readonly ClearConfirmation _clear = new();
+    private readonly DispatcherTimer _clearTimer = new();
 
     /// <summary>The window that was in front before the popup opened; it gets the focus back.</summary>
     private nint _previous;
@@ -49,6 +53,10 @@ public sealed partial class PopupWindow : Window
         _model = model;
         _model.RowsChanged += (_, _) => ShowRows();
         _model.SelectionChanged += (_, _) => ShowSelection(announce: true);
+
+        _clearTimer.Interval = _clear.Window;
+        _clearTimer.Tick += (_, _) => DisarmClear();
+        ShowClearButton();
 
         Root.FlowDirection = _rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         // The first time, the content loads after the window is shown.
@@ -72,6 +80,9 @@ public sealed partial class PopupWindow : Window
 
     /// <summary>Raised when the user pins or unpins a row; the popup stays open.</summary>
     public event EventHandler<PopupPin>? PinRequested;
+
+    /// <summary>Raised with the tab to clear, after the user clicked Clear twice; the popup stays open.</summary>
+    public event EventHandler<Category>? ClearRequested;
 
     public bool IsShown { get; private set; }
 
@@ -132,6 +143,7 @@ public sealed partial class PopupWindow : Window
             return;
         }
         IsShown = false;
+        DisarmClear();
         // While the popup is still in front, Windows allows handing the front over.
         if (restoreFocus)
         {
@@ -205,6 +217,7 @@ public sealed partial class PopupWindow : Window
     /// <summary>Shows the model's tab as selected in the tab bar.</summary>
     private void ShowTab()
     {
+        DisarmClear();
         var index = PopupModel.Categories.ToList().IndexOf(_model.Category);
         if (index >= 0 && index < Tabs.Items.Count)
         {
@@ -299,6 +312,40 @@ public sealed partial class PopupWindow : Window
         flyout.ShowAt(HistoryList, new FlyoutShowOptions { Position = e.GetPosition(HistoryList) });
     }
 
+    private void OnClearClick(object sender, RoutedEventArgs e)
+    {
+        if (_clear.Press())
+        {
+            DisarmClear();
+            ClearRequested?.Invoke(this, _model.Category);
+        }
+        else
+        {
+            _clearTimer.Start();
+            ShowClearButton();
+        }
+        SearchBox.Focus(FocusState.Programmatic);
+    }
+
+    /// <summary>Back to the plain Clear button, for the tab now shown.</summary>
+    private void DisarmClear()
+    {
+        _clearTimer.Stop();
+        _clear.Disarm();
+        ShowClearButton();
+    }
+
+    private void ShowClearButton()
+    {
+        var armed = _clear.IsArmed;
+        ClearButton.Visibility = _model.CanClear ? Visibility.Visible : Visibility.Collapsed;
+        ClearIcon.Visibility = armed ? Visibility.Collapsed : Visibility.Visible;
+        ClearConfirm.Visibility = armed ? Visibility.Visible : Visibility.Collapsed;
+        var name = armed ? s_strings.GetString("ClearConfirmName") : _text.ClearTab(_model.Category);
+        ToolTipService.SetToolTip(ClearButton, name);
+        AutomationProperties.SetName(ClearButton, name);
+    }
+
     /// <summary>1 to 9 for the digit keys, in the top row or on the number pad.</summary>
     private static int? QuickPasteNumber(VirtualKey key) => key switch
     {
@@ -314,6 +361,7 @@ public sealed partial class PopupWindow : Window
         {
             _ = _model.SetCategoryAsync(PopupModel.Categories[index]);
         }
+        DisarmClear();
         SearchBox.Focus(FocusState.Programmatic);
     }
 

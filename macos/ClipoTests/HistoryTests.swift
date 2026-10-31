@@ -132,6 +132,23 @@ final class HistoryTests {
         #expect(!FileManager.default.fileExists(atPath: url.path))
     }
 
+    @Test func clearingKeepsPinnedItems() async throws {
+        let url = try History.databaseURL(in: folder)
+        guard case let .ready(store, _) = History.open(at: url, keyStore: MemoryKeyStore()) else {
+            Issue.record("a new history opens")
+            return
+        }
+        for word in ["keep", "drop"] {
+            _ = try store.record(capture: Capture(content: .text(text: TextContent(plain: word)), capturedAt: Date()))
+        }
+        let keep = try #require(try store.search(query: Query(category: .all, text: "keep")).first)
+        try store.setPinned(id: keep.id, pinned: true)
+
+        #expect(await History.clear(.pinned, in: store) == 2)
+        #expect(await History.clear(.all, in: store) == 1)
+        #expect(try store.get(id: keep.id)?.pinned == true)
+    }
+
     @Test func defaultHistorySizeMatchesDecision0004() {
         #expect(defaultHistoryLimits().maxItems == 200)
     }

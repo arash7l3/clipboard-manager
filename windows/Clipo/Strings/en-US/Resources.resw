@@ -512,4 +512,48 @@
     <value>Last used tab</value>
     <comment>Start tab choice: open on the tab that was last open, until Clipo quits</comment>
   </data>
+  <data name="ClearAll" xml:space="preserve">
+    <value>Clear all unpinned items</value>
+    <comment>Clear button tooltip on the All tab</comment>
+  </data>
+  <data name="ClearText" xml:space="preserve">
+    <value>Clear unpinned text</value>
+    <comment>Clear button tooltip on the Text tab</comment>
+  </data>
+  <data name="ClearImages" xml:space="preserve">
+    <value>Clear unpinned images</value>
+    <comment>Clear button tooltip on the Images tab</comment>
+  </data>
+  <data name="ClearFiles" xml:space="preserve">
+    <value>Clear unpinned files</value>
+    <comment>Clear button tooltip on the Files tab</comment>
+  </data>
+  <data name="ClearConfirm.Text" xml:space="preserve">
+    <value>Clear?</value>
+    <comment>Clear button label after the first click, asking for a second</comment>
+  </data>
+  <data name="ClearConfirmName" xml:space="preserve">
+    <value>Click again to clear. Pinned items are kept.</value>
+    <comment>Clear button tooltip after the first click</comment>
+  </data>
+  <data name="MenuClearHistory" xml:space="preserve">
+    <value>Clear History…</value>
+    <comment>Tray menu item that deletes every unpinned item, after asking</comment>
+  </data>
+  <data name="ClearHistoryTitle" xml:space="preserve">
+    <value>Clear the clipboard history?</value>
+    <comment>Dialog title before clearing the history from the tray menu</comment>
+  </data>
+  <data name="ClearHistoryText" xml:space="preserve">
+    <value>Every item that isn't pinned is deleted. Pinned items and snippets are kept. This can't be undone.</value>
+    <comment>Dialog text before clearing the history</comment>
+  </data>
+  <data name="ClearHistoryButton" xml:space="preserve">
+    <value>Clear History</value>
+    <comment>Dialog button that clears the history</comment>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Dialog button that changes nothing</comment>
+  </data>
 </root>

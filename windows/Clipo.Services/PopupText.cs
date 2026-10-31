@@ -54,6 +54,15 @@ public sealed class PopupText(Func<string, string> strings, CultureInfo culture)
     /// <summary>The quick-paste key of the <paramref name="number"/>th row, such as "Ctrl+1".</summary>
     public string Shortcut(int number) => Format("QuickPasteKey", number);
 
+    /// <summary>The Clear button's tooltip and name for <paramref name="category"/>, such as "Clear Images (pinned items are kept)".</summary>
+    public string ClearTab(Category category) => strings(category switch
+    {
+        Category.Text => "ClearText",
+        Category.Images => "ClearImages",
+        Category.Files => "ClearFiles",
+        _ => "ClearAll",
+    });
+
     /// <summary>What the list says when it has no rows.</summary>
     public string EmptyList(bool failed, bool searching) =>
         strings(failed ? "StatusUnavailable" : searching ? "NoMatches" : "NoItems");
