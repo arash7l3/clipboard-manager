@@ -43,7 +43,11 @@
             <Button x:Name="ClearButton" Grid.Column="1" VerticalAlignment="Center" MinWidth="40"
                     IsTabStop="False" AllowFocusOnInteraction="False" Click="OnClearClick">
                 <Grid>
-                    <FontIcon x:Name="ClearIcon" Glyph="&#xE74D;" FontSize="14" />
+                    <!-- Drawn, not a font glyph: when Clipo starts at sign-in the icon font may not be ready, and the glyph stayed blank. -->
+                    <Path x:Name="ClearIcon" Width="16" Height="16" Stretch="Uniform" StrokeThickness="1.2"
+                          StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Stroke="{ThemeResource TextFillColorPrimaryBrush}"
+                          Data="M5.5 2.5H10.5 M2 4H14 M3.5 4L4.2 13.2A1 1 0 0 0 5.2 14H10.8A1 1 0 0 0 11.8 13.2L12.5 4 M6.5 6.5V11.5 M9.5 6.5V11.5" />
                     <TextBlock x:Name="ClearConfirm" x:Uid="ClearConfirm" Visibility="Collapsed"
                                Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                 </Grid>

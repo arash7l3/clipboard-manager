@@ -96,6 +96,17 @@ struct StatusMenuTests {
     @Test func menuBarSymbolExists() {
         #expect(NSImage(systemSymbolName: StatusMenu.symbolName, accessibilityDescription: nil) != nil)
     }
+
+    @Test func privateModeKeepsTheIconInTheMenuBar() {
+        let menu = StatusMenu()
+        let item = menu.install()
+        menu.showPrivateMode(true)
+        #expect(item.isVisible)
+        #expect(item.button?.image != nil)
+        menu.showPrivateMode(false)
+        #expect(item.isVisible)
+        #expect(item.button?.image != nil)
+    }
 }
 
 @MainActor
