@@ -36,7 +36,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 2.5 | 2 macOS | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S9 | Done |
 | 2.6 | 2 macOS | Verification: run app, RTL, dark mode, accessibility | Sonnet 5.5 | medium | S10 (fresh) | Audited; manual run on a Mac pending ([checklist](macos-verification.md)) |
 | 3.1 | 3 Windows | WinUI 3 solution, link core via C# bindings | Opus 5.5 | high | S11 | Done in CI; manual run on Windows pending |
-| 3.2 | 3 Windows | Clipboard listener, tray icon, RegisterHotKey | Sonnet 5.5 | high | S12 (with 3.3) |  |
+| 3.2 | 3 Windows | Clipboard listener, tray icon, RegisterHotKey | Sonnet 5.5 | high | S12 (with 3.3) | Done in CI; manual run on Windows pending |
 | 3.3 | 3 Windows | Popup, tabs, search, thumbnails, restore, auto-paste | Opus 5.5 | high | S12 |  |
 | 3.4 | 3 Windows | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S13 |  |
 | 4.1 | 4 Extras | Core: snippets, export/import, plain-text, source app | Sonnet 5.5 | high | S14 |  |

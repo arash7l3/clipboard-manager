@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  A small status window: the history's state and Try Again. The tray icon
-  (step 3.2) takes over as the app's main surface.
+  A small status window: the history's state and Try Again. Closing it hides
+  it; the tray icon keeps the app running. The popup (step 3.3) takes over as
+  the main surface.
 -->
 <Window
     x:Class="Clipo.MainWindow"
@@ -21,6 +22,8 @@
         <!-- Announced by screen readers when it changes. -->
         <TextBlock x:Name="StatusText" Style="{StaticResource BodyStrongTextBlockStyle}"
                    AutomationProperties.LiveSetting="Polite" />
+        <TextBlock x:Name="NoticeText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed" />
         <Button x:Name="TryAgainButton" x:Uid="TryAgainButton" Visibility="Collapsed" Click="OnTryAgain" />
     </StackPanel>
 </Window>

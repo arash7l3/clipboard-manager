@@ -52,4 +52,20 @@
     <value>فعلاً نه</value>
     <comment>Dialog button that keeps the unreadable history for now</comment>
   </data>
+  <data name="TrayTooltip" xml:space="preserve">
+    <value>Clipo — تاریخچه کلیپ‌بورد</value>
+    <comment>Tooltip of the tray icon, read out by screen readers</comment>
+  </data>
+  <data name="MenuOpen" xml:space="preserve">
+    <value>باز کردن Clipo</value>
+    <comment>Tray menu item that opens Clipo; the shortcut is shown after it</comment>
+  </data>
+  <data name="MenuQuit" xml:space="preserve">
+    <value>خروج از Clipo</value>
+    <comment>Tray menu item that quits the app</comment>
+  </data>
+  <data name="HotkeyUnavailable" xml:space="preserve">
+    <value>میانبر {0} را برنامه‌ای دیگر استفاده می‌کند و نمی‌تواند Clipo را باز کند. به‌جای آن از آیکون سینی سیستم استفاده کنید.</value>
+    <comment>Shown in the status window when the global shortcut could not be registered; {0} is the shortcut, such as Ctrl+Shift+V</comment>
+  </data>
 </root>

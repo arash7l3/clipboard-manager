@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.UI;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
@@ -9,13 +10,16 @@ using Windows.Graphics;
 
 namespace Clipo;
 
-/// <summary>Shows the state of the history, and asks before starting a new one.</summary>
+/// <summary>
+/// Shows the state of the history, and asks before starting a new one.
+/// Closing the window hides it, because the app lives in the tray.
+/// </summary>
 public sealed partial class MainWindow : Window
 {
     private static readonly ResourceLoader s_strings = new();
 
     /// <summary>The status window's size, in effective pixels.</summary>
-    private static readonly SizeInt32 s_statusSize = new(440, 240);
+    private static readonly SizeInt32 s_statusSize = new(440, 300);
 
     /// <summary>
     /// Room for the start-over dialog, which is laid out inside the window:
@@ -23,9 +27,13 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private static readonly SizeInt32 s_dialogSize = new(560, 440);
 
+    private bool _allowClose;
+
     public MainWindow()
     {
         InitializeComponent();
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Clipo.ico"));
+        AppWindow.Closing += OnClosing;
         Resize(s_statusSize);
         ShowOpening();
     }
@@ -35,19 +43,41 @@ public sealed partial class MainWindow : Window
 
     public void ShowOpening() => ShowStatus(s_strings.GetString("StatusOpening"), canRetry: false);
 
-    public void ShowReady(ulong itemCount)
+    /// <param name="announce">Whether screen readers read the change out; not for the count growing after each copy.</param>
+    public void ShowReady(ulong itemCount, bool announce = true)
     {
         var format = s_strings.GetString(itemCount == 1 ? "StatusReadyOne" : "StatusReadyOther");
-        ShowStatus(string.Format(CultureInfo.CurrentCulture, format, itemCount), canRetry: false);
+        ShowStatus(string.Format(CultureInfo.CurrentCulture, format, itemCount), canRetry: false, announce);
     }
 
     public void ShowUnavailable() => ShowStatus(s_strings.GetString("StatusUnavailable"), canRetry: true);
 
+    /// <summary>A line under the status, such as a shortcut that could not be registered; <c>null</c> removes it.</summary>
+    public void ShowNotice(string? text)
+    {
+        NoticeText.Text = text ?? "";
+        NoticeText.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>Brings the window to the front, showing it if it was hidden.</summary>
+    public void ShowWindow()
+    {
+        AppWindow.Show();
+        Activate();
+    }
+
+    /// <summary>Closes the window for good, which ends the hiding.</summary>
+    public void Quit()
+    {
+        _allowClose = true;
+        Close();
+    }
+
     /// <summary>Asks whether to delete the unreadable history and start a new one.</summary>
     public async Task<bool> ConfirmStartOverAsync()
     {
+        ShowWindow();
         await LoadedAsync();
-        Activate();
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
@@ -69,12 +99,24 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void ShowStatus(string text, bool canRetry)
+    private void ShowStatus(string text, bool canRetry, bool announce = true)
     {
         StatusText.Text = text;
         TryAgainButton.Visibility = canRetry ? Visibility.Visible : Visibility.Collapsed;
-        FrameworkElementAutomationPeer.CreatePeerForElement(StatusText)
-            .RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        if (announce)
+        {
+            FrameworkElementAutomationPeer.CreatePeerForElement(StatusText)
+                .RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        }
+    }
+
+    private void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (!_allowClose)
+        {
+            args.Cancel = true;
+            sender.Hide();
+        }
     }
 
     private void OnTryAgain(object sender, RoutedEventArgs e) => RetryRequested?.Invoke(this, EventArgs.Empty);
