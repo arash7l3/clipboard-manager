@@ -464,4 +464,12 @@
     <value>وارد کردن ناموفق بود.</value>
     <comment>Shown when the store could not import</comment>
   </data>
+  <data name="MenuPin" xml:space="preserve">
+    <value>سنجاق کردن</value>
+    <comment>Popup row menu item that pins the item</comment>
+  </data>
+  <data name="MenuUnpin" xml:space="preserve">
+    <value>برداشتن سنجاق</value>
+    <comment>Popup row menu item that unpins the item</comment>
+  </data>
 </root>

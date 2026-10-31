@@ -45,6 +45,29 @@ public sealed class HistoryTests : IDisposable
     }
 
     [Fact]
+    public async Task PinningMovesAnItemIntoThePinnedTabAndBack()
+    {
+        using var store = OpenReady(DatabasePath(), new MemoryKeyStore(), expectedCount: 0);
+        var added = Assert.IsType<Recorded.Added>(store.Record(new Capture(new ItemContent.Text(new TextContent("keep")), DateTime.UtcNow)));
+        var id = added.Item.Id;
+        int Pinned() => store.Previews(new Query(Category.Pinned, "")).Length;
+
+        Assert.True(await History.SetPinnedAsync(store, id, true));
+        Assert.Equal(1, Pinned());
+        Assert.True(await History.SetPinnedAsync(store, id, false));
+        Assert.Equal(0, Pinned());
+    }
+
+    [Fact]
+    public async Task PinningWithoutAnOpenHistoryOrAnUnknownItemFails()
+    {
+        using var store = OpenReady(DatabasePath(), new MemoryKeyStore(), expectedCount: 0);
+
+        Assert.False(await History.SetPinnedAsync(null, 1, true));
+        Assert.False(await History.SetPinnedAsync(store, 999, true));
+    }
+
+    [Fact]
     public void MissingKeyIsAKeyProblem()
     {
         var path = DatabasePath();

@@ -33,7 +33,7 @@
         </SelectorBar>
 
         <ListView x:Name="HistoryList" x:Uid="HistoryList" Grid.Row="2"
-                  SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OnItemClick"
+                  SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OnItemClick" RightTapped="OnRowRightTapped"
                   IsTabStop="False" AllowFocusOnInteraction="False">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:PopupRow">

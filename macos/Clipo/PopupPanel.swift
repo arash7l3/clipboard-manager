@@ -10,6 +10,8 @@ final class PopupPanel: NSPanel {
     var onDismiss: (@MainActor () -> Void)?
     /// Called with the row index (0 to 8) for Cmd+1 to Cmd+9.
     var onQuickPaste: (@MainActor (Int) -> Void)?
+    /// Called for Cmd+P: pin or unpin the selected item.
+    var onTogglePin: (@MainActor () -> Void)?
 
     /// - Parameter content: The view to show, filling the panel.
     init(content: NSView) {
@@ -75,6 +77,10 @@ final class PopupPanel: NSPanel {
            let digit = event.charactersIgnoringModifiers.flatMap({ Int($0) }),
            (1...9).contains(digit) {
             onQuickPaste?(digit - 1)
+            return true
+        }
+        if modifiers == .command, event.charactersIgnoringModifiers == "p" {
+            onTogglePin?()
             return true
         }
         return super.performKeyEquivalent(with: event)

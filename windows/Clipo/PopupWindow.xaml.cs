@@ -6,6 +6,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Graphics;
@@ -19,7 +20,8 @@ namespace Clipo;
 /// Page Up, Page Down, Home and End move the selection; Tab and Shift+Tab
 /// switch tabs; Enter picks the selected item; Esc closes. Ctrl+1 to Ctrl+9
 /// pick the first nine rows. Holding Shift while picking, with Enter or a
-/// click, pastes without formatting. A click on a row picks it, and clicking
+/// click, pastes without formatting. Ctrl+P, or Pin in a row's right-click
+/// menu, pins or unpins an item. A click on a row picks it, and clicking
 /// anywhere else closes the popup.
 /// </summary>
 public sealed partial class PopupWindow : Window
@@ -67,6 +69,9 @@ public sealed partial class PopupWindow : Window
 
     /// <summary>Raised with the row the user picked, after the popup closed and gave the focus back.</summary>
     public event EventHandler<PopupChoice>? Chosen;
+
+    /// <summary>Raised when the user pins or unpins a row; the popup stays open.</summary>
+    public event EventHandler<PopupPin>? PinRequested;
 
     public bool IsShown { get; private set; }
 
@@ -203,6 +208,14 @@ public sealed partial class PopupWindow : Window
     private void OnSearchKeyDown(object sender, KeyRoutedEventArgs e)
     {
         e.Handled = true;
+        if (e.Key == VirtualKey.P && Desktop.IsControlDown())
+        {
+            if (_model.SelectedRow is { } selected)
+            {
+                RequestPin(selected);
+            }
+            return;
+        }
         if (Desktop.IsControlDown() && QuickPasteNumber(e.Key) is { } number)
         {
             if (_model.RowForShortcut(number) is { } quick)
@@ -248,6 +261,33 @@ public sealed partial class PopupWindow : Window
                 e.Handled = false;
                 break;
         }
+    }
+
+    private void RequestPin(ItemPreview row) => PinRequested?.Invoke(this, new PopupPin(row, !row.Pinned));
+
+    private void OnRowRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is not PopupRow row)
+        {
+            return;
+        }
+        e.Handled = true;
+        var index = _model.Rows.ToList().FindIndex(preview => preview.Id == row.Preview.Id);
+        if (index >= 0)
+        {
+            _model.Select(index);
+        }
+        var item = new MenuFlyoutItem
+        {
+            Text = s_strings.GetString(row.Preview.Pinned ? "MenuUnpin" : "MenuPin"),
+            KeyboardAcceleratorTextOverride = "Ctrl+P",
+        };
+        item.Click += (_, _) => RequestPin(row.Preview);
+        var flyout = new MenuFlyout();
+        flyout.Items.Add(item);
+        // The menu takes the focus; the search field gets it back.
+        flyout.Closed += (_, _) => SearchBox.Focus(FocusState.Programmatic);
+        flyout.ShowAt(HistoryList, new FlyoutShowOptions { Position = e.GetPosition(HistoryList) });
     }
 
     /// <summary>1 to 9 for the digit keys, in the top row or on the number pad.</summary>
@@ -300,3 +340,8 @@ public sealed partial class PopupWindow : Window
 /// <param name="Row">The item.</param>
 /// <param name="Plain">Paste it as plain text, without formatting.</param>
 public sealed record PopupChoice(ItemPreview Row, bool Plain);
+
+/// <summary>A request to pin or unpin a row.</summary>
+/// <param name="Row">The item.</param>
+/// <param name="Pinned">Whether it should be pinned afterwards.</param>
+public sealed record PopupPin(ItemPreview Row, bool Pinned);

@@ -5,8 +5,9 @@ import ClipoCore
 ///
 /// The search field keeps the keyboard the whole time. Typing searches;
 /// Up, Down, Page Up, Page Down, Home and End move the selection; Tab and
-/// Shift+Tab switch tabs; Enter picks the selected item; Esc closes. A click
-/// on a row picks it, and a click outside the popup closes it.
+/// Shift+Tab switch tabs; Enter picks the selected item; Esc closes. Cmd+P,
+/// or Pin in a row's context menu, pins or unpins an item. A click on a row
+/// picks it, and a click outside the popup closes it.
 @MainActor
 final class PopupController: NSViewController {
     let model: PopupModel
@@ -16,6 +17,9 @@ final class PopupController: NSViewController {
     /// Called instead of ``onChoose`` when the user picked with Option held:
     /// paste only the item's text, without formatting.
     var onChoosePlain: (@MainActor (ItemPreview) -> Void)?
+    /// Called with the item and whether it should now be pinned. The popup
+    /// stays open and lists the rows again once this returns.
+    var onSetPinned: (@MainActor (ItemPreview, Bool) async -> Void)?
     /// The current time, for "copied 5 min. ago".
     var now: () -> Date = Date.init
 
@@ -29,6 +33,7 @@ final class PopupController: NSViewController {
         let panel = PopupPanel(content: view)
         panel.onDismiss = { [weak self] in self?.dismiss() }
         panel.onQuickPaste = { [weak self] index in self?.choose(rowAt: index) }
+        panel.onTogglePin = { [weak self] in self?.togglePinOfSelected() }
         return panel
     }()
 
@@ -152,6 +157,9 @@ final class PopupController: NSViewController {
         table.delegate = self
         table.target = self
         table.action = #selector(rowClicked(_:))
+        let contextMenu = NSMenu()
+        contextMenu.delegate = self
+        table.menu = contextMenu
         table.setAccessibilityLabel(String(
             localized: "Clipboard items",
             comment: "Screen-reader label of the popup's list of items"

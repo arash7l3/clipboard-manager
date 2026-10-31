@@ -47,3 +47,9 @@ Record anything that fails as a new step in `PLAN.md`.
 - [ ] Settings > Snippets: add, edit, delete; the menu-bar Snippets submenu follows and pasting one works.
 - [ ] Settings > Data: Export warns, writes a file; Import of that file reports the counts, a second import adds nothing; a random file is refused.
 - [ ] Farsi: new tabs and messages are translated and mirrored.
+
+## Pinning (step 4.4), still to try on a Mac
+
+- [ ] Cmd+P pins the selected row (pin mark appears); again unpins it; the Pinned tab lists it.
+- [ ] Right-click a row: the menu says Pin or Unpin, and the popup stays open while it is shown.
+- [ ] Unpinning in the Pinned tab removes the row; Farsi labels are translated.

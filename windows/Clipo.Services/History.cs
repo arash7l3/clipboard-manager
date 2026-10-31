@@ -101,6 +101,28 @@ public static class History
         }
     }
 
+    /// <summary>
+    /// Pins or unpins item <paramref name="id"/> in <paramref name="store"/>, off the calling thread.
+    /// Returns whether it worked; unpinning may evict items past the history limit.
+    /// </summary>
+    public static Task<bool> SetPinnedAsync(ClipStore? store, long id, bool pinned) => Task.Run(() =>
+    {
+        try
+        {
+            if (store is null)
+            {
+                return false;
+            }
+            store.SetPinned(id, pinned);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"pinning item {id} failed: {Describe(e)}");
+            return false;
+        }
+    });
+
     /// <summary><see cref="Open"/> on the user's history, off the calling thread.</summary>
     [SupportedOSPlatform("windows")]
     public static Task<OpenResult> OpenDefaultAsync() => Task.Run(() =>

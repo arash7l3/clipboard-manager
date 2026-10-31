@@ -79,6 +79,7 @@ public partial class App : Application
         var popup = new PopupWindow(new PopupModel(query => _store?.Previews(query)));
         _popup = popup;
         popup.Chosen += (_, choice) => _ = RestoreAsync(choice);
+        popup.PinRequested += (_, pin) => _ = PinAsync(pin);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
             WriteToClipboardAsync,
@@ -170,6 +171,17 @@ public partial class App : Application
         {
             Desktop.Beep();
         }
+    }
+
+    private async Task PinAsync(PopupPin pin)
+    {
+        if (!await History.SetPinnedAsync(_store, pin.Row.Id, pin.Pinned))
+        {
+            Desktop.Beep();
+        }
+        // Unpinning may have evicted items, so the count and the rows change.
+        _ = TrimAsync();
+        _popup?.HistoryChanged();
     }
 
     private async Task PasteSnippetAsync(Snippet snippet)
