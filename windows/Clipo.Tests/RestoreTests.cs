@@ -21,7 +21,8 @@ public sealed class RestoreTests : IDisposable
         var outcome = await Restorer(autoPaste: false).RestoreAsync(7);
 
         Assert.Equal(RestoreOutcome.Restored, outcome);
-        Assert.Equal(["load 7", "write"], Calls());
+        // The bump runs in the background, so it may come at any point after the write.
+        Assert.Equal(["load 7", "write"], Calls().Where(call => !call.StartsWith("bump", StringComparison.Ordinal)));
         await WaitForAsync("bump 7");
     }
 
