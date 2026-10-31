@@ -53,7 +53,10 @@ final class StatusMenu: NSObject {
         showHistoryItem.target = self
         showHistoryItem.action = #selector(showHistory)
 
-        snippetsItem.title = String(localized: "Snippets", comment: "Menu item with the list of saved snippets")
+        snippetsItem.title = String(
+            localized: "Snippets",
+            comment: "Menu item with the list of saved snippets"
+        )
         snippetsItem.submenu = snippetsMenu
         showSnippets([])
 
