@@ -74,7 +74,8 @@ final class StatusMenu: NSObject {
         quitItem.keyEquivalent = "q"
 
         menu.items = [
-            statusLine, retryItem, showHistoryItem, snippetsItem, .separator(), settingsItem, aboutItem, .separator(), quitItem
+            statusLine, retryItem, showHistoryItem, snippetsItem, .separator(),
+            settingsItem, aboutItem, .separator(), quitItem
         ]
         show(.opening)
     }
