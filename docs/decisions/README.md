@@ -26,3 +26,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0020](0020-windows-extras.md) | Windows extras: Shift for plain text, Ctrl+digit quick paste, snippets in the tray menu |
 | [0021](0021-pinning.md) | Pinning from the popup: Cmd/Ctrl+P and a row context menu |
 | [0022](0022-start-tab-and-private-indicator.md) | Start tab setting, and private mode in the menus with a visible indicator |
+| [0023](0023-macos-dmg-and-signing.md) | macOS dmg: one script, Developer ID when available, ad-hoc until then |

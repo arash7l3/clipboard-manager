@@ -39,6 +39,15 @@ xcodebuild test -project Clipo.xcodeproj -scheme Clipo -destination 'platform=ma
 
 Run `cargo xtask package macos` again after changing the core. Lint with `swiftlint lint --strict` from `macos/`. See [decision 0009](docs/decisions/0009-macos-app-shell.md) for how the app stores its key.
 
+To build a dmg (Release, arm64 + x86_64) into `macos/build/dist/`:
+
+```sh
+(cd core && cargo xtask package macos)
+macos/scripts/make-dmg.sh
+```
+
+Without `CLIPO_SIGN_IDENTITY` and `CLIPO_NOTARY_PROFILE` the dmg is ad-hoc signed. CI builds it for a `v*` tag or a manual run of the "macOS dmg" workflow and uploads `Clipo-macos-dmg`. See [decision 0023](docs/decisions/0023-macos-dmg-and-signing.md) for signing and notarization.
+
 ## Building the Windows app
 
 Needs Windows 11, the .NET 10 SDK, Rust with the MSVC build tools, and Perl (for the vendored OpenSSL). Package the core first; the projects pick it up from `core/dist/windows/`:
@@ -65,4 +74,4 @@ See [decision 0014](docs/decisions/0014-windows-app-shell.md) for how the app st
 
 ## Requirements
 
-macOS 14+ or Windows 11. Builds are unsigned for now.
+macOS 14+ or Windows 11. Builds are unsigned for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.

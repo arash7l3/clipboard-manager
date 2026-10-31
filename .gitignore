@@ -6,6 +6,7 @@ core/target/
 macos/**/xcuserdata/
 macos/**/DerivedData/
 macos/.build/
+macos/build/
 *.xcuserstate
 
 # Visual Studio / C#
