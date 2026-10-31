@@ -80,6 +80,13 @@ Without `CLIPO_SIGN_PFX` and `CLIPO_SIGN_PFX_PASSWORD` the package is signed wit
 
 See [decision 0014](docs/decisions/0014-windows-app-shell.md) for how the app stores its key.
 
+## Install
+
+Pushing a `v*` tag builds the macOS dmg and the Windows MSIX and attaches them, with their `.sha256` files, to a GitHub release (marked pre-release). Without a tag, run the "macOS dmg" or "Windows MSIX" workflow by hand and download its artifact; the plain Windows build is the `Clipo-win-x64` artifact of the "Windows" workflow. Artifacts expire after 14 to 30 days; release files do not.
+
+- **macOS:** open the dmg, drag Clipo to Applications, and the first time open it from System Settings > Privacy & Security > Open Anyway.
+- **Windows:** in an administrator PowerShell, run `Import-Certificate -FilePath .\Clipo-test-signing.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople`, then `Add-AppxPackage .\Clipo-<version>-x64-selfsigned.msix`.
+
 ## Requirements
 
 macOS 14+ or Windows 11. Builds are unsigned (macOS) or test-signed (Windows MSIX) for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.
