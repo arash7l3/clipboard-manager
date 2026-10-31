@@ -22,3 +22,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0016](0016-windows-popup-and-restore.md) | Windows popup, restore and auto-paste: a WinUI window that takes the keyboard, SendInput for Ctrl+V |
 | [0017](0017-windows-settings.md) | Windows settings: a WinUI window over a JSON file, Run-key login item, language by restart |
 | [0018](0018-snippets-and-export.md) | Extras in the core: snippets table, plain-text view, unencrypted binary export |
+| [0019](0019-macos-extras.md) | macOS extras: Option for plain text, Cmd+digit quick paste, snippets in the menu |

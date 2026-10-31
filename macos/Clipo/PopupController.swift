@@ -13,6 +13,9 @@ final class PopupController: NSViewController {
 
     /// Called with the item the user picked, after the popup has closed.
     var onChoose: (@MainActor (ItemPreview) -> Void)?
+    /// Called instead of ``onChoose`` when the user picked with Option held:
+    /// paste only the item's text, without formatting.
+    var onChoosePlain: (@MainActor (ItemPreview) -> Void)?
     /// The current time, for "copied 5 min. ago".
     var now: () -> Date = Date.init
 
@@ -25,6 +28,7 @@ final class PopupController: NSViewController {
     private lazy var panel: PopupPanel = {
         let panel = PopupPanel(content: view)
         panel.onDismiss = { [weak self] in self?.dismiss() }
+        panel.onQuickPaste = { [weak self] index in self?.choose(rowAt: index) }
         return panel
     }()
 
@@ -233,15 +237,6 @@ final class PopupController: NSViewController {
         max(1, Int(scrollView.contentView.bounds.height / table.rowHeight) - 1)
     }
 
-    func chooseSelected() {
-        guard let row = model.selectedRow else {
-            NSSound.beep()
-            return
-        }
-        dismiss()
-        onChoose?(row)
-    }
-
     @objc private func searchChanged(_ sender: NSSearchField) {
         model.setSearchText(sender.stringValue)
     }
@@ -257,6 +252,31 @@ final class PopupController: NSViewController {
         let row = sender.clickedRow
         guard model.rows.indices.contains(row) else { return }
         model.select(row)
+        chooseSelected(plain: NSEvent.modifierFlags.contains(.option))
+    }
+}
+
+extension PopupController {
+    func chooseSelected(plain: Bool = false) {
+        guard let row = model.selectedRow else {
+            NSSound.beep()
+            return
+        }
+        dismiss()
+        if plain {
+            onChoosePlain?(row)
+        } else {
+            onChoose?(row)
+        }
+    }
+
+    /// Picks the row at `index`, for the Cmd+digit shortcuts.
+    func choose(rowAt index: Int) {
+        guard model.rows.indices.contains(index) else {
+            NSSound.beep()
+            return
+        }
+        model.select(index)
         chooseSelected()
     }
 }
@@ -276,11 +296,7 @@ extension PopupController: NSSearchFieldDelegate {
     @discardableResult
     func handle(_ command: Selector) -> Bool {
         if let move = selectionMove(for: command) {
-            switch move {
-            case let .offset(rows): model.moveSelection(by: rows)
-            case .first: model.select(0)
-            case .last: model.select(model.rows.count - 1)
-            }
+            apply(move)
             return true
         }
         switch command {
@@ -290,12 +306,23 @@ extension PopupController: NSSearchFieldDelegate {
             model.moveCategory(by: -1)
         case #selector(NSResponder.insertNewline(_:)):
             chooseSelected()
+        case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
+            // Option+Return.
+            chooseSelected(plain: true)
         case #selector(NSResponder.cancelOperation(_:)):
             dismiss()
         default:
             return false
         }
         return true
+    }
+
+    private func apply(_ move: SelectionMove) {
+        switch move {
+        case let .offset(rows): model.moveSelection(by: rows)
+        case .first: model.select(0)
+        case .last: model.select(model.rows.count - 1)
+        }
     }
 
     private enum SelectionMove {
@@ -335,7 +362,7 @@ extension PopupController: NSTableViewDataSource, NSTableViewDelegate {
         guard model.rows.indices.contains(row) else { return nil }
         let cell = tableView.makeView(withIdentifier: HistoryRowView.reuseIdentifier, owner: self) as? HistoryRowView
             ?? HistoryRowView()
-        cell.show(model.rows[row], now: now())
+        cell.show(model.rows[row], now: now(), quickPaste: row < 9 ? row + 1 : nil)
         return cell
     }
 

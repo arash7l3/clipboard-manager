@@ -49,6 +49,10 @@ struct ItemRestorerTests {
     ) -> ItemRestorer {
         let restorer = ItemRestorer(pasteboard: board.pasteboard)
         restorer.load = { id in items.first { $0.id == id } }
+        restorer.loadPlainText = { id in
+            guard case let .text(text)? = items.first(where: { $0.id == id })?.content else { return nil }
+            return text.plain
+        }
         let bumps = bumps
         restorer.bump = { id in bumps.add(id) }
         restorer.didWrite = { [effects] in effects.writes += 1 }
@@ -67,6 +71,47 @@ struct ItemRestorerTests {
         #expect(board.pasteboard.string(forType: .string) == "two")
         #expect(effects.writes == 1)
         #expect(effects.pastes == 0)
+    }
+
+    @Test func plainTextDropsTheFormatting() async {
+        let rich = RichText(format: .html, data: "<b>bold</b>")
+        let formatted = ClipItem(
+            id: 4,
+            content: .text(text: TextContent(plain: "bold", rich: rich)),
+            pinned: false,
+            sourceApp: nil,
+            createdAt: Rows.copiedAt,
+            lastCopiedAt: Rows.copiedAt
+        )
+        let restorer = restorer(items: [formatted])
+
+        let outcome = await restorer.restore(Rows.text(4, "bold"), plainText: true)
+
+        #expect(outcome == .restored)
+        #expect(board.pasteboard.string(forType: .string) == "bold")
+        #expect(board.pasteboard.data(forType: .html) == nil)
+    }
+
+    @Test func plainTextOfAnImageIsUnavailable() async {
+        board.set("untouched")
+        let restorer = restorer(items: [])
+
+        let outcome = await restorer.restore(Rows.text(5, "image"), plainText: true)
+
+        #expect(outcome == .unavailable)
+        #expect(board.pasteboard.string(forType: .string) == "untouched")
+    }
+
+    @Test func snippetTextIsPastedWithoutTouchingTheHistory() async {
+        let restorer = restorer(items: [], autoPaste: true)
+
+        let outcome = await restorer.restore(text: "Kind regards")
+
+        #expect(outcome == .pasted)
+        #expect(board.pasteboard.string(forType: .string) == "Kind regards")
+        #expect(effects.writes == 1)
+        #expect(effects.pastes == 1)
+        #expect(bumps.all.isEmpty)
     }
 
     @Test func restoredItemMovesToTheTop() async throws {

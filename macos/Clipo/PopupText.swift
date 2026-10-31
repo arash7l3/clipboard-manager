@@ -27,12 +27,7 @@ enum PopupText {
     static func title(_ content: PreviewContent) -> String {
         switch content {
         case let .text(snippet, _, _):
-            let line = snippet
-                .split(whereSeparator: \.isNewline)
-                .lazy
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .first { !$0.isEmpty } ?? ""
-            return String(line.prefix(maxTitleLength))
+            return firstLine(snippet)
         case let .image(_, width, height, _):
             return String(
                 localized: "Image \(Int(width)) × \(Int(height))",
@@ -46,6 +41,16 @@ enum PopupText {
                 comment: "Popup row title of several copied files: the first file's name and how many others"
             )
         }
+    }
+
+    /// The first line of `text` that is not blank, cut to ``maxTitleLength``.
+    static func firstLine(_ text: String) -> String {
+        let line = text
+            .split(whereSeparator: \.isNewline)
+            .lazy
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { !$0.isEmpty } ?? ""
+        return String(line.prefix(maxTitleLength))
     }
 
     /// Where and when the item was copied, for the row's second line.

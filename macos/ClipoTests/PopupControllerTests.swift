@@ -56,6 +56,70 @@ struct PopupControllerTests {
         #expect(picked == [2])
     }
 
+    @Test func optionEnterPicksPlainText() async {
+        let controller = await loaded(rows)
+        var plain: [Int64] = []
+        var normal: [Int64] = []
+        controller.onChoose = { normal.append($0.id) }
+        controller.onChoosePlain = { plain.append($0.id) }
+
+        #expect(controller.handle(#selector(NSResponder.insertNewlineIgnoringFieldEditor(_:))))
+
+        #expect(plain == [3])
+        #expect(normal.isEmpty)
+    }
+
+    @Test func quickPasteChoosesTheNthRow() async {
+        let controller = await loaded(rows)
+        var picked: [Int64] = []
+        controller.onChoose = { picked.append($0.id) }
+
+        controller.choose(rowAt: 2)
+        controller.choose(rowAt: 8)
+
+        #expect(picked == [1])
+    }
+
+    @Test func firstNineRowsShowTheirShortcut() async throws {
+        let controller = await loaded(rows)
+        let cell = try #require(
+            controller.tableView(controller.table, viewFor: nil, row: 0) as? HistoryRowView
+        )
+        #expect(cell.shortcut.stringValue == "⌘1")
+    }
+
+    @Test func commandDigitReachesTheQuickPasteHook() {
+        let panel = PopupPanel(content: NSView())
+        var indexes: [Int] = []
+        panel.onQuickPaste = { indexes.append($0) }
+
+        func key(_ digit: String, _ modifiers: NSEvent.ModifierFlags) -> NSEvent? {
+            NSEvent.keyEvent(
+                with: .keyDown,
+                location: .zero,
+                modifierFlags: modifiers,
+                timestamp: 0,
+                windowNumber: 0,
+                context: nil,
+                characters: digit,
+                charactersIgnoringModifiers: digit,
+                isARepeat: false,
+                keyCode: 0
+            )
+        }
+
+        if let event = key("3", .command) {
+            #expect(panel.performKeyEquivalent(with: event))
+        }
+        if let event = key("3", [.command, .shift]) {
+            #expect(!panel.performKeyEquivalent(with: event))
+        }
+        if let event = key("0", .command) {
+            #expect(!panel.performKeyEquivalent(with: event))
+        }
+        #expect(indexes == [2])
+    }
+
     @Test func tabKeysSwitchTabs() async {
         let controller = await loaded(rows)
 

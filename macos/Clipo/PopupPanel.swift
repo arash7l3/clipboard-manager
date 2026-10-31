@@ -8,6 +8,8 @@ import AppKit
 final class PopupPanel: NSPanel {
     /// Called when the panel should go away: Esc, or a click outside it.
     var onDismiss: (@MainActor () -> Void)?
+    /// Called with the row index (0 to 8) for Cmd+1 to Cmd+9.
+    var onQuickPaste: (@MainActor (Int) -> Void)?
 
     /// - Parameter content: The view to show, filling the panel.
     init(content: NSView) {
@@ -66,6 +68,17 @@ final class PopupPanel: NSPanel {
     // keyboard for search and arrows.
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if modifiers == .command,
+           let digit = event.charactersIgnoringModifiers.flatMap({ Int($0) }),
+           (1...9).contains(digit) {
+            onQuickPaste?(digit - 1)
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 
     override func cancelOperation(_ sender: Any?) {
         onDismiss?()

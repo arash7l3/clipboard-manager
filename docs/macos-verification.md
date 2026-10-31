@@ -39,3 +39,11 @@ Run `cargo xtask package macos`, open `macos/Clipo.xcodeproj`, run, then tick ea
 - [ ] Settings controls all have names.
 
 Record anything that fails as a new step in `PLAN.md`.
+
+## Extras (step 4.2), still to try on a Mac
+
+- [ ] Cmd+1 to Cmd+9 in the popup pick the matching row; rows show "⌘1" and so on.
+- [ ] Option+Return (and Option+click) on a rich-text item pastes it without formatting; on an image it beeps.
+- [ ] Settings > Snippets: add, edit, delete; the menu-bar Snippets submenu follows and pasting one works.
+- [ ] Settings > Data: Export warns, writes a file; Import of that file reports the counts, a second import adds nothing; a random file is refused.
+- [ ] Farsi: new tabs and messages are translated and mirrored.

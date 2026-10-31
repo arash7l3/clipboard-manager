@@ -97,6 +97,17 @@
         }
       }
     },
+    "Add Snippet" : {
+      "comment" : "Settings button that adds a snippet",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افزودن متن"
+          }
+        }
+      }
+    },
     "After 1 day" : {
       "comment" : "Settings choice: auto-clear after one day",
       "localizations" : {
@@ -163,6 +174,17 @@
         }
       }
     },
+    "An export is not encrypted. Anyone who gets the file can read what you copied." : {
+      "comment" : "Settings note under the export button",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی رمزگذاری نمی‌شود. هر کسی که فایل را به دست آورد می‌تواند آنچه کپی کرده‌اید را بخواند."
+          }
+        }
+      }
+    },
     "Appearance" : {
       "comment" : "Settings picker: light, dark or system look",
       "localizations" : {
@@ -192,6 +214,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "شناسهٔ بسته"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "comment" : "Button that cancels",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انصراف"
           }
         }
       }
@@ -236,6 +269,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "موارد کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Clipo Export.clipoexport" : {
+      "comment" : "Default file name of an export",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی Clipo.clipoexport"
           }
         }
       }
@@ -302,6 +346,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تیره"
+          }
+        }
+      }
+    },
+    "Data" : {
+      "comment" : "Settings tab for export and import",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "داده‌ها"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "comment" : "Settings button that deletes a snippet",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "comment" : "Settings button that edits a snippet",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ویرایش"
+          }
+        }
+      }
+    },
+    "Export" : {
+      "comment" : "Alert button that exports the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی گرفتن"
+          }
+        }
+      }
+    },
+    "Export History and Snippets…" : {
+      "comment" : "Settings button that exports",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی گرفتن از تاریخچه و متن‌ها…"
+          }
+        }
+      }
+    },
+    "Export without encryption?" : {
+      "comment" : "Alert title before exporting the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی بدون رمزگذاری؟"
+          }
+        }
+      }
+    },
+    "Exported." : {
+      "comment" : "Settings message after a successful export",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی گرفته شد."
           }
         }
       }
@@ -390,6 +511,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تصویر‌ها"
+          }
+        }
+      }
+    },
+    "Imported %lld items and %lld snippets." : {
+      "comment" : "Settings message after an import: how many items and snippets were added",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld مورد و %2$lld متن آماده وارد شد."
+          }
+        }
+      }
+    },
+    "Import…" : {
+      "comment" : "Settings button that imports",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وارد کردن…"
           }
         }
       }
@@ -500,6 +643,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "موردی پیدا نشد"
+          }
+        }
+      }
+    },
+    "No snippets yet." : {
+      "comment" : "Settings text when no snippet is saved",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هنوز متنی ذخیره نشده است."
+          }
+        }
+      }
+    },
+    "No snippets. Add them in Settings." : {
+      "comment" : "Snippets submenu text when no snippet is saved",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متنی ذخیره نشده است. از تنظیمات اضافه کنید."
           }
         }
       }
@@ -669,6 +834,17 @@
         }
       }
     },
+    "Save Snippet" : {
+      "comment" : "Settings button that saves a changed snippet",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ذخیره متن"
+          }
+        }
+      }
+    },
     "Search" : {
       "comment" : "Placeholder of the popup's search field",
       "localizations" : {
@@ -713,6 +889,28 @@
         }
       }
     },
+    "Snippet text" : {
+      "comment" : "Screen-reader label of the snippet text field",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متن"
+          }
+        }
+      }
+    },
+    "Snippets" : {
+      "comment" : "Menu item and Settings tab for saved snippets",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متن‌های آماده"
+          }
+        }
+      }
+    },
     "Start Clipo at login" : {
       "comment" : "Settings switch: open Clipo when the user logs in",
       "localizations" : {
@@ -746,6 +944,61 @@
         }
       }
     },
+    "The export failed." : {
+      "comment" : "Settings message when exporting failed",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خروجی گرفتن ناموفق بود."
+          }
+        }
+      }
+    },
+    "The file could not be read." : {
+      "comment" : "Settings message when import failed",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فایل خوانده نشد."
+          }
+        }
+      }
+    },
+    "The file could not be written." : {
+      "comment" : "Settings message when the export file could not be saved",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فایل ذخیره نشد."
+          }
+        }
+      }
+    },
+    "The file holds everything you copied, possibly including passwords, as plain data. Keep it somewhere safe and delete it when you no longer need it." : {
+      "comment" : "Alert text before exporting the history",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "این فایل همه آنچه را کپی کرده‌اید، شاید شامل گذرواژه‌ها، به‌صورت ساده نگه می‌دارد. آن را در جای امنی نگه دارید و وقتی دیگر لازم نیست حذفش کنید."
+          }
+        }
+      }
+    },
+    "The import failed." : {
+      "comment" : "Settings message when importing failed",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وارد کردن ناموفق بود."
+          }
+        }
+      }
+    },
     "The key that encrypts it is missing from your keychain or doesn't match. You can start a new, empty history. The old history can't be recovered." : {
       "comment" : "Alert text when the history's encryption key is missing or wrong",
       "localizations" : {
@@ -753,6 +1006,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "کلیدی که آن را رمزگذاری می‌کند در جاکلیدی شما نیست یا با آن جور نیست. می‌توانید تاریخچه‌ای تازه و خالی شروع کنید. تاریخچه قبلی دیگر بازیابی نمی‌شود."
+          }
+        }
+      }
+    },
+    "The snippet needs a title and some text." : {
+      "comment" : "Settings message when a snippet could not be saved",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متن آماده به عنوان و متن نیاز دارد."
+          }
+        }
+      }
+    },
+    "This export is from a newer version of Clipo." : {
+      "comment" : "Settings message when the import file is from a newer version",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "این خروجی از نسخه جدیدتری از Clipo است."
+          }
+        }
+      }
+    },
+    "This is not a Clipo export, or it is damaged." : {
+      "comment" : "Settings message when the import file is not valid",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "این فایل خروجی Clipo نیست یا آسیب دیده است."
+          }
+        }
+      }
+    },
+    "Title" : {
+      "comment" : "Settings field: the name of a snippet",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عنوان"
           }
         }
       }

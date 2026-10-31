@@ -100,6 +100,17 @@ enum History {
         }
     }
 
+    /// The plain text of the item with `id`, or `nil` for an image, a missing
+    /// item or a store failure. Does disk I/O: call it off the main thread.
+    static func plainText(_ id: Int64, in store: ClipStore) -> String? {
+        do {
+            return try store.plainText(id: id)
+        } catch {
+            logger.error("loading plain text failed: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
     /// Moves the item with `id` to the top, as if it was copied again. Does
     /// disk I/O: call it off the main thread.
     static func bump(_ id: Int64, in store: ClipStore) {

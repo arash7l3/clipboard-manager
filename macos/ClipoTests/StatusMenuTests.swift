@@ -1,5 +1,6 @@
 import AppKit
 @testable import Clipo
+import ClipoCore
 import Testing
 
 @MainActor
@@ -79,5 +80,33 @@ struct StatusMenuTests {
 
     @Test func menuBarSymbolExists() {
         #expect(NSImage(systemSymbolName: StatusMenu.symbolName, accessibilityDescription: nil) != nil)
+    }
+}
+
+@MainActor
+struct SnippetsMenuTests {
+    private func snippet(_ id: Int64, _ title: String) -> Snippet {
+        Snippet(id: id, title: title, body: "body \(id)", createdAt: Rows.copiedAt, updatedAt: Rows.copiedAt)
+    }
+
+    @Test func emptySubmenuSaysSoAndDoesNothing() {
+        let menu = StatusMenu()
+        #expect(menu.menu.items.contains(menu.snippetsItem))
+        #expect(menu.snippetsMenu.items.count == 1)
+        #expect(menu.snippetsMenu.items.first?.action == nil)
+    }
+
+    @Test func pickingASnippetCallsBackWithIt() throws {
+        let menu = StatusMenu()
+        menu.showSnippets([snippet(1, "Greeting"), snippet(2, "Address")])
+        var pasted: [Int64] = []
+        menu.onPasteSnippet = { pasted.append($0.id) }
+
+        #expect(menu.snippetsMenu.items.map(\.title) == ["Greeting", "Address"])
+        let item = menu.snippetsMenu.items[1]
+        let action = try #require(item.action)
+        _ = NSApp.sendAction(action, to: item.target, from: item)
+
+        #expect(pasted == [2])
     }
 }
