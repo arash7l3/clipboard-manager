@@ -6,10 +6,14 @@ PNG images inside the .ico, which Windows Vista and later read.
 
     python3 assets/make-windows-icon.py windows/Clipo/Clipo.ico
     python3 assets/make-windows-icon.py windows/Clipo/ClipoPrivate.ico private
+    python3 assets/make-windows-icon.py --logos windows/Clipo/Assets
+
+The second form writes the MSIX package's logos (Package.appxmanifest) into a folder.
 
 The "private" variant is the tray icon while private mode is on: a grey
 tile with an orange badge, so it differs at a glance, also in grey tones.
 """
+import os
 import struct
 import sys
 import zlib
@@ -84,6 +88,17 @@ def png(size, raw):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
 
 
+# The logos the package manifest names, at 100% scale.
+LOGOS = {"StoreLogo.png": 50, "Square44x44Logo.png": 44, "Square150x150Logo.png": 150}
+
+
+def write_logos(folder):
+    os.makedirs(folder, exist_ok=True)
+    for name, size in LOGOS.items():
+        with open(os.path.join(folder, name), "wb") as f:
+            f.write(render(size, SHAPES))
+
+
 def main(path, variant):
     shapes = PRIVATE_SHAPES if variant == "private" else SHAPES
     images = [render(size, shapes) for size in SIZES]
@@ -99,4 +114,7 @@ def main(path, variant):
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "--logos":
+        write_logos(sys.argv[2])
+        sys.exit()
     main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "")

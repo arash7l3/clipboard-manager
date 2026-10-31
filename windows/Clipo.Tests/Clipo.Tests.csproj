@@ -30,4 +30,10 @@
     <None Include="../Clipo/Strings/**/*.resw" LinkBase="Strings" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- The MSIX manifest and its logos, checked by PackageManifestTests. -->
+  <ItemGroup>
+    <None Include="../Clipo/Package.appxmanifest" Link="Package.appxmanifest" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../Clipo/Assets/*.png" LinkBase="Assets" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -12,7 +12,13 @@
     <ClipoNativeLibrary Condition="'$(ClipoNativeLibrary)' == ''">$(ClipoDist)runtimes/win-$(ClipoArch)/native/clipo_ffi.dll</ClipoNativeLibrary>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(ClipoCopiesNativeLibrary)' == 'true'">
+  <ItemGroup Condition="'$(ClipoCopiesNativeLibrary)' == 'true' and '$(WindowsPackageType)' == 'MSIX'">
+    <!-- A package holds Content items, not None items. -->
+    <Content Include="$(ClipoNativeLibrary)" Link="%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ClipoCopiesNativeLibrary)' == 'true' and '$(WindowsPackageType)' != 'MSIX'">
     <None Include="$(ClipoNativeLibrary)" Link="%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>

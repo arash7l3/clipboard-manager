@@ -70,8 +70,16 @@ cd windows && dotnet test Clipo.Tests \
   -p:ClipoNativeLibrary=$PWD/../core/target/debug/libclipo_ffi.so   # .dylib on macOS
 ```
 
+To build the MSIX package into a folder (needs the Windows SDK; x64):
+
+```powershell
+windows/scripts/make-msix.ps1 -OutputDirectory windows/dist
+```
+
+Without `CLIPO_SIGN_PFX` and `CLIPO_SIGN_PFX_PASSWORD` the package is signed with a throwaway certificate and written as `Clipo-<version>-x64-selfsigned.msix` next to `Clipo-test-signing.cer`, which a PC has to trust before it installs the package. CI builds it for a `v*` tag, a manual run of the "Windows MSIX" workflow and pull requests that touch the app, and uploads `Clipo-windows-msix`. See [decision 0025](docs/decisions/0025-windows-msix.md) for installing a test-signed package and for real signing.
+
 See [decision 0014](docs/decisions/0014-windows-app-shell.md) for how the app stores its key.
 
 ## Requirements
 
-macOS 14+ or Windows 11. Builds are unsigned for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.
+macOS 14+ or Windows 11. Builds are unsigned (macOS) or test-signed (Windows MSIX) for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.

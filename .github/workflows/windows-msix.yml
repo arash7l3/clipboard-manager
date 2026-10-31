@@ -1,0 +1,80 @@
+name: Windows MSIX
+
+# A v* tag or a manual run builds the MSIX package and uploads it. Pull
+# requests that touch the app or the packaging build it too, to check it, and
+# upload it as well (the hosted runner's uploads cost nothing).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - windows/Clipo/**
+      - windows/Directory.*
+      - windows/scripts/**
+      - assets/make-windows-icon.py
+      - .github/workflows/windows-msix.yml
+
+concurrency:
+  group: windows-msix-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  OPENSSL_SRC_PERL: C:\Strawberry\perl\bin\perl.exe
+
+jobs:
+  msix:
+    name: Windows MSIX
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: NuGet cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('windows/**/*.csproj', 'windows/Directory.Packages.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Package the core
+        working-directory: core
+        run: cargo xtask package windows --target x86_64-pc-windows-msvc
+
+      # A certificate in the repository's secrets signs tag and manual builds;
+      # pull requests never get it. Without one the script signs with a
+      # throwaway certificate (decision 0025).
+      - name: Build the MSIX
+        shell: pwsh
+        env:
+          CLIPO_PFX_BASE64: ${{ github.event_name != 'pull_request' && secrets.CLIPO_SIGN_PFX_BASE64 || '' }}
+          CLIPO_SIGN_PFX_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.CLIPO_SIGN_PFX_PASSWORD || '' }}
+        run: |
+          if ($env:CLIPO_PFX_BASE64) {
+            $pfx = Join-Path $env:RUNNER_TEMP 'clipo-signing.pfx'
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CLIPO_PFX_BASE64))
+            $env:CLIPO_SIGN_PFX = $pfx
+          }
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $env:CLIPO_EXPECT_VERSION = $env:GITHUB_REF_NAME.Substring(1)
+          }
+          windows/scripts/make-msix.ps1 -OutputDirectory "$env:RUNNER_TEMP/clipo-msix"
+
+      - name: Upload the package
+        uses: actions/upload-artifact@v7
+        with:
+          name: Clipo-windows-msix
+          path: ${{ runner.temp }}/clipo-msix
+          retention-days: 30

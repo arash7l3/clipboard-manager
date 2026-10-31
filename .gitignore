@@ -11,6 +11,7 @@ macos/build/
 
 # Visual Studio / C#
 windows/**/bin/
+windows/dist/
 windows/**/obj/
 windows/.vs/
 *.user

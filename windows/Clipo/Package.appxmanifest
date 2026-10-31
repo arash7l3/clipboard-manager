@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The MSIX package's manifest (decision 0025). Only the MSIX build reads it
+  (windows/scripts/make-msix.ps1); the plain build and the zip ignore it.
+
+  Version: four numbers, the app's version and a 0. The release tag has to
+  match the first three (v0.1.0 for 0.1.0.0).
+
+  Publisher: has to equal the subject of the certificate that signs the
+  package. CN=Clipo is the subject of the throwaway certificate the script
+  makes when it has no real one; with a real certificate, copy its subject here.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity Name="io.github.arash7l3.Clipo" Publisher="CN=Clipo" Version="0.1.0.0" />
+
+  <Properties>
+    <DisplayName>Clipo</DisplayName>
+    <PublisherDisplayName>Clipo</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- Windows 11 (decision 0002). -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <!-- The languages of Strings\; the first is the default. -->
+  <Resources>
+    <Resource Language="en-US" />
+    <Resource Language="fa" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="Clipo"
+        Description="Clipboard history"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Start at sign-in. Off until the user turns it on in Clipo's settings; the id is LoginItem.StartupTaskId. -->
+        <desktop:Extension Category="windows.startupTask" Executable="Clipo.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="ClipoStartup" Enabled="false" DisplayName="Clipo" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- A WinUI 3 desktop app runs outside the app container. -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
