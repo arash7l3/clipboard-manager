@@ -142,7 +142,7 @@ impl Store {
     }
 
     /// Deletes the oldest unpinned items beyond the limit. Returns how many.
-    fn enforce_item_limit(&mut self) -> Result<usize, CoreError> {
+    pub(super) fn enforce_item_limit(&mut self) -> Result<usize, CoreError> {
         // A limit SQLite cannot hold keeps everything anyway.
         let keep = i64::try_from(self.limits.max_items).unwrap_or(i64::MAX);
         let deleted = self.conn.execute(

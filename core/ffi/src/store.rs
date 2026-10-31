@@ -4,10 +4,12 @@ use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 use std::time::SystemTime;
 
-use clipo_core::{ItemId, Store, Timestamp};
+use clipo_core::{ItemId, SnippetId, Store, Timestamp};
 
 use crate::error::{ClipoError, KeyStoreError};
-use crate::types::{CaptureRules, ClipItem, HistoryLimits, ItemPreview, Query, Recorded};
+use crate::types::{
+    CaptureRules, ClipItem, HistoryLimits, ImportSummary, ItemPreview, Query, Recorded, Snippet,
+};
 use crate::Capture;
 
 /// Keeps the database key in the OS credential store. Implemented by each
@@ -166,6 +168,95 @@ impl ClipStore {
     /// [`ClipoError::ItemNotFound`] if no item has this id.
     pub fn delete(&self, id: i64) -> Result<(), ClipoError> {
         Ok(self.lock().delete(ItemId::from_raw(id))?)
+    }
+
+    /// The item's content as plain text, for "paste as plain text": the text
+    /// without formatting, or the file paths one per line. `None` for an image.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::ItemNotFound`] if no item has this id.
+    pub fn plain_text(&self, id: i64) -> Result<Option<String>, ClipoError> {
+        Ok(self.lock().plain_text(ItemId::from_raw(id))?)
+    }
+
+    /// Saves a new snippet, created at `at`.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::InvalidSnippet`] if the title is blank or the body empty.
+    pub fn add_snippet(
+        &self,
+        title: &str,
+        body: &str,
+        at: SystemTime,
+    ) -> Result<Snippet, ClipoError> {
+        Ok(self
+            .lock()
+            .add_snippet(title, body, Timestamp::from(at))?
+            .into())
+    }
+
+    /// Changes a snippet's title and body.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::InvalidSnippet`] if the title is blank or the body empty,
+    /// [`ClipoError::SnippetNotFound`] if no snippet has this id.
+    pub fn update_snippet(
+        &self,
+        id: i64,
+        title: &str,
+        body: &str,
+        at: SystemTime,
+    ) -> Result<Snippet, ClipoError> {
+        Ok(self
+            .lock()
+            .update_snippet(SnippetId::from_raw(id), title, body, Timestamp::from(at))?
+            .into())
+    }
+
+    /// Snippets whose title or body contains every word of `text` (matched
+    /// like history search), in creation order. Empty `text` lists them all.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn snippets(&self, text: &str) -> Result<Vec<Snippet>, ClipoError> {
+        let snippets = self.lock().snippets(text)?;
+        Ok(snippets.into_iter().map(Snippet::from).collect())
+    }
+
+    /// Deletes the snippet. Its text is overwritten in the file.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::SnippetNotFound`] if no snippet has this id.
+    pub fn delete_snippet(&self, id: i64) -> Result<(), ClipoError> {
+        Ok(self.lock().delete_snippet(SnippetId::from_raw(id))?)
+    }
+
+    /// The whole history and all snippets as one blob for the app to write to
+    /// a file. **Not encrypted**: it holds clipboard content in the clear.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn export_data(&self) -> Result<Vec<u8>, ClipoError> {
+        Ok(self.lock().export()?)
+    }
+
+    /// Adds the items and snippets of a blob made by
+    /// [`export_data`](Self::export_data). Content already stored is skipped;
+    /// on error nothing is imported.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::InvalidExport`] if the data is not an export or is
+    /// damaged, [`ClipoError::UnsupportedExport`] if it is from a newer Clipo,
+    /// and storage errors.
+    pub fn import_data(&self, data: &[u8]) -> Result<ImportSummary, ClipoError> {
+        Ok(self.lock().import(data)?.into())
     }
 
     /// The current history limits.

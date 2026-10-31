@@ -18,6 +18,32 @@ pub enum ClipoError {
         /// The id that was asked for.
         id: i64,
     },
+    /// No snippet with this id exists.
+    #[error("snippet {id} not found")]
+    SnippetNotFound {
+        /// The id that was asked for.
+        id: i64,
+    },
+    /// A snippet failed validation and was not stored.
+    #[error("invalid snippet: {reason}")]
+    InvalidSnippet {
+        /// What was wrong with it.
+        reason: InvalidSnippet,
+    },
+    /// The data to import is not a Clipo export, or is damaged.
+    #[error("not a valid Clipo export: {message}")]
+    InvalidExport {
+        /// What is structurally wrong; never quotes content.
+        message: String,
+    },
+    /// The export was written by a newer version of Clipo.
+    #[error("export format version {found} is newer than supported version {supported}")]
+    UnsupportedExport {
+        /// Version found in the data.
+        found: u32,
+        /// Newest version this build understands.
+        supported: u32,
+    },
     /// An item with identical content is already stored.
     #[error("an item with the same content already exists")]
     DuplicateContent,
@@ -79,6 +105,16 @@ impl From<clipo_core::CoreError> for ClipoError {
                 reason: reason.into(),
             },
             E::ItemNotFound(id) => Self::ItemNotFound { id: id.as_raw() },
+            E::SnippetNotFound(id) => Self::SnippetNotFound { id: id.as_raw() },
+            E::InvalidSnippet(reason) => Self::InvalidSnippet {
+                reason: reason.into(),
+            },
+            E::InvalidExport(message) => Self::InvalidExport {
+                message: message.to_owned(),
+            },
+            E::UnsupportedExport { found, supported } => {
+                Self::UnsupportedExport { found, supported }
+            }
             E::DuplicateContent => Self::DuplicateContent,
             E::InvalidLimits => Self::InvalidLimits,
             E::InvalidRules => Self::InvalidRules,
@@ -128,6 +164,26 @@ impl From<clipo_core::InvalidContent> for InvalidContent {
             R::ZeroImageDimension => Self::ZeroImageDimension,
             R::NoFiles => Self::NoFiles,
             R::EmptyFilePath => Self::EmptyFilePath,
+        }
+    }
+}
+
+/// Why a snippet was rejected. Mirrors [`clipo_core::InvalidSnippet`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error, uniffi::Enum)]
+pub enum InvalidSnippet {
+    /// The title is empty or only whitespace.
+    #[error("title is empty")]
+    EmptyTitle,
+    /// The body is empty.
+    #[error("body is empty")]
+    EmptyBody,
+}
+
+impl From<clipo_core::InvalidSnippet> for InvalidSnippet {
+    fn from(reason: clipo_core::InvalidSnippet) -> Self {
+        match reason {
+            clipo_core::InvalidSnippet::EmptyTitle => Self::EmptyTitle,
+            clipo_core::InvalidSnippet::EmptyBody => Self::EmptyBody,
         }
     }
 }

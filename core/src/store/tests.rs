@@ -62,7 +62,7 @@ impl Fixture {
         PathBuf::from(wal)
     }
 
-    fn file_bytes(&self) -> Vec<u8> {
+    pub(super) fn file_bytes(&self) -> Vec<u8> {
         let mut bytes = fs::read(&self.path).unwrap();
         if let Ok(more) = fs::read(self.wal_path()) {
             bytes.extend(more);

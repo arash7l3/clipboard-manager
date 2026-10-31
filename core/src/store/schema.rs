@@ -6,7 +6,7 @@ use crate::error::CoreError;
 
 /// Migration `i` upgrades the schema from version `i` to `i + 1`.
 /// Append new migrations; never edit a shipped one.
-const MIGRATIONS: &[&str] = &[V1, V2];
+const MIGRATIONS: &[&str] = &[V1, V2, V3];
 
 /// Version 1: history items, with per-kind columns and their files.
 ///
@@ -69,6 +69,18 @@ UPDATE items SET copy_order = (
 
 DROP INDEX items_by_recency;
 CREATE UNIQUE INDEX items_by_copy_order ON items (copy_order);
+";
+
+/// Version 3: snippets, saved text kept apart from the history so that limits,
+/// auto-clear and clearing history never touch them.
+const V3: &str = "
+CREATE TABLE snippets (
+    id         INTEGER PRIMARY KEY,
+    title      TEXT    NOT NULL CHECK (trim(title) <> ''),
+    body       TEXT    NOT NULL CHECK (body <> ''),
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+) STRICT;
 ";
 
 /// Newest schema version this build understands.

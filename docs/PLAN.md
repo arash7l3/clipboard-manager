@@ -39,7 +39,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 3.2 | 3 Windows | Clipboard listener, tray icon, RegisterHotKey | Sonnet 5.5 | high | S12 (with 3.3) | Done in CI; manual run on Windows pending |
 | 3.3 | 3 Windows | Popup, tabs, search, thumbnails, restore, auto-paste | Opus 5.5 | high | S12 | Done in CI; manual run on Windows pending |
 | 3.4 | 3 Windows | Settings, login item, light/dark, English and Farsi RTL | Sonnet 5.5 | high | S13 | Done in CI; manual run on Windows pending |
-| 4.1 | 4 Extras | Core: snippets, export/import, plain-text, source app | Sonnet 5.5 | high | S14 |  |
+| 4.1 | 4 Extras | Core: snippets, export/import, plain-text, source app | Sonnet 5.5 | high | S14 | Done |
 | 4.2 | 4 Extras | macOS UI for extras, quick-paste shortcuts | Sonnet 5.5 | medium | S15 |  |
 | 4.3 | 4 Extras | Windows UI for extras | Sonnet 5.5 | medium | S16 |  |
 | 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 |  |

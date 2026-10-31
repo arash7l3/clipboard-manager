@@ -208,6 +208,37 @@ pub struct ItemPreview {
     pub last_copied_at: SystemTime,
 }
 
+/// A saved text template, kept apart from the history: never evicted, never
+/// expired. No `Debug`: snippets are often credentials or addresses.
+#[derive(Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Snippet {
+    /// Store-assigned id, stable for the snippet's lifetime.
+    pub id: i64,
+    /// Short name shown in lists and matched by search; not blank.
+    pub title: String,
+    /// The text that is pasted; not empty.
+    pub body: String,
+    /// When the snippet was created.
+    pub created_at: SystemTime,
+    /// When the title or body last changed.
+    pub updated_at: SystemTime,
+}
+
+/// What [`ClipStore::import_data`](crate::ClipStore::import_data) did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+pub struct ImportSummary {
+    /// History items added.
+    pub items_added: u64,
+    /// History items skipped because the same content was already stored.
+    pub items_duplicate: u64,
+    /// History items skipped for being over the item size limit.
+    pub items_too_large: u64,
+    /// Snippets added.
+    pub snippets_added: u64,
+    /// Snippets skipped because one with the same title and body exists.
+    pub snippets_duplicate: u64,
+}
+
 /// The popup tabs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Category {
@@ -426,6 +457,30 @@ impl From<clipo_core::ItemPreview> for ItemPreview {
             pinned: preview.pinned,
             source_app: preview.source_app.map(SourceApp::from),
             last_copied_at: preview.last_copied_at.to_system_time(),
+        }
+    }
+}
+
+impl From<clipo_core::Snippet> for Snippet {
+    fn from(snippet: clipo_core::Snippet) -> Self {
+        Self {
+            id: snippet.id.as_raw(),
+            title: snippet.title,
+            body: snippet.body,
+            created_at: snippet.created_at.to_system_time(),
+            updated_at: snippet.updated_at.to_system_time(),
+        }
+    }
+}
+
+impl From<clipo_core::ImportSummary> for ImportSummary {
+    fn from(summary: clipo_core::ImportSummary) -> Self {
+        Self {
+            items_added: to_u64(summary.items_added),
+            items_duplicate: to_u64(summary.items_duplicate),
+            items_too_large: to_u64(summary.items_too_large),
+            snippets_added: to_u64(summary.snippets_added),
+            snippets_duplicate: to_u64(summary.snippets_duplicate),
         }
     }
 }
