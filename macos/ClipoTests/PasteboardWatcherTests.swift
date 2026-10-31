@@ -80,6 +80,27 @@ struct PasteboardWatcherTests {
         #expect(changes.map(\.content) == [.text("after", rtf: nil, html: nil)])
     }
 
+    @Test func copyLandingWhileReadingIsLeftForTheNextPoll() async {
+        let board = self.board
+        var landed = false
+        let watcher = watcher(shouldRead: { _ in
+            // Another app copies after the change count was read, before the data is.
+            if !landed {
+                landed = true
+                board.set("newer")
+            }
+            return true
+        })
+        watcher.start()
+
+        board.set("older")
+        watcher.poll()
+        watcher.poll()
+
+        let changes = await drain(watcher)
+        #expect(changes.map(\.content) == [.text("newer", rtf: nil, html: nil)])
+    }
+
     @Test func nothingIsYieldedAfterStop() async {
         let watcher = watcher()
         watcher.start()

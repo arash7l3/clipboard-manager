@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# The token can only read the repository; no job here writes to GitHub.
+permissions:
+  contents: read
+
 # Cancel superseded runs of the same branch/PR.
 concurrency:
   group: windows-${{ github.ref }}

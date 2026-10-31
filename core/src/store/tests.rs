@@ -466,6 +466,38 @@ fn deleting_empties_the_wal() {
 }
 
 #[test]
+fn editing_a_snippet_empties_the_wal() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let snippet = store.add_snippet("title", SECRET, at(1)).unwrap();
+    assert!(fx.wal_len() > 0, "test needs WAL mode");
+
+    store
+        .update_snippet(snippet.id, "title", "new body", at(2))
+        .unwrap();
+    // The WAL frames that held the old text are gone, not just superseded.
+    assert_eq!(fx.wal_len(), 0);
+}
+
+#[test]
+fn unlock_errors_never_carry_the_key() {
+    let key = DatabaseKey::from_bytes(&[0xAB; KEY_LEN]).unwrap();
+    let hex = "AB".repeat(KEY_LEN);
+    // rusqlite quotes the statement in errors about a token in it.
+    let err = rusqlite::Error::SqlInputError {
+        error: rusqlite::ffi::Error::new(rusqlite::ffi::SQLITE_ERROR),
+        msg: "near \"x\": syntax error".into(),
+        sql: key.unlock_sql().to_string(),
+        offset: 13,
+    };
+    assert!(err.to_string().contains(&hex), "test needs a quoting error");
+
+    let message = unlock_error(&err).to_string();
+    assert!(!message.contains(&hex), "leaked: {message}");
+    assert!(message.starts_with("storage error: unlocking the database failed: "));
+}
+
+#[test]
 fn missing_item_operations_report_not_found() {
     let fx = Fixture::new();
     let mut store = fx.open();

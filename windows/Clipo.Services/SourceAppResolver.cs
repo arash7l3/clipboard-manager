@@ -19,17 +19,25 @@ public static unsafe class SourceAppResolver
     /// is credited. Call it as soon as the change is noticed. <c>null</c> if
     /// it cannot be found, for example for an elevated app.
     /// </summary>
-    public static SourceApp? Current()
+    public static SourceApp? Current() => CurrentPath() is { } path ? new SourceApp(Path.GetFileName(path), DisplayName(path)) : null;
+
+    /// <summary>
+    /// <see cref="Current"/> without the display name, which reads the
+    /// executable from disk: quick enough to ask while holding the clipboard open.
+    /// </summary>
+    public static SourceApp? CurrentWithoutName() => CurrentPath() is { } path ? new SourceApp(Path.GetFileName(path), null) : null;
+
+    private static string? CurrentPath()
     {
         var window = NativeMethods.GetClipboardOwner();
         if (window == 0)
         {
             window = NativeMethods.GetForegroundWindow();
         }
-        return window == 0 ? null : FromWindow(window);
+        return window == 0 ? null : ImagePathOf(window);
     }
 
-    private static SourceApp? FromWindow(nint window)
+    private static string? ImagePathOf(nint window)
     {
         NativeMethods.GetWindowThreadProcessId(window, out var processId);
         if (processId == 0)
@@ -43,8 +51,7 @@ public static unsafe class SourceAppResolver
         }
         try
         {
-            var path = ImagePath(process);
-            return path is null ? null : new SourceApp(Path.GetFileName(path), DisplayName(path));
+            return ImagePath(process);
         }
         finally
         {

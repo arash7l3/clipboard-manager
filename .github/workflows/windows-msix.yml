@@ -15,6 +15,10 @@ on:
       - assets/make-windows-icon.py
       - .github/workflows/windows-msix.yml
 
+# The token can only read the repository; no job here writes to GitHub.
+permissions:
+  contents: read
+
 concurrency:
   group: windows-msix-${{ github.ref }}
   cancel-in-progress: true
@@ -34,7 +38,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Signed builds (tags, manual runs) start from nothing: other runs write
+      # the caches, and nothing they leave may end up in a signed package.
+      # Pull requests use the caches to stay quick.
       - uses: Swatinem/rust-cache@v2
+        if: github.event_name == 'pull_request'
         with:
           workspaces: core
 
@@ -43,6 +51,7 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: NuGet cache
+        if: github.event_name == 'pull_request'
         uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
@@ -62,6 +71,7 @@ jobs:
           CLIPO_PFX_BASE64: ${{ github.event_name != 'pull_request' && secrets.CLIPO_SIGN_PFX_BASE64 || '' }}
           CLIPO_SIGN_PFX_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.CLIPO_SIGN_PFX_PASSWORD || '' }}
         run: |
+          $pfx = $null
           if ($env:CLIPO_PFX_BASE64) {
             $pfx = Join-Path $env:RUNNER_TEMP 'clipo-signing.pfx'
             [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CLIPO_PFX_BASE64))
@@ -70,7 +80,13 @@ jobs:
           if ($env:GITHUB_REF -like 'refs/tags/v*') {
             $env:CLIPO_EXPECT_VERSION = $env:GITHUB_REF_NAME.Substring(1)
           }
-          windows/scripts/make-msix.ps1 -OutputDirectory "$env:RUNNER_TEMP/clipo-msix"
+          try {
+            windows/scripts/make-msix.ps1 -OutputDirectory "$env:RUNNER_TEMP/clipo-msix"
+          }
+          finally {
+            # The key is on disk only while the package is signed.
+            if ($pfx) { Remove-Item -LiteralPath $pfx -Force -ErrorAction SilentlyContinue }
+          }
 
       - name: Upload the package
         uses: actions/upload-artifact@v7

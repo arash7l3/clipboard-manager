@@ -9,7 +9,7 @@ Status: accepted. Replaces the "5.2 is blocked" part of decision 0006.
   - `CLIPO_SIGN_IDENTITY` names a "Developer ID Application" identity in the keychain. Without it the app gets an ad-hoc signature and the file is `Clipo-<version>-unsigned.dmg`.
   - `CLIPO_NOTARY_PROFILE` names a `notarytool` keychain profile. With it the app is notarized and stapled, then the dmg is signed, notarized and stapled, and both are checked with `spctl`.
 - `.github/workflows/macos-dmg.yml` runs the script on the self-hosted Mac for a `v*` tag or a manual run, and uploads the dmg as the `Clipo-macos-dmg` artifact. For a tag it fails unless the tag matches the app's version. Pull requests that change the script or the workflow build an ad-hoc dmg to check it, and upload nothing.
-- The workflow reads the two names from repository variables (`CLIPO_SIGN_IDENTITY`, `CLIPO_NOTARY_PROFILE`). The certificate, its private key and the notary password stay in the Mac's login keychain; no signing secret is stored in GitHub. Pull requests never get the names, so code from a pull request is never signed with the Developer ID.
+- The workflow reads the two names from repository variables (`CLIPO_SIGN_IDENTITY`, `CLIPO_NOTARY_PROFILE`). The certificate, its private key and the notary password stay in the Mac's login keychain; no signing secret is stored in GitHub. Pull requests never get the names, so the script never signs a pull request with the Developer ID. That does not stop pull-request code from using the keychain itself: see decision 0026 and recommendation 1 of the security review before installing the certificate.
 
 **Why.**
 

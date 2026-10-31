@@ -53,6 +53,8 @@ final class HistoryTests {
 
         let attributes = try FileManager.default.attributesOfItem(atPath: url.deletingLastPathComponent().path)
         #expect((attributes[.posixPermissions] as? Int) == 0o700)
+        let values = try url.deletingLastPathComponent().resourceValues(forKeys: [.isExcludedFromBackupKey])
+        #expect(values.isExcludedFromBackup == true)
     }
 
     @Test func opensRecordsAndReopens() throws {

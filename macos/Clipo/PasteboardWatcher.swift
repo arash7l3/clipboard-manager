@@ -94,6 +94,10 @@ final class PasteboardWatcher {
 
         let app = frontmostApp()
         guard shouldRead(app), let content = PasteboardReader.content(of: pasteboard) else { return }
+        // Another copy landed while this one was read, so the data may be the
+        // newer copy's, which the concealed check did not see. The next poll
+        // reads that copy on its own.
+        guard pasteboard.changeCount == count else { return }
         continuation.yield(PasteboardChange(content: content, sourceApp: app, date: Date()))
     }
 }

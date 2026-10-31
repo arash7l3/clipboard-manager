@@ -25,10 +25,13 @@ public static unsafe class ClipboardReader
     /// <summary>
     /// The clipboard's content, or <c>null</c> if it is concealed, empty,
     /// larger than <paramref name="maxItemBytes"/>, held by another app for
-    /// too long, or holds nothing Clipo keeps.
+    /// too long, refused by <paramref name="mayRead"/>, or holds nothing Clipo keeps.
     /// </summary>
-    public static ClipboardContent? Read(long maxItemBytes)
+    /// <param name="maxItemBytes">The largest item the history keeps.</param>
+    /// <param name="mayRead">Asked once the clipboard is open, before any data is read. No other app can change the clipboard then, so it can ask about the app whose data this is.</param>
+    public static ClipboardContent? Read(long maxItemBytes, Func<bool> mayRead)
     {
+        ArgumentNullException.ThrowIfNull(mayRead);
         if (!Open())
         {
             Trace.TraceWarning("the clipboard stayed busy; one copy was missed");
@@ -36,6 +39,10 @@ public static unsafe class ClipboardReader
         }
         try
         {
+            if (!mayRead())
+            {
+                return null;
+            }
             var formats = ListFormats();
             return IsConcealed(formats) ? null : ReadContent(formats, maxItemBytes);
         }
