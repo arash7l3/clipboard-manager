@@ -1,0 +1,4 @@
+# Keep LF in every checkout, including Windows runners, to match .editorconfig.
+* text=auto eol=lf
+*.ico binary
+*.png binary
