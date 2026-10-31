@@ -96,7 +96,7 @@ jobs:
           retention-days: 30
 
   # Tags only: attaches the build to a GitHub release, which the first of the
-  # two packaging workflows creates (as a pre-release, because the builds are
+  # two packaging workflows creates (as the latest release, even though the builds are
   # not signed with a real certificate yet) and the other adds to. Runs on a
   # hosted runner and only moves files; it runs no code from the repository.
   publish:
@@ -122,6 +122,6 @@ jobs:
           notes="Test builds, not yet signed with an Apple Developer ID or a Windows code-signing certificate. How to install them: https://github.com/$GH_REPO#install"
           # The other workflow may create the release at the same moment.
           gh release view "$TAG" >/dev/null 2>&1 \
-            || gh release create "$TAG" --verify-tag --prerelease --title "Clipo ${TAG#v}" --notes "$notes" \
+            || gh release create "$TAG" --verify-tag --latest --title "Clipo ${TAG#v}" --notes "$notes" \
             || gh release view "$TAG" >/dev/null
           gh release upload "$TAG" assets/* --clobber
