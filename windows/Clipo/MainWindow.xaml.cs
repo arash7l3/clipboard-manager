@@ -1,6 +1,5 @@
 using System.Globalization;
-using System.Runtime.InteropServices;
-using Microsoft.UI;
+using Clipo.Services;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
@@ -32,11 +31,15 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Root.FlowDirection = Appearance.Direction;
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Clipo.ico"));
         AppWindow.Closing += OnClosing;
         Resize(s_statusSize);
         ShowOpening();
     }
+
+    /// <summary>Gives the window the theme the user chose.</summary>
+    public void ApplyTheme(AppTheme theme) => Appearance.ApplyTheme(Root, theme);
 
     /// <summary>Raised when the user picks Try Again after the history failed to open.</summary>
     public event EventHandler? RetryRequested;
@@ -138,14 +141,5 @@ public sealed partial class MainWindow : Window
         return loaded.Task;
     }
 
-    /// <summary>Sets the size in effective pixels, scaled for the monitor's DPI.</summary>
-    private void Resize(SizeInt32 size)
-    {
-        var dpi = GetDpiForWindow(Win32Interop.GetWindowFromWindowId(AppWindow.Id));
-        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        AppWindow.Resize(new SizeInt32((int)(size.Width * scale), (int)(size.Height * scale)));
-    }
-
-    [LibraryImport("user32.dll")]
-    private static partial uint GetDpiForWindow(nint hwnd);
+    private void Resize(SizeInt32 size) => WindowSize.Resize(AppWindow, size);
 }

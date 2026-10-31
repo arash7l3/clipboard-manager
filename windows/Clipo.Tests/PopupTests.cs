@@ -17,10 +17,13 @@ public sealed class PopupModelTests
         await model.SetCategoryAsync(Category.Images);
         await model.SetSearchTextAsync("old");
 
+        // Held back, so the answer cannot arrive (on another thread) before the assertions.
+        loader.Gate = new ManualResetEventSlim();
         var task = model.ResetAsync();
 
         Assert.Empty(model.Rows);
         Assert.Null(model.Selection);
+        loader.Gate.Set();
         await task;
         Assert.Equal(new Query(Category.All, ""), loader.Queries[^1]);
         Assert.Equal([1L, 2L], model.Rows.Select(row => row.Id));
@@ -177,8 +180,12 @@ public sealed class PopupModelTests
 
         public List<Query> Queries { get; } = [];
 
+        /// <summary>When set, <see cref="Load"/> waits until it is.</summary>
+        public ManualResetEventSlim? Gate { get; set; }
+
         public ItemPreview[]? Load(Query query)
         {
+            Gate?.Wait();
             lock (_lock)
             {
                 Queries.Add(query);

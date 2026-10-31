@@ -68,6 +68,9 @@ public sealed partial class PopupWindow : Window
 
     public bool IsShown { get; private set; }
 
+    /// <summary>Gives the popup the theme the user chose.</summary>
+    public void ApplyTheme(AppTheme theme) => Appearance.ApplyTheme(Root, theme);
+
     /// <summary>Opens the popup, or closes it if it is open.</summary>
     public void Toggle()
     {

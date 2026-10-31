@@ -31,6 +31,19 @@ public static class CaptureSettings
         new(PrivateMode: privateMode, IgnoredApps: [.. DefaultIgnoredApps], AutoClearAfter: null);
 
     /// <summary>
+    /// The rules to give the core for <paramref name="settings"/>: the
+    /// built-in ignore list followed by the user's own apps.
+    /// </summary>
+    public static CaptureRules Rules(AppSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return new CaptureRules(
+            PrivateMode: settings.PrivateMode,
+            IgnoredApps: [.. DefaultIgnoredApps, .. settings.IgnoredApps],
+            AutoClearAfter: settings.AutoClearAfter);
+    }
+
+    /// <summary>
     /// Whether a copy made in <paramref name="app"/> may be read at all under
     /// <paramref name="rules"/>: the check made before touching the
     /// clipboard's data. The core applies the same rules again when a capture
