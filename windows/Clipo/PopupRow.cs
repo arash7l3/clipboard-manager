@@ -1,0 +1,92 @@
+using System.Diagnostics;
+using Clipo.Core;
+using Clipo.Services;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+
+namespace Clipo;
+
+/// <summary>One history item as a popup row shows it: an icon or thumbnail, a title, a details line and a pin mark.</summary>
+public sealed class PopupRow
+{
+    private PopupRow(ItemPreview preview, string title, string detail, string accessibleName, string glyph, ImageSource? thumbnail)
+    {
+        Preview = preview;
+        Title = title;
+        Detail = detail;
+        AccessibleName = accessibleName;
+        Glyph = glyph;
+        Thumbnail = thumbnail;
+    }
+
+    public ItemPreview Preview { get; }
+
+    public string Title { get; }
+
+    public string Detail { get; }
+
+    /// <summary>Everything the row shows, in one sentence for screen readers.</summary>
+    public string AccessibleName { get; }
+
+    /// <summary>A Segoe Fluent Icons character for the kind of content.</summary>
+    public string Glyph { get; }
+
+    public ImageSource? Thumbnail { get; }
+
+    public Visibility GlyphVisibility => Thumbnail is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ThumbnailVisibility => Thumbnail is null ? Visibility.Collapsed : Visibility.Visible;
+
+    public Visibility PinVisibility => Preview.Pinned ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>The list item's name for screen readers comes from here.</summary>
+    public override string ToString() => AccessibleName;
+
+    /// <summary>A row for <paramref name="preview"/>. Call it on the UI thread: it creates the thumbnail image.</summary>
+    public static PopupRow Create(ItemPreview preview, PopupText text, DateTime now)
+    {
+        ArgumentNullException.ThrowIfNull(preview);
+        ArgumentNullException.ThrowIfNull(text);
+        var thumbnail = preview.Content is PreviewContent.Image { Thumbnail: { Length: > 0 } png } ? LoadThumbnail(png) : null;
+        return new PopupRow(
+            preview,
+            text.Title(preview.Content),
+            text.Detail(preview, now),
+            text.AccessibleName(preview, now),
+            GlyphFor(preview.Content),
+            thumbnail);
+    }
+
+    private static string GlyphFor(PreviewContent content) => content switch
+    {
+        PreviewContent.Text { Hint: TextHint.Link } => "",
+        PreviewContent.Text { Hint: TextHint.Code } => "",
+        PreviewContent.Text => "",
+        PreviewContent.Image => "",
+        PreviewContent.Files => "",
+        _ => "",
+    };
+
+    /// <summary>An image that fills in once the PNG is decoded.</summary>
+    private static BitmapImage LoadThumbnail(byte[] png)
+    {
+        var image = new BitmapImage { DecodePixelType = DecodePixelType.Logical, DecodePixelWidth = 32 };
+        _ = LoadAsync(image, png);
+        return image;
+    }
+
+    private static async Task LoadAsync(BitmapImage image, byte[] png)
+    {
+        try
+        {
+            using var stream = await Streams.FromBytesAsync(png);
+            await image.SetSourceAsync(stream);
+        }
+        catch (Exception e)
+        {
+            // The row shows no picture; never log the image itself.
+            Trace.TraceWarning($"showing a thumbnail failed: {e.GetType().Name}");
+        }
+    }
+}

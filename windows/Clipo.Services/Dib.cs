@@ -70,6 +70,34 @@ public static class Dib
         return file;
     }
 
+    /// <summary>
+    /// A 32-bit DIB of <paramref name="bgra"/>: pixels in blue, green, red,
+    /// alpha order, top row first, as image decoders give them. The DIB is
+    /// bottom-up, which every app reads.
+    /// </summary>
+    public static byte[] FromBgra(uint width, uint height, ReadOnlySpan<byte> bgra)
+    {
+        var stride = checked((int)width * 4);
+        if (width == 0 || height == 0 || bgra.Length != checked(stride * (int)height))
+        {
+            throw new ArgumentException("The pixel data does not match the size.", nameof(bgra));
+        }
+        var dib = new byte[InfoHeaderSize + bgra.Length];
+        var header = dib.AsSpan();
+        BinaryPrimitives.WriteUInt32LittleEndian(header, InfoHeaderSize);
+        BinaryPrimitives.WriteInt32LittleEndian(header[4..], (int)width);
+        BinaryPrimitives.WriteInt32LittleEndian(header[8..], (int)height);
+        BinaryPrimitives.WriteUInt16LittleEndian(header[12..], 1);
+        BinaryPrimitives.WriteUInt16LittleEndian(header[14..], 32);
+        BinaryPrimitives.WriteUInt32LittleEndian(header[20..], (uint)bgra.Length);
+        var pixels = dib.AsSpan(InfoHeaderSize);
+        for (var row = 0; row < (int)height; row++)
+        {
+            bgra.Slice(row * stride, stride).CopyTo(pixels[(((int)height - 1 - row) * stride)..]);
+        }
+        return dib;
+    }
+
     /// <summary>BITMAPINFOHEADER, BITMAPV4HEADER and BITMAPV5HEADER, and the two in-between sizes some apps write.</summary>
     private static bool IsHeaderSize(uint size) => size is 40 or 52 or 56 or 108 or 124;
 }

@@ -25,6 +25,28 @@ public static class CfHtml
         return string.IsNullOrWhiteSpace(fragment) ? null : fragment;
     }
 
+    /// <summary>
+    /// <paramref name="fragment"/> in the "HTML Format" layout, NUL-terminated,
+    /// as apps expect to find it on the clipboard.
+    /// </summary>
+    public static byte[] Build(string fragment)
+    {
+        ArgumentNullException.ThrowIfNull(fragment);
+        const string Before = "<html><body>\r\n<!--StartFragment-->";
+        const string After = "<!--EndFragment-->\r\n</body></html>";
+        // Every offset has ten digits, so the header's length is known up front.
+        var headerLength = Header(0, 0, 0, 0).Length;
+        var startFragment = headerLength + Encoding.UTF8.GetByteCount(Before);
+        var endFragment = startFragment + Encoding.UTF8.GetByteCount(fragment);
+        var endHtml = endFragment + Encoding.UTF8.GetByteCount(After);
+        var text = Header(headerLength, endHtml, startFragment, endFragment) + Before + fragment + After + "\0";
+        return Encoding.UTF8.GetBytes(text);
+    }
+
+    private static string Header(int startHtml, int endHtml, int startFragment, int endFragment) => string.Create(
+        CultureInfo.InvariantCulture,
+        $"Version:0.9\r\nStartHTML:{startHtml:D10}\r\nEndHTML:{endHtml:D10}\r\nStartFragment:{startFragment:D10}\r\nEndFragment:{endFragment:D10}\r\n");
+
     private static bool TryReadOffset(ReadOnlySpan<byte> data, string name, out int offset)
     {
         offset = 0;

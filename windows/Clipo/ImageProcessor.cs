@@ -13,8 +13,7 @@ internal sealed class ImageProcessor : IImageProcessor
     {
         try
         {
-            using var source = new InMemoryRandomAccessStream();
-            await WriteAsync(source, encoded);
+            using var source = await Streams.FromBytesAsync(encoded);
             var decoder = await BitmapDecoder.CreateAsync(source);
             var width = decoder.PixelWidth;
             var height = decoder.PixelHeight;
@@ -32,6 +31,21 @@ internal sealed class ImageProcessor : IImageProcessor
         {
             // An image that does not decode is simply not kept. Never log its content.
             Trace.TraceWarning($"processing an image failed: {e.GetType().Name}: {e.Message}");
+            return null;
+        }
+    }
+
+    public async Task<byte[]?> ToBitmapAsync(byte[] encoded)
+    {
+        try
+        {
+            using var source = await Streams.FromBytesAsync(encoded);
+            var decoder = await BitmapDecoder.CreateAsync(source);
+            return Dib.FromBgra(decoder.PixelWidth, decoder.PixelHeight, await FullPixelsAsync(decoder));
+        }
+        catch (Exception e)
+        {
+            Trace.TraceWarning($"converting an image to a bitmap failed: {e.GetType().Name}: {e.Message}");
             return null;
         }
     }
@@ -67,25 +81,6 @@ internal sealed class ImageProcessor : IImageProcessor
         var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, output);
         encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight, width, height, 96, 96, bgra);
         await encoder.FlushAsync();
-        return await ReadAllAsync(output);
-    }
-
-    private static async Task WriteAsync(InMemoryRandomAccessStream stream, byte[] data)
-    {
-        using var writer = new DataWriter(stream);
-        writer.WriteBytes(data);
-        await writer.StoreAsync();
-        await writer.FlushAsync();
-        writer.DetachStream();
-        stream.Seek(0);
-    }
-
-    private static async Task<byte[]> ReadAllAsync(InMemoryRandomAccessStream stream)
-    {
-        var bytes = new byte[stream.Size];
-        using var reader = new DataReader(stream.GetInputStreamAt(0));
-        await reader.LoadAsync((uint)bytes.Length);
-        reader.ReadBytes(bytes);
-        return bytes;
+        return await Streams.ToBytesAsync(output);
     }
 }

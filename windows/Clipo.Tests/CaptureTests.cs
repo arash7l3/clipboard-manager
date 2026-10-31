@@ -247,5 +247,7 @@ public sealed class CaptureTests : IDisposable
             Call = (encoded, isPng, maxPixels, thumbnailPixels);
             return Task.FromResult(Result);
         }
+
+        public Task<byte[]?> ToBitmapAsync(byte[] encoded) => Task.FromResult<byte[]?>(null);
     }
 }
