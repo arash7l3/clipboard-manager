@@ -60,6 +60,15 @@ jobs:
         working-directory: core
         run: cargo xtask package windows --target x86_64-pc-windows-msvc
 
+      # Style gate: analyzers already fail the build; this checks whitespace.
+      - name: Format check
+        working-directory: windows
+        shell: bash
+        run: |
+          for project in Clipo.Services Clipo.Tests Clipo; do
+            dotnet format whitespace "$project/$project.csproj" --verify-no-changes
+          done
+
       - name: Test
         working-directory: windows
         run: dotnet test Clipo.Tests/Clipo.Tests.csproj -c Release

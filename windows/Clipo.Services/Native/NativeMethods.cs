@@ -16,7 +16,7 @@ internal static unsafe partial class NativeMethods
     public const uint WmContextMenu = 0x007B;
     public const uint WmApp = 0x8000;
 
-        public static readonly nint HwndMessage = -3;
+    public static readonly nint HwndMessage = -3;
 
     public const uint InputKeyboard = 1;
     public const uint KeyEventKeyUp = 0x2;
