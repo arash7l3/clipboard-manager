@@ -1,0 +1,18 @@
+<!--
+  The Windows app's logic that doesn't need WinUI: opening the history and
+  keeping its key in the Credential Manager. Plain .NET, so the tests also
+  build and run on macOS and Linux; Windows-only parts are marked as such.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- The Credential Manager calls use pointers. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Clipo.Core/Clipo.Core.csproj" />
+  </ItemGroup>
+
+</Project>

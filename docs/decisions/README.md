@@ -17,3 +17,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0011](0011-macos-popup.md) | macOS popup: Carbon hot key, non-activating panel, previews from the core |
 | [0012](0012-macos-restore-and-auto-paste.md) | macOS restore and auto-paste: write back what was copied, Cmd+V only if allowed |
 | [0013](0013-macos-settings.md) | macOS settings: SwiftUI window over `UserDefaults`, login item, language by relaunch |
+| [0014](0014-windows-app-shell.md) | Windows app: WinUI 3 unpackaged, core as a class library, Credential Manager key |

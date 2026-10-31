@@ -1,0 +1,25 @@
+<!-- Settings shared by every project in windows/. -->
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    The core package written by `cargo xtask package windows` (decision 0008).
+    To build against other files, for example to run the tests on macOS or
+    Linux, pass -p:ClipoBindings=<ClipoCore.cs> -p:ClipoNativeLibrary=<library>.
+  -->
+  <PropertyGroup>
+    <ClipoDist>$(MSBuildThisFileDirectory)../core/dist/windows/</ClipoDist>
+    <ClipoBindings Condition="'$(ClipoBindings)' == ''">$(ClipoDist)ClipoCore.cs</ClipoBindings>
+  </PropertyGroup>
+
+</Project>

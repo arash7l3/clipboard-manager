@@ -1,0 +1,25 @@
+<!--
+  Projects that load the core at run time (the app and the tests) set
+  ClipoCopiesNativeLibrary and get clipo_ffi.dll for their architecture next
+  to their output. Evaluated after the project, so Platform and
+  RuntimeIdentifier are known here.
+-->
+<Project>
+
+  <PropertyGroup Condition="'$(ClipoCopiesNativeLibrary)' == 'true'">
+    <ClipoArch Condition="'$(Platform)' == 'ARM64' or $(RuntimeIdentifier.EndsWith('-arm64'))">arm64</ClipoArch>
+    <ClipoArch Condition="'$(ClipoArch)' == ''">x64</ClipoArch>
+    <ClipoNativeLibrary Condition="'$(ClipoNativeLibrary)' == ''">$(ClipoDist)runtimes/win-$(ClipoArch)/native/clipo_ffi.dll</ClipoNativeLibrary>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ClipoCopiesNativeLibrary)' == 'true'">
+    <None Include="$(ClipoNativeLibrary)" Link="%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="ClipoCheckNativeLibrary" BeforeTargets="BeforeBuild"
+          Condition="'$(ClipoCopiesNativeLibrary)' == 'true' and !Exists('$(ClipoNativeLibrary)')">
+    <Error Text="The Clipo core library is missing: $(ClipoNativeLibrary). Run `cargo xtask package windows` from core/ first." />
+  </Target>
+
+</Project>

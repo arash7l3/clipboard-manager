@@ -1,0 +1,33 @@
+<!--
+  Unit tests for Clipo.Services and the app's string tables. They load the
+  real core library; Credential Manager tests run on Windows only.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <ClipoCopiesNativeLibrary>true</ClipoCopiesNativeLibrary>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Clipo.Services/Clipo.Services.csproj" />
+  </ItemGroup>
+
+  <!-- The app's string tables, checked by LocalizationTests. -->
+  <ItemGroup>
+    <None Include="../Clipo/Strings/**/*.resw" LinkBase="Strings" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
