@@ -24,3 +24,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0018](0018-snippets-and-export.md) | Extras in the core: snippets table, plain-text view, unencrypted binary export |
 | [0019](0019-macos-extras.md) | macOS extras: Option for plain text, Cmd+digit quick paste, snippets in the menu |
 | [0020](0020-windows-extras.md) | Windows extras: Shift for plain text, Ctrl+digit quick paste, snippets in the tray menu |
+| [0021](0021-pinning.md) | Pinning from the popup: Cmd/Ctrl+P and a row context menu |

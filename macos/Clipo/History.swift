@@ -121,6 +121,20 @@ enum History {
         }
     }
 
+    /// Pins or unpins the item with `id`, off the main thread. Returns
+    /// whether it worked. Unpinning may evict items past the history limit.
+    static func setPinned(_ id: Int64, _ pinned: Bool, in store: ClipStore) async -> Bool {
+        await Task.detached(priority: .userInitiated) {
+            do {
+                try store.setPinned(id: id, pinned: pinned)
+                return true
+            } catch {
+                logger.error("pinning an item failed: \(String(describing: error), privacy: .public)")
+                return false
+            }
+        }.value
+    }
+
     /// ``open(at:keyStore:)`` on the user's history, off the main thread.
     static func openDefault() async -> Opened {
         await Task.detached(priority: .userInitiated) {

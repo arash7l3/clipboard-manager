@@ -735,6 +735,17 @@
         }
       }
     },
+    "Pin" : {
+      "comment" : "Context menu item that pins a history item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سنجاق کردن"
+          }
+        }
+      }
+    },
     "Pinned" : {
       "comment" : "Popup tab listing pinned items",
       "localizations" : {
@@ -1061,6 +1072,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "تلاش دوباره"
+          }
+        }
+      }
+    },
+    "Unpin" : {
+      "comment" : "Context menu item that unpins a history item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "برداشتن سنجاق"
           }
         }
       }

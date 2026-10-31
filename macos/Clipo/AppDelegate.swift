@@ -151,6 +151,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popup.onChoosePlain = { [weak self] row in
             Task { await self?.restore(row, with: restorer, plainText: true) }
         }
+        popup.onSetPinned = { row, pinned in
+            if !(await History.setPinned(row.id, pinned, in: store)) {
+                NSSound.beep()
+            }
+        }
         snippetRestorer = restorer
         return popup
     }
