@@ -1,0 +1,27 @@
+<!--
+  The generated C# bindings of the Rust core (namespace Clipo.Core), from
+  `cargo xtask package windows`. Nothing else belongs here: the file is
+  generated, so analyzers and warnings-as-errors are off for this project.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- The bindings use unsafe code for the FFI calls. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RunAnalyzers>false</RunAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>0</WarningLevel>
+    <NoWarn>$(NoWarn);CS1591;CS8981</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ClipoBindings)" Link="ClipoCore.cs" />
+  </ItemGroup>
+
+  <Target Name="ClipoCheckBindings" BeforeTargets="BeforeBuild" Condition="!Exists('$(ClipoBindings)')">
+    <Error Text="The Clipo core bindings are missing: $(ClipoBindings). Run `cargo xtask package windows` from core/ first." />
+  </Target>
+
+</Project>

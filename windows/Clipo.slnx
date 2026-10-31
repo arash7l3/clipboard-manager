@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="ARM64" />
+  </Configurations>
+  <Project Path="Clipo/Clipo.csproj" />
+  <Project Path="Clipo.Core/Clipo.Core.csproj" />
+  <Project Path="Clipo.Services/Clipo.Services.csproj" />
+  <Project Path="Clipo.Tests/Clipo.Tests.csproj" />
+</Solution>

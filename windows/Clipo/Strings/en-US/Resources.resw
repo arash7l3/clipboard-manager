@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppSubtitle.Text" xml:space="preserve">
+    <value>Clipboard history</value>
+    <comment>Subtitle under the app name in the status window</comment>
+  </data>
+  <data name="TryAgainButton.Content" xml:space="preserve">
+    <value>Try Again</value>
+    <comment>Button that retries opening the history</comment>
+  </data>
+  <data name="StatusOpening" xml:space="preserve">
+    <value>Opening history…</value>
+    <comment>Status while the history opens</comment>
+  </data>
+  <data name="StatusReadyOne" xml:space="preserve">
+    <value>{0} item in history</value>
+    <comment>Status: number of stored clipboard items, when it is 1</comment>
+  </data>
+  <data name="StatusReadyOther" xml:space="preserve">
+    <value>{0} items in history</value>
+    <comment>Status: number of stored clipboard items</comment>
+  </data>
+  <data name="StatusUnavailable" xml:space="preserve">
+    <value>History unavailable</value>
+    <comment>Status when the history could not be opened</comment>
+  </data>
+  <data name="KeyProblemTitle" xml:space="preserve">
+    <value>Clipo can't open your clipboard history</value>
+    <comment>Dialog title when the history's encryption key is missing or wrong</comment>
+  </data>
+  <data name="KeyProblemText" xml:space="preserve">
+    <value>The key that encrypts it is missing from the Windows Credential Manager or doesn't match. You can start a new, empty history. The old history can't be recovered.</value>
+    <comment>Dialog text when the history's encryption key is missing or wrong</comment>
+  </data>
+  <data name="StartNewHistory" xml:space="preserve">
+    <value>Start New History</value>
+    <comment>Dialog button that deletes the unreadable history and starts over</comment>
+  </data>
+  <data name="NotNow" xml:space="preserve">
+    <value>Not Now</value>
+    <comment>Dialog button that keeps the unreadable history for now</comment>
+  </data>
+</root>
