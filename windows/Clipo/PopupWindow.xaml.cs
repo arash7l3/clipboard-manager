@@ -60,7 +60,13 @@ public sealed partial class PopupWindow : Window
 
         Root.FlowDirection = _rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         // The first time, the content loads after the window is shown.
-        Root.Loaded += (_, _) => SearchBox.Focus(FocusState.Programmatic);
+        Root.Loaded += (_, _) =>
+        {
+            // The button's state is set again once the content is laid out: a popup that
+            // was created at sign-in and never shown came up without it.
+            ShowClearButton();
+            SearchBox.Focus(FocusState.Programmatic);
+        };
 
         AppWindow.IsShownInSwitchers = false;
         if (AppWindow.Presenter is OverlappedPresenter presenter)
@@ -338,7 +344,10 @@ public sealed partial class PopupWindow : Window
     private void ShowClearButton()
     {
         var armed = _clear.IsArmed;
-        ClearButton.Visibility = _model.CanClear ? Visibility.Visible : Visibility.Collapsed;
+        // Hidden by opacity, not collapsed: the button keeps its place in the layout in every state.
+        ClearButton.Opacity = _model.CanClear ? 1 : 0;
+        ClearButton.IsEnabled = _model.CanClear;
+        ClearButton.IsHitTestVisible = _model.CanClear;
         ClearIcon.Visibility = armed ? Visibility.Collapsed : Visibility.Visible;
         ClearConfirm.Visibility = armed ? Visibility.Visible : Visibility.Collapsed;
         var name = armed ? s_strings.GetString("ClearConfirmName") : _text.ClearTab(_model.Category);
