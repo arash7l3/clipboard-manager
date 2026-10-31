@@ -71,6 +71,15 @@
                                    AutomationProperties.LiveSetting="Polite" />
                     </StackPanel>
 
+                    <ComboBox x:Name="StartTabBox" x:Uid="StartTabBox" HorizontalAlignment="Stretch" SelectionChanged="OnStartTabChanged">
+                        <ComboBoxItem x:Uid="StartTabAll" />
+                        <ComboBoxItem x:Uid="StartTabText" />
+                        <ComboBoxItem x:Uid="StartTabImages" />
+                        <ComboBoxItem x:Uid="StartTabFiles" />
+                        <ComboBoxItem x:Uid="StartTabPinned" />
+                        <ComboBoxItem x:Uid="StartTabLastUsed" />
+                    </ComboBox>
+
                     <StackPanel Spacing="6">
                         <CheckBox x:Name="AutoPasteBox" x:Uid="AutoPasteBox" Click="OnAutoPasteClick" />
                         <TextBlock x:Uid="AutoPasteNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"

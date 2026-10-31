@@ -27,6 +27,7 @@ struct GeneralSettingsView: View {
     @AppStorage(InterfaceSettings.languageKey) private var language = AppLanguage.system
     @AppStorage(InterfaceSettings.hotkeyKey) private var hotkey = HotkeyChoice.commandShift
     @AppStorage(PasteSettings.autoPasteKey) private var autoPaste = false
+    @AppStorage(PopupSettings.startTabKey) private var startTab = StartTab.all
     @State private var startAtLogin = LoginItem.isOn
     @State private var needsApproval = LoginItem.needsApproval
     @State private var loginFailed = false
@@ -47,6 +48,9 @@ struct GeneralSettingsView: View {
             Section {
                 Picker("Open history with", selection: $hotkey) {
                     ForEach(HotkeyChoice.allCases) { Text(verbatim: $0.label).tag($0) }
+                }
+                Picker("Open history on", selection: $startTab) {
+                    ForEach(StartTab.allCases) { Text($0.title).tag($0) }
                 }
                 Toggle("Paste automatically after choosing an item", isOn: $autoPaste)
                     .onChange(of: autoPaste) { _, wanted in askForAccessibility(if: wanted) }

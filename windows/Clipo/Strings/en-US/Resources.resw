@@ -472,4 +472,44 @@
     <value>Unpin</value>
     <comment>Popup row menu item that unpins the item</comment>
   </data>
+  <data name="TrayTooltipPrivate" xml:space="preserve">
+    <value>Clipo (private mode: nothing is saved)</value>
+    <comment>Tray icon tooltip while private mode is on</comment>
+  </data>
+  <data name="MenuPrivateMode" xml:space="preserve">
+    <value>Private Mode</value>
+    <comment>Tray menu check item: while on, nothing that is copied is stored</comment>
+  </data>
+  <data name="PrivateNote.Text" xml:space="preserve">
+    <value>Private mode is on. Nothing you copy is saved.</value>
+    <comment>Note at the top of the popup while private mode is on</comment>
+  </data>
+  <data name="StartTabBox.Header" xml:space="preserve">
+    <value>Open the popup on</value>
+    <comment>Settings: which tab the popup opens on</comment>
+  </data>
+  <data name="StartTabAll.Content" xml:space="preserve">
+    <value>All</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabText.Content" xml:space="preserve">
+    <value>Text</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabImages.Content" xml:space="preserve">
+    <value>Images</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabFiles.Content" xml:space="preserve">
+    <value>Files</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabPinned.Content" xml:space="preserve">
+    <value>Pinned</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabLastUsed.Content" xml:space="preserve">
+    <value>Last used tab</value>
+    <comment>Start tab choice: open on the tab that was last open, until Clipo quits</comment>
+  </data>
 </root>

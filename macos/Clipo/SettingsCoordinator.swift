@@ -34,6 +34,8 @@ final class SettingsCoordinator {
     /// Asked to move the shortcut. Returns false if it could not, in which
     /// case the setting goes back to the one before.
     var onHotkeyChange: (@MainActor (KeyCombo) -> Bool)?
+    /// Called with the new state when private mode was turned on or off.
+    var onPrivateModeChange: (@MainActor (Bool) -> Void)?
     /// Called with the new item count after the history was trimmed.
     var onHistoryTrimmed: (@MainActor (UInt64?) -> Void)?
 
@@ -87,6 +89,9 @@ final class SettingsCoordinator {
         if current.hotkey != before.hotkey, onHotkeyChange?(current.hotkey.combo) == false {
             applied.hotkey = before.hotkey
             defaults.set(before.hotkey.rawValue, forKey: InterfaceSettings.hotkeyKey)
+        }
+        if current.history.privateMode != before.history.privateMode {
+            onPrivateModeChange?(current.history.privateMode)
         }
         if current.history != before.history {
             Task { await trim() }

@@ -18,6 +18,7 @@ internal sealed class Shell : IDisposable
     private const int SettingsId = 2;
     private const int AutoPasteId = 3;
     private const int QuitId = 4;
+    private const int PrivateModeId = 5;
 
     /// <summary>Snippet menu items are numbered from here, in list order.</summary>
     private const int SnippetBaseId = 100;
@@ -27,12 +28,13 @@ internal sealed class Shell : IDisposable
     private readonly MessageWindow _messages = new();
     private readonly TrayIcon _tray;
     private readonly GlobalHotkey _hotkey;
+    private bool _privateMode;
 
     /// <param name="chord">The shortcut that opens the history.</param>
     /// <param name="rules">The capture rules in force, asked before every copy is read.</param>
     public Shell(HotkeyChord chord, Func<CaptureRules> rules)
     {
-        _tray = new TrayIcon(_messages, Path.Combine(AppContext.BaseDirectory, "Clipo.ico"), s_strings.GetString("TrayTooltip"));
+        _tray = new TrayIcon(_messages, IconPath(isPrivate: false), s_strings.GetString("TrayTooltip"));
         _tray.Activated += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
         _tray.MenuRequested += OnMenuRequested;
 
@@ -59,6 +61,9 @@ internal sealed class Shell : IDisposable
     /// <summary>The user picked a snippet in the tray menu's Snippets submenu.</summary>
     public event EventHandler<Snippet>? SnippetChosen;
 
+    /// <summary>The user picked Private Mode in the tray menu.</summary>
+    public event EventHandler? PrivateModeToggled;
+
     /// <summary>The user picked Quit in the tray menu.</summary>
     public event EventHandler? QuitRequested;
 
@@ -69,6 +74,26 @@ internal sealed class Shell : IDisposable
 
     /// <summary>The snippets the tray menu lists, in order.</summary>
     public IReadOnlyList<Snippet> Snippets { get; set; } = [];
+
+    /// <summary>
+    /// Whether private mode is on: the tray menu shows it checked, and the
+    /// tray icon and its tooltip change so it shows at a glance.
+    /// </summary>
+    public bool PrivateMode
+    {
+        get => _privateMode;
+        set
+        {
+            if (_privateMode == value)
+            {
+                return;
+            }
+            _privateMode = value;
+            _tray.SetAppearance(
+                IconPath(value),
+                s_strings.GetString(value ? "TrayTooltipPrivate" : "TrayTooltip"));
+        }
+    }
 
     /// <summary>The window that owns what Clipo writes to the clipboard.</summary>
     public nint ClipboardOwner => _messages.Handle;
@@ -103,6 +128,9 @@ internal sealed class Shell : IDisposable
         _messages.Dispose();
     }
 
+    private static string IconPath(bool isPrivate) =>
+        Path.Combine(AppContext.BaseDirectory, isPrivate ? "ClipoPrivate.ico" : "Clipo.ico");
+
     private void OnMenuRequested(object? sender, TrayMenuEventArgs e)
     {
         var open = s_strings.GetString("MenuOpen");
@@ -118,6 +146,7 @@ internal sealed class Shell : IDisposable
             new MenuEntry(0, s_strings.GetString("MenuSnippets"), Submenu: snippetEntries),
             new MenuEntry(SettingsId, s_strings.GetString("MenuSettings")),
             new MenuEntry(AutoPasteId, s_strings.GetString("MenuAutoPaste"), IsChecked: AutoPaste),
+            new MenuEntry(PrivateModeId, s_strings.GetString("MenuPrivateMode"), IsChecked: PrivateMode),
             MenuEntry.Separator,
             new MenuEntry(QuitId, s_strings.GetString("MenuQuit")),
         };
@@ -133,6 +162,9 @@ internal sealed class Shell : IDisposable
                 break;
             case AutoPasteId:
                 AutoPasteToggled?.Invoke(this, EventArgs.Empty);
+                break;
+            case PrivateModeId:
+                PrivateModeToggled?.Invoke(this, EventArgs.Empty);
                 break;
             case QuitId:
                 QuitRequested?.Invoke(this, EventArgs.Empty);

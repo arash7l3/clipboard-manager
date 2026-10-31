@@ -472,4 +472,44 @@
     <value>برداشتن سنجاق</value>
     <comment>Popup row menu item that unpins the item</comment>
   </data>
+  <data name="TrayTooltipPrivate" xml:space="preserve">
+    <value>Clipo (حالت خصوصی: چیزی ذخیره نمی‌شود)</value>
+    <comment>Tray icon tooltip while private mode is on</comment>
+  </data>
+  <data name="MenuPrivateMode" xml:space="preserve">
+    <value>حالت خصوصی</value>
+    <comment>Tray menu check item: while on, nothing that is copied is stored</comment>
+  </data>
+  <data name="PrivateNote.Text" xml:space="preserve">
+    <value>حالت خصوصی روشن است. چیزی که کپی می‌کنید ذخیره نمی‌شود.</value>
+    <comment>Note at the top of the popup while private mode is on</comment>
+  </data>
+  <data name="StartTabBox.Header" xml:space="preserve">
+    <value>باز شدن پنجره تاریخچه روی</value>
+    <comment>Settings: which tab the popup opens on</comment>
+  </data>
+  <data name="StartTabAll.Content" xml:space="preserve">
+    <value>همه</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabText.Content" xml:space="preserve">
+    <value>متن</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabImages.Content" xml:space="preserve">
+    <value>تصویرها</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabFiles.Content" xml:space="preserve">
+    <value>فایل‌ها</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabPinned.Content" xml:space="preserve">
+    <value>سنجاق‌شده</value>
+    <comment>Start tab choice</comment>
+  </data>
+  <data name="StartTabLastUsed.Content" xml:space="preserve">
+    <value>آخرین تب استفاده‌شده</value>
+    <comment>Start tab choice: open on the tab that was last open, until Clipo quits</comment>
+  </data>
 </root>

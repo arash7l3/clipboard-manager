@@ -54,6 +54,29 @@ public sealed class PopupModelTests
     }
 
     [Fact]
+    public async Task ResetCanStartOnAnotherTab()
+    {
+        var loader = new FakeLoader { Rows = Rows(1) };
+        var model = new PopupModel(loader.Load, TimeSpan.Zero);
+
+        await model.ResetAsync(Category.Pinned);
+
+        Assert.Equal(Category.Pinned, model.Category);
+        Assert.Equal(new Query(Category.Pinned, ""), loader.Queries[^1]);
+    }
+
+    [Fact]
+    public async Task ResetOnTheLastTabKeepsIt()
+    {
+        var model = new PopupModel(new FakeLoader { Rows = Rows(1) }.Load, TimeSpan.Zero);
+        await model.SetCategoryAsync(Category.Files);
+
+        await model.ResetAsync(model.Category);
+
+        Assert.Equal(Category.Files, model.Category);
+    }
+
+    [Fact]
     public async Task EmptyAnswerSelectsNothing()
     {
         var model = new PopupModel(new FakeLoader().Load, TimeSpan.Zero);

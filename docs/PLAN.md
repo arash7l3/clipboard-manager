@@ -43,6 +43,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 4.2 | 4 Extras | macOS UI for extras, quick-paste shortcuts | Sonnet 5.5 | medium | S15 | Done |
 | 4.3 | 4 Extras | Windows UI for extras | Sonnet 5.5 | medium | S16 | Done |
 | 4.4 | 4 Extras | Pin and unpin from the popup (both apps) | Sonnet 5.5 | medium | S21 | Done |
+| 4.5 | 4 Extras | Start-tab setting, private mode in the menus and a visible indicator | Sonnet 5.5 | medium | S22 | Done |
 | 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 | Done |
 | 5.2 | 5 Packaging | macOS signing, notarization, dmg | Opus 5.5 | high | S18 |  |
 | 5.3 | 5 Packaging | Windows MSIX installer and signing | Sonnet 5.5 | high | S19 |  |

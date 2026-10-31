@@ -32,7 +32,7 @@ public sealed class TrayIcon : IDisposable
     private const uint CallbackMessage = NativeMethods.WmApp + 1;
 
     private readonly MessageWindow _window;
-    private readonly string _tooltip;
+    private string _tooltip;
     private readonly uint _taskbarCreated;
     private nint _icon;
     private bool _added;
@@ -45,16 +45,9 @@ public sealed class TrayIcon : IDisposable
         ArgumentNullException.ThrowIfNull(window);
         ArgumentException.ThrowIfNullOrEmpty(iconPath);
         _window = window;
-        _tooltip = tooltip.Length < TipLength ? tooltip : tooltip[..(TipLength - 1)];
+        _tooltip = Shorten(tooltip);
         _taskbarCreated = NativeMethods.RegisterWindowMessage("TaskbarCreated");
-
-        var dpi = NativeMethods.GetDpiForWindow(window.Handle);
-        var size = NativeMethods.GetSystemMetricsForDpi(SmallIconWidth, dpi == 0 ? 96 : dpi);
-        _icon = NativeMethods.LoadImage(0, iconPath, ImageIcon, size, size, LoadFromFile);
-        if (_icon == 0)
-        {
-            Trace.TraceError($"loading the tray icon failed (Win32 error {Marshal.GetLastPInvokeError()})");
-        }
+        _icon = Load(iconPath);
 
         _window.MessageReceived += OnMessage;
         Install();
@@ -69,6 +62,31 @@ public sealed class TrayIcon : IDisposable
     /// <summary>Whether Windows accepted the icon.</summary>
     public bool IsVisible => _added;
 
+    /// <summary>Shows another icon and tooltip, for example while private mode is on.</summary>
+    /// <param name="iconPath">An .ico file.</param>
+    /// <param name="tooltip">Shown on hover and read by screen readers.</param>
+    public void SetAppearance(string iconPath, string tooltip)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(iconPath);
+        var icon = Load(iconPath);
+        if (icon == 0)
+        {
+            // Keep the icon that works.
+            return;
+        }
+        var old = _icon;
+        _icon = icon;
+        _tooltip = Shorten(tooltip);
+        if (_added)
+        {
+            Notify(Modify);
+        }
+        if (old != 0)
+        {
+            NativeMethods.DestroyIcon(old);
+        }
+    }
+
     public void Dispose()
     {
         _window.MessageReceived -= OnMessage;
@@ -82,6 +100,20 @@ public sealed class TrayIcon : IDisposable
             NativeMethods.DestroyIcon(_icon);
             _icon = 0;
         }
+    }
+
+    private static string Shorten(string tooltip) => tooltip.Length < TipLength ? tooltip : tooltip[..(TipLength - 1)];
+
+    private nint Load(string iconPath)
+    {
+        var dpi = NativeMethods.GetDpiForWindow(_window.Handle);
+        var size = NativeMethods.GetSystemMetricsForDpi(SmallIconWidth, dpi == 0 ? 96 : dpi);
+        var icon = NativeMethods.LoadImage(0, iconPath, ImageIcon, size, size, LoadFromFile);
+        if (icon == 0)
+        {
+            Trace.TraceError($"loading the tray icon failed (Win32 error {Marshal.GetLastPInvokeError()})");
+        }
+        return icon;
     }
 
     private void Install()

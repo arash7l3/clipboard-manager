@@ -79,6 +79,16 @@ struct PopupModelTests {
         #expect(loader.queries == [Query(category: .all, text: "")])
     }
 
+    @Test func resetCanStartOnAnotherTab() async {
+        let loader = FakeLoader(rows: three)
+        let model = loader.model()
+
+        await model.reset(to: .pinned).value
+
+        #expect(model.category == .pinned)
+        #expect(loader.queries == [Query(category: .pinned, text: "")])
+    }
+
     @Test func resetDropsOldRowsAtOnce() async {
         let model = FakeLoader(rows: three).model()
         await model.reset().value

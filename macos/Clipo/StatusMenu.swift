@@ -13,6 +13,8 @@ final class StatusMenu: NSObject {
 
     /// SF Symbol for the menu-bar icon.
     static let symbolName = "list.clipboard"
+    /// SF Symbol for the menu-bar icon while private mode is on.
+    static let privateSymbolName = "eye.slash"
 
     let menu = NSMenu()
     /// Called when the user picks "Try Again" after the history failed to open.
@@ -27,6 +29,7 @@ final class StatusMenu: NSObject {
 
     let statusLine = NSMenuItem()
     let snippetsItem = NSMenuItem()
+    let privateModeItem = NSMenuItem()
     let snippetsMenu = NSMenu()
     let retryItem = NSMenuItem()
     let showHistoryItem = NSMenuItem()
@@ -36,6 +39,10 @@ final class StatusMenu: NSObject {
 
     /// The history is open, so the popup has something to show.
     private(set) var isReady = false
+    /// Private mode is on: the icon looks different and the menu item is checked.
+    private(set) var isPrivate = false
+
+    private var statusItem: NSStatusItem?
 
     override init() {
         super.init()
@@ -60,6 +67,13 @@ final class StatusMenu: NSObject {
         snippetsItem.submenu = snippetsMenu
         showSnippets([])
 
+        privateModeItem.title = String(
+            localized: "Private Mode",
+            comment: "Menu item that turns private mode on or off: nothing copied is saved while it is on"
+        )
+        privateModeItem.target = self
+        privateModeItem.action = #selector(togglePrivateMode)
+
         settingsItem.title = String(localized: "Settings…", comment: "Menu item that opens the Settings window")
         settingsItem.target = self
         settingsItem.action = #selector(showSettings)
@@ -74,7 +88,7 @@ final class StatusMenu: NSObject {
         quitItem.keyEquivalent = "q"
 
         menu.items = [
-            statusLine, retryItem, showHistoryItem, snippetsItem, .separator(),
+            statusLine, retryItem, showHistoryItem, snippetsItem, privateModeItem, .separator(),
             settingsItem, aboutItem, .separator(), quitItem
         ]
         show(.opening)
@@ -84,19 +98,36 @@ final class StatusMenu: NSObject {
     /// away when it is released.
     func install() -> NSStatusItem {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        if let button = item.button {
-            let image = NSImage(
-                systemSymbolName: Self.symbolName,
-                accessibilityDescription: String(
-                    localized: "Clipo clipboard history",
-                    comment: "Screen-reader label of the menu-bar icon"
-                )
-            )
-            image?.isTemplate = true
-            button.image = image
-        }
+        statusItem = item
         item.menu = menu
+        updateIcon()
         return item
+    }
+
+    /// Shows whether private mode is on: a checked menu item and, at a
+    /// glance, a different orange icon.
+    func showPrivateMode(_ enabled: Bool) {
+        isPrivate = enabled
+        privateModeItem.state = enabled ? .on : .off
+        updateIcon()
+    }
+
+    private func updateIcon() {
+        guard let button = statusItem?.button else { return }
+        let label = isPrivate
+            ? String(
+                localized: "Clipo clipboard history, private mode is on",
+                comment: "Screen-reader label and tooltip of the menu-bar icon while private mode is on"
+            )
+            : String(localized: "Clipo clipboard history", comment: "Screen-reader label of the menu-bar icon")
+        let image = NSImage(
+            systemSymbolName: isPrivate ? Self.privateSymbolName : Self.symbolName,
+            accessibilityDescription: label
+        )
+        image?.isTemplate = true
+        button.image = image
+        button.contentTintColor = isPrivate ? .systemOrange : nil
+        button.toolTip = isPrivate ? label : nil
     }
 
     func show(_ status: Status) {
@@ -159,6 +190,14 @@ final class StatusMenu: NSObject {
     @objc private func snippetChosen(_ sender: NSMenuItem) {
         guard snippets.indices.contains(sender.tag) else { return }
         onPasteSnippet?(snippets[sender.tag])
+    }
+
+    @objc private func togglePrivateMode() {
+        let defaults = UserDefaults.standard
+        let wanted = !defaults.bool(forKey: CaptureSettings.privateModeKey)
+        // The settings coordinator sees the change and applies the new rules.
+        defaults.set(wanted, forKey: CaptureSettings.privateModeKey)
+        showPrivateMode(wanted)
     }
 
     @objc private func retry() {

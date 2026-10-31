@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Clipo.Core;
 
 namespace Clipo.Services;
 
@@ -33,6 +34,19 @@ public enum HotkeyChoice
     ControlAltShift,
 }
 
+/// <summary>Which tab the popup opens on.</summary>
+public enum StartTab
+{
+    All,
+    Text,
+    Images,
+    Files,
+    Pinned,
+
+    /// <summary>The tab the popup was on when it was last open, until Clipo quits.</summary>
+    LastUsed,
+}
+
 /// <summary>The user's choices. Missing values keep their defaults.</summary>
 public sealed record AppSettings
 {
@@ -59,6 +73,9 @@ public sealed record AppSettings
 
     public HotkeyChoice Hotkey { get; init; }
 
+    /// <summary>The tab a freshly opened popup shows.</summary>
+    public StartTab StartTab { get; init; }
+
     /// <summary>
     /// The most unpinned items kept. Not <c>init</c>: the JSON source
     /// generator gives a missing init-only property the type's default (0)
@@ -79,12 +96,27 @@ public sealed record AppSettings
     [JsonIgnore]
     public TimeSpan? AutoClearAfter => AutoClearDays > 0 ? TimeSpan.FromDays(AutoClearDays) : null;
 
+    /// <summary>
+    /// The tab to open the popup on. <paramref name="lastUsed"/> is the tab it
+    /// was on when it was last open, for <see cref="StartTab.LastUsed"/>.
+    /// </summary>
+    public Category StartCategory(Category lastUsed) => StartTab switch
+    {
+        StartTab.Text => Category.Text,
+        StartTab.Images => Category.Images,
+        StartTab.Files => Category.Files,
+        StartTab.Pinned => Category.Pinned,
+        StartTab.LastUsed => lastUsed,
+        _ => Category.All,
+    };
+
     /// <summary>These settings with values a hand-edited file could hold brought back into range.</summary>
     public AppSettings Normalized() => this with
     {
         Theme = Enum.IsDefined(Theme) ? Theme : AppTheme.System,
         Language = Enum.IsDefined(Language) ? Language : AppLanguage.System,
         Hotkey = Enum.IsDefined(Hotkey) ? Hotkey : HotkeyChoice.ControlShift,
+        StartTab = Enum.IsDefined(StartTab) ? StartTab : StartTab.All,
         MaxItems = Math.Clamp(MaxItems, 1, LargestMaxItems),
         AutoClearDays = Math.Clamp(AutoClearDays, 0, 3650),
         IgnoredApps = IgnoredAppList.Clean(IgnoredApps ?? []),
@@ -111,6 +143,7 @@ public sealed record AppSettings
         && Theme == other.Theme
         && Language == other.Language
         && Hotkey == other.Hotkey
+        && StartTab == other.StartTab
         && MaxItems == other.MaxItems
         && AutoClearDays == other.AutoClearDays
         && PrivateMode == other.PrivateMode
@@ -123,6 +156,7 @@ public sealed record AppSettings
         hash.Add(Theme);
         hash.Add(Language);
         hash.Add(Hotkey);
+        hash.Add(StartTab);
         hash.Add(MaxItems);
         hash.Add(AutoClearDays);
         hash.Add(PrivateMode);
