@@ -15,6 +15,9 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     /// <summary>The usual pause before a search runs.</summary>
     public static readonly TimeSpan DefaultSearchDelay = TimeSpan.FromMilliseconds(80);
 
+    /// <summary>How many rows have a quick-paste shortcut: Ctrl+1 to Ctrl+9.</summary>
+    public const int QuickPasteCount = 9;
+
     private int _generation;
 
     public PopupModel(Func<Query, ItemPreview[]?> load)
@@ -47,6 +50,10 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     public bool IsLoading { get; private set; }
 
     public ItemPreview? SelectedRow => Selection is { } index ? Rows[index] : null;
+
+    /// <summary>The row Ctrl+<paramref name="number"/> picks (1 is the first row), or <c>null</c> if the number has no row.</summary>
+    public ItemPreview? RowForShortcut(int number) =>
+        number >= 1 && number <= QuickPasteCount && number <= Rows.Count ? Rows[number - 1] : null;
 
     /// <summary>
     /// Back to the All tab with no search and no rows until they load, for a

@@ -36,6 +36,59 @@ public sealed class RestoreTests : IDisposable
     }
 
     [Fact]
+    public async Task PlainRestoreWritesThePlainTextOnly()
+    {
+        ItemContent? written = null;
+        var restorer = new ItemRestorer(
+            _ => throw new InvalidOperationException("the full item is not needed"),
+            content =>
+            {
+                written = content;
+                return Task.FromResult(true);
+            },
+            id => Record($"bump {id}"),
+            () => false,
+            () => Record("paste"),
+            id => id == 7 ? "just text" : null);
+
+        Assert.Equal(RestoreOutcome.Restored, await restorer.RestoreAsync(7, plain: true));
+        Assert.Equal("just text", Assert.IsType<ItemContent.Text>(written).TextValue.Plain);
+        Assert.Null(Assert.IsType<ItemContent.Text>(written).TextValue.Rich);
+        await WaitForAsync("bump 7");
+    }
+
+    [Fact]
+    public async Task PlainRestoreOfAnItemWithoutTextIsUnavailable()
+    {
+        var restorer = new ItemRestorer(
+            _ => s_item, _ => throw new InvalidOperationException("nothing to write"), _ => { }, () => true, () => { }, _ => null);
+
+        Assert.Equal(RestoreOutcome.Unavailable, await restorer.RestoreAsync(7, plain: true));
+    }
+
+    [Fact]
+    public async Task PlainRestoreWithoutALoaderIsUnavailable()
+    {
+        Assert.Equal(RestoreOutcome.Unavailable, await Restorer(autoPaste: false).RestoreAsync(7, plain: true));
+    }
+
+    [Fact]
+    public async Task SnippetIsWrittenAndPastedWithoutMovingAnything()
+    {
+        var outcome = await Restorer(autoPaste: true).RestoreTextAsync("signature");
+
+        Assert.Equal(RestoreOutcome.Pasted, outcome);
+        Assert.Equal(["write", "paste"], Calls());
+    }
+
+    [Fact]
+    public async Task EmptySnippetIsUnavailable()
+    {
+        Assert.Equal(RestoreOutcome.Unavailable, await Restorer(autoPaste: true).RestoreTextAsync(""));
+        Assert.Empty(Calls());
+    }
+
+    [Fact]
     public async Task MissingItemIsUnavailableAndNothingIsWritten()
     {
         var outcome = await Restorer(autoPaste: true, found: false).RestoreAsync(7);

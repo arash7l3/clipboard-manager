@@ -32,6 +32,28 @@ public sealed class PopupModelTests
     }
 
     [Fact]
+    public async Task QuickPasteKeysPickTheFirstNineRows()
+    {
+        var model = new PopupModel(new FakeLoader { Rows = Rows(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) }.Load, TimeSpan.Zero);
+        await model.ResetAsync();
+
+        Assert.Equal(1, model.RowForShortcut(1)?.Id);
+        Assert.Equal(9, model.RowForShortcut(9)?.Id);
+        Assert.Null(model.RowForShortcut(0));
+        Assert.Null(model.RowForShortcut(10));
+    }
+
+    [Fact]
+    public async Task QuickPasteKeyWithoutARowPicksNothing()
+    {
+        var model = new PopupModel(new FakeLoader { Rows = Rows(1, 2) }.Load, TimeSpan.Zero);
+        await model.ResetAsync();
+
+        Assert.NotNull(model.RowForShortcut(2));
+        Assert.Null(model.RowForShortcut(3));
+    }
+
+    [Fact]
     public async Task EmptyAnswerSelectsNothing()
     {
         var model = new PopupModel(new FakeLoader().Load, TimeSpan.Zero);

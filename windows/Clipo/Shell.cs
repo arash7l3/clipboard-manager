@@ -19,6 +19,9 @@ internal sealed class Shell : IDisposable
     private const int AutoPasteId = 3;
     private const int QuitId = 4;
 
+    /// <summary>Snippet menu items are numbered from here, in list order.</summary>
+    private const int SnippetBaseId = 100;
+
     private static readonly ResourceLoader s_strings = new();
 
     private readonly MessageWindow _messages = new();
@@ -53,6 +56,9 @@ internal sealed class Shell : IDisposable
     /// <summary>The user picked Paste After Choosing in the tray menu.</summary>
     public event EventHandler? AutoPasteToggled;
 
+    /// <summary>The user picked a snippet in the tray menu's Snippets submenu.</summary>
+    public event EventHandler<Snippet>? SnippetChosen;
+
     /// <summary>The user picked Quit in the tray menu.</summary>
     public event EventHandler? QuitRequested;
 
@@ -60,6 +66,9 @@ internal sealed class Shell : IDisposable
 
     /// <summary>Whether the tray menu shows Paste After Choosing as checked.</summary>
     public bool AutoPaste { get; set; }
+
+    /// <summary>The snippets the tray menu lists, in order.</summary>
+    public IReadOnlyList<Snippet> Snippets { get; set; } = [];
 
     /// <summary>The window that owns what Clipo writes to the clipboard.</summary>
     public nint ClipboardOwner => _messages.Handle;
@@ -99,9 +108,14 @@ internal sealed class Shell : IDisposable
         var open = s_strings.GetString("MenuOpen");
         // After a tab, a menu shows the shortcut aligned to the side.
         var openText = _hotkey.Chord is { } chord ? $"{open}\t{chord.Display}" : open;
+        var snippets = Snippets;
+        List<MenuEntry> snippetEntries = snippets.Count == 0
+            ? [new MenuEntry(SnippetBaseId - 1, s_strings.GetString("MenuNoSnippets"), IsEnabled: false)]
+            : snippets.Select((snippet, index) => new MenuEntry(SnippetBaseId + index, Extras.MenuTitle(snippet.Title))).ToList();
         var entries = new[]
         {
             new MenuEntry(OpenId, openText),
+            new MenuEntry(0, s_strings.GetString("MenuSnippets"), Submenu: snippetEntries),
             new MenuEntry(SettingsId, s_strings.GetString("MenuSettings")),
             new MenuEntry(AutoPasteId, s_strings.GetString("MenuAutoPaste"), IsChecked: AutoPaste),
             MenuEntry.Separator,
@@ -122,6 +136,9 @@ internal sealed class Shell : IDisposable
                 break;
             case QuitId:
                 QuitRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case >= SnippetBaseId when picked - SnippetBaseId < snippets.Count:
+                SnippetChosen?.Invoke(this, snippets[picked - SnippetBaseId]);
                 break;
         }
     }

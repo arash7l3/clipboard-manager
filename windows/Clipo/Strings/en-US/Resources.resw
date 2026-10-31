@@ -328,4 +328,140 @@
     <value>Password managers such as 1Password and Bitwarden are always ignored.</value>
     <comment>Explains the built-in ignore list</comment>
   </data>
+  <data name="SettingsTabSnippets.Text" xml:space="preserve">
+    <value>Snippets</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabData.Text" xml:space="preserve">
+    <value>Data</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="MenuSnippets" xml:space="preserve">
+    <value>Snippets</value>
+    <comment>Tray menu item that opens the list of snippets</comment>
+  </data>
+  <data name="MenuNoSnippets" xml:space="preserve">
+    <value>No snippets</value>
+    <comment>Disabled line in the empty snippets submenu</comment>
+  </data>
+  <data name="QuickPasteKey" xml:space="preserve">
+    <value>Ctrl+{0}</value>
+    <comment>Quick-paste key shown on a popup row; {0} is 1 to 9</comment>
+  </data>
+  <data name="SnippetsNone" xml:space="preserve">
+    <value>No snippets yet.</value>
+    <comment>Shown in Settings when there are no snippets</comment>
+  </data>
+  <data name="SnippetsUnavailable" xml:space="preserve">
+    <value>The history is not open, so snippets cannot be shown.</value>
+    <comment>Shown in Settings when the history failed to open</comment>
+  </data>
+  <data name="SnippetList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Snippets</value>
+    <comment>Screen reader name of the snippet list</comment>
+  </data>
+  <data name="SnippetTitleBox.Header" xml:space="preserve">
+    <value>Name</value>
+    <comment>Label of the snippet name field</comment>
+  </data>
+  <data name="SnippetBodyBox.Header" xml:space="preserve">
+    <value>Text</value>
+    <comment>Label of the snippet text field</comment>
+  </data>
+  <data name="SaveSnippetButton.Content" xml:space="preserve">
+    <value>Save Snippet</value>
+    <comment>Saves the snippet being edited</comment>
+  </data>
+  <data name="NewSnippetButton.Content" xml:space="preserve">
+    <value>New Snippet</value>
+    <comment>Empties the fields to write another snippet</comment>
+  </data>
+  <data name="DeleteSnippetButton.Content" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Deletes the selected snippet</comment>
+  </data>
+  <data name="SnippetInvalid" xml:space="preserve">
+    <value>A snippet needs a name and some text.</value>
+    <comment>Shown when saving a blank snippet</comment>
+  </data>
+  <data name="SnippetSaved" xml:space="preserve">
+    <value>Saved.</value>
+    <comment>Shown after a snippet was saved</comment>
+  </data>
+  <data name="SnippetFailed" xml:space="preserve">
+    <value>The snippet could not be saved.</value>
+    <comment>Shown when the store refused a snippet change</comment>
+  </data>
+  <data name="SnippetsNote.Text" xml:space="preserve">
+    <value>Choose a snippet from the Clipo tray icon menu to paste it as plain text. Snippets are not part of the clipboard history.</value>
+    <comment>Explains snippets</comment>
+  </data>
+  <data name="ExportButton.Content" xml:space="preserve">
+    <value>Export History and Snippets…</value>
+    <comment>Starts an export</comment>
+  </data>
+  <data name="ImportButton.Content" xml:space="preserve">
+    <value>Import…</value>
+    <comment>Starts an import</comment>
+  </data>
+  <data name="DataNote.Text" xml:space="preserve">
+    <value>The export file is not encrypted. It holds everything you copied, possibly including passwords. Keep it somewhere safe and delete it when you no longer need it.</value>
+    <comment>Warns about the export file</comment>
+  </data>
+  <data name="ExportConfirmTitle" xml:space="preserve">
+    <value>Export without encryption?</value>
+    <comment>Title of the export warning dialog</comment>
+  </data>
+  <data name="ExportConfirmText" xml:space="preserve">
+    <value>An export is not encrypted. Anyone who gets the file can read what you copied.</value>
+    <comment>Body of the export warning dialog</comment>
+  </data>
+  <data name="ExportConfirmButton" xml:space="preserve">
+    <value>Export</value>
+    <comment>Confirms the export</comment>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Cancels a dialog</comment>
+  </data>
+  <data name="ExportFileName" xml:space="preserve">
+    <value>Clipo Export</value>
+    <comment>Suggested name of the export file, without extension</comment>
+  </data>
+  <data name="ExportFileType" xml:space="preserve">
+    <value>Clipo export</value>
+    <comment>Name of the export file type in the save dialog</comment>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>Exported.</value>
+    <comment>Shown after a successful export</comment>
+  </data>
+  <data name="ExportFailed" xml:space="preserve">
+    <value>The export failed.</value>
+    <comment>Shown when the store could not export</comment>
+  </data>
+  <data name="FileNotWritten" xml:space="preserve">
+    <value>The file could not be written.</value>
+    <comment>Shown when writing the export file failed</comment>
+  </data>
+  <data name="FileNotRead" xml:space="preserve">
+    <value>The file could not be read.</value>
+    <comment>Shown when reading the import file failed</comment>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>Imported {0} items and {1} snippets. Skipped {2} already here and {3} too large.</value>
+    <comment>Result of an import; the numbers are items added, snippets added, duplicates, items too large</comment>
+  </data>
+  <data name="ImportInvalid" xml:space="preserve">
+    <value>This is not a Clipo export, or it is damaged.</value>
+    <comment>Shown when the import file is not valid</comment>
+  </data>
+  <data name="ImportTooNew" xml:space="preserve">
+    <value>This export is from a newer version of Clipo.</value>
+    <comment>Shown when the import file is newer</comment>
+  </data>
+  <data name="ImportFailed" xml:space="preserve">
+    <value>The import failed.</value>
+    <comment>Shown when the store could not import</comment>
+  </data>
 </root>

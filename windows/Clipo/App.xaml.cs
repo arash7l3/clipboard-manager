@@ -43,10 +43,12 @@ public partial class App : Application
     private volatile CaptureRules _rules = CaptureSettings.Rules();
     private DispatcherQueue? _dispatcher;
     private ClipStore? _store;
+    private readonly Extras _extras;
 
     public App()
     {
         // The language has to be known before anything loads a string.
+        _extras = new Extras(() => _store);
         LoadSettings();
         _rules = CaptureSettings.Rules(_settings);
         _launchLanguage = _settings.Language;
@@ -76,13 +78,14 @@ public partial class App : Application
         _login.Repair();
         var popup = new PopupWindow(new PopupModel(query => _store?.Previews(query)));
         _popup = popup;
-        popup.Chosen += (_, row) => _ = RestoreAsync(row);
+        popup.Chosen += (_, choice) => _ = RestoreAsync(choice);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
             WriteToClipboardAsync,
             id => _store?.Touch(id, DateTime.UtcNow),
             () => _settings.AutoPaste,
-            () => Desktop.SendPaste());
+            () => Desktop.SendPaste(),
+            id => _store?.PlainText(id));
 
         var chord = HotkeyChoices.Chord(_settings.Hotkey);
         var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste };
@@ -91,6 +94,7 @@ public partial class App : Application
         shell.HotkeyPressed += (_, _) => ShowHistory(toggle: true);
         shell.SettingsRequested += (_, _) => ShowSettings();
         shell.AutoPasteToggled += (_, _) => SetAutoPaste(!_settings.AutoPaste);
+        shell.SnippetChosen += (_, snippet) => _ = PasteSnippetAsync(snippet);
         shell.QuitRequested += (_, _) => Quit();
         shell.Watcher.Recorded += OnRecorded;
         if (!shell.HotkeyRegistered)
@@ -160,11 +164,28 @@ public partial class App : Application
         }
     }
 
-    private async Task RestoreAsync(ItemPreview row)
+    private async Task RestoreAsync(PopupChoice choice)
     {
-        if (_restorer is null || await _restorer.RestoreAsync(row.Id) == RestoreOutcome.Unavailable)
+        if (_restorer is null || await _restorer.RestoreAsync(choice.Row.Id, choice.Plain) == RestoreOutcome.Unavailable)
         {
             Desktop.Beep();
+        }
+    }
+
+    private async Task PasteSnippetAsync(Snippet snippet)
+    {
+        if (_restorer is null || await _restorer.RestoreTextAsync(snippet.Body) == RestoreOutcome.Unavailable)
+        {
+            Desktop.Beep();
+        }
+    }
+
+    /// <summary>Loads the snippets again for the tray menu.</summary>
+    private async Task RefreshSnippetsAsync()
+    {
+        if (await _extras.SnippetsAsync() is { } snippets && _shell is { } shell)
+        {
+            shell.Snippets = snippets;
         }
     }
 
@@ -205,7 +226,13 @@ public partial class App : Application
     {
         if (_settingsWindow is null)
         {
-            var window = new SettingsWindow(_settings, _launchLanguage, _login);
+            var window = new SettingsWindow(_settings, _launchLanguage, _login, _extras);
+            window.SnippetsChanged += (_, _) => _ = RefreshSnippetsAsync();
+            window.Imported += (_, _) =>
+            {
+                _ = RefreshSnippetsAsync();
+                _ = TrimAsync();
+            };
             window.ApplyTheme(_settings.Theme);
             window.Changed += (_, settings) => ApplySettings(settings);
             window.RestartRequested += (_, _) => Restart();
@@ -424,6 +451,7 @@ public partial class App : Application
         {
             current.Watcher.Store = store;
         }
+        _ = RefreshSnippetsAsync();
         return count;
     }
 
