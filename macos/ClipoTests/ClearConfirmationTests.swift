@@ -14,7 +14,8 @@ final class ClearConfirmationTests {
     @Test func theFirstPressOnlyArms() {
         var clear = confirmation()
 
-        #expect(!clear.press())
+        let cleared = clear.press()
+        #expect(!cleared)
         #expect(clear.isArmed)
     }
 
@@ -23,10 +24,12 @@ final class ClearConfirmationTests {
         _ = clear.press()
         now += 2
 
-        #expect(clear.press())
+        let cleared = clear.press()
+        #expect(cleared)
         #expect(!clear.isArmed)
         // The next press starts over.
-        #expect(!clear.press())
+        let clearedAgain = clear.press()
+        #expect(!clearedAgain)
     }
 
     @Test func aLateSecondPressArmsAgain() {
@@ -35,7 +38,8 @@ final class ClearConfirmationTests {
         now += 3
 
         #expect(!clear.isArmed)
-        #expect(!clear.press())
+        let cleared = clear.press()
+        #expect(!cleared)
         #expect(clear.isArmed)
     }
 
@@ -44,7 +48,9 @@ final class ClearConfirmationTests {
         _ = clear.press()
         clear.disarm()
 
-        #expect(!clear.press())
-        #expect(clear.press())
+        let clearedFirst = clear.press()
+        #expect(!clearedFirst)
+        let clearedSecond = clear.press()
+        #expect(clearedSecond)
     }
 }
