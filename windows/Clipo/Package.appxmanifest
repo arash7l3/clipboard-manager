@@ -4,7 +4,7 @@
   (windows/scripts/make-msix.ps1); the plain build and the zip ignore it.
 
   Version: four numbers, the app's version and a 0. The release tag has to
-  match the first three (v0.1.0 for 0.1.0.0).
+  match the first three (v0.1.1 for 0.1.1.0).
 
   Publisher: has to equal the subject of the certificate that signs the
   package. CN=Clipo is the subject of the throwaway certificate the script
@@ -17,7 +17,7 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap desktop rescap">
 
-  <Identity Name="io.github.arash7l3.Clipo" Publisher="CN=Clipo" Version="0.1.0.0" />
+  <Identity Name="io.github.arash7l3.Clipo" Publisher="CN=Clipo" Version="0.1.1.0" />
 
   <Properties>
     <DisplayName>Clipo</DisplayName>
