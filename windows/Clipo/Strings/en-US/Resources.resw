@@ -52,4 +52,20 @@
     <value>Not Now</value>
     <comment>Dialog button that keeps the unreadable history for now</comment>
   </data>
+  <data name="TrayTooltip" xml:space="preserve">
+    <value>Clipo — clipboard history</value>
+    <comment>Tooltip of the tray icon, read out by screen readers</comment>
+  </data>
+  <data name="MenuOpen" xml:space="preserve">
+    <value>Open Clipo</value>
+    <comment>Tray menu item that opens Clipo; the shortcut is shown after it</comment>
+  </data>
+  <data name="MenuQuit" xml:space="preserve">
+    <value>Quit Clipo</value>
+    <comment>Tray menu item that quits the app</comment>
+  </data>
+  <data name="HotkeyUnavailable" xml:space="preserve">
+    <value>The shortcut {0} is already used by another app, so it can't open Clipo. Use the tray icon instead.</value>
+    <comment>Shown in the status window when the global shortcut could not be registered; {0} is the shortcut, such as Ctrl+Shift+V</comment>
+  </data>
 </root>

@@ -10,7 +10,7 @@ Status: early development (core and macOS app done, Windows app in progress). Se
 |---|---|
 | `core/` | Rust engine (`clipo-core`): model, encrypted store, history rules and search. `core/ffi` exports it to Swift and C# with UniFFI; `core/xtask` builds the bindings and packages |
 | `macos/` | Swift app (`Clipo.xcodeproj`): menu-bar shell linked to the core |
-| `windows/` | C# app (`Clipo.slnx`): WinUI 3 shell linked to the core |
+| `windows/` | C# app (`Clipo.slnx`): WinUI 3 shell with tray icon, shortcut and clipboard capture, linked to the core |
 | `docs/` | Work plan and [decision records](docs/decisions/README.md) |
 | `assets/` | Icon source |
 

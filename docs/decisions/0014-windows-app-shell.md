@@ -18,7 +18,7 @@ Status: accepted
 - The history is `%LOCALAPPDATA%\Clipo\history.db`. Its key is a generic credential in the Windows Credential Manager, target `io.github.arash7l3.Clipo/history-key`, persisted for this user on this machine only (`CRED_PERSIST_LOCAL_MACHINE`).
 - Strings are `.resw` files in `Clipo/Strings/en-US` and `Clipo/Strings/fa`, read through MRT Core (`x:Uid` and `ResourceLoader`).
 - One copy per sign-in session, through a named mutex. A second launch exits.
-- Until the tray icon (step 3.2), the app shows a small status window: the history's state and Try Again.
+- The app shows a small status window: the history's state and Try Again. Step 3.2 added the tray icon, which keeps the app running when the window is closed (decision 0015).
 - Package versions are pinned centrally in `windows/Directory.Packages.props`. Every project except `Clipo.Core` builds with nullable reference types, the recommended .NET analyzers and warnings as errors.
 - CI: `.github/workflows/windows.yml` runs on GitHub's hosted `windows-latest`, free while the repository is public. It runs the C# smoke test and the tests, and publishes the app for x64 as a downloadable artifact (`Clipo-win-x64`).
 

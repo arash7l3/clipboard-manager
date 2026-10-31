@@ -1,0 +1,82 @@
+using System.Globalization;
+using Clipo.Services;
+using Microsoft.Windows.ApplicationModel.Resources;
+
+namespace Clipo;
+
+/// <summary>
+/// The parts of Clipo that live in Windows itself: the tray icon and its
+/// menu, the global shortcut and the clipboard listener. Create it on the UI
+/// thread. Its events are raised on the UI thread, except
+/// <see cref="ClipboardWatcher.Recorded"/>.
+/// </summary>
+internal sealed class Shell : IDisposable
+{
+    private const int OpenId = 1;
+    private const int QuitId = 2;
+
+    private static readonly ResourceLoader s_strings = new();
+
+    private readonly MessageWindow _messages = new();
+    private readonly TrayIcon _tray;
+    private readonly GlobalHotkey _hotkey;
+
+    public Shell()
+    {
+        _tray = new TrayIcon(_messages, Path.Combine(AppContext.BaseDirectory, "Clipo.ico"), s_strings.GetString("TrayTooltip"));
+        _tray.Activated += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
+        _tray.MenuRequested += OnMenuRequested;
+
+        _hotkey = new GlobalHotkey(_messages);
+        _hotkey.Pressed += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
+        HotkeyRegistered = _hotkey.Register(HotkeyChord.ShowHistory);
+
+        var rules = CaptureSettings.Rules();
+        Watcher = new ClipboardWatcher(_messages, new ClipboardRecorder(new CaptureBuilder(new ImageProcessor())), () => rules);
+        Watcher.Start();
+    }
+
+    /// <summary>The user clicked the tray icon, picked Open in its menu, or pressed the shortcut.</summary>
+    public event EventHandler? OpenRequested;
+
+    /// <summary>The user picked Quit in the tray menu.</summary>
+    public event EventHandler? QuitRequested;
+
+    public ClipboardWatcher Watcher { get; }
+
+    /// <summary>Whether the shortcut was registered; another app may hold it.</summary>
+    public bool HotkeyRegistered { get; }
+
+    public void Dispose()
+    {
+        Watcher.Store = null;
+        Watcher.Dispose();
+        _hotkey.Dispose();
+        _tray.Dispose();
+        _messages.Dispose();
+    }
+
+    private void OnMenuRequested(object? sender, TrayMenuEventArgs e)
+    {
+        var open = s_strings.GetString("MenuOpen");
+        // After a tab, a menu shows the shortcut aligned to the side.
+        var openText = _hotkey.Chord is { } chord ? $"{open}\t{chord.Display}" : open;
+        var entries = new[]
+        {
+            new MenuEntry(OpenId, openText),
+            MenuEntry.Separator,
+            new MenuEntry(QuitId, s_strings.GetString("MenuQuit")),
+        };
+
+        var picked = PopupMenu.Show(_messages, entries, e.X, e.Y, CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft);
+        switch (picked)
+        {
+            case OpenId:
+                OpenRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case QuitId:
+                QuitRequested?.Invoke(this, EventArgs.Empty);
+                break;
+        }
+    }
+}
