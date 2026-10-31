@@ -162,14 +162,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSSound.beep()
             return
         }
-        Task { await handle(await restorer.restore(text: snippet.body)) }
+        Task { handle(await restorer.restore(text: snippet.body)) }
     }
 
     /// Puts the picked item on the clipboard. When auto-paste is on but macOS
     /// has not given Clipo the Accessibility permission, the item stays on the
     /// clipboard and the user is told why nothing was pasted.
     private func restore(_ row: ItemPreview, with restorer: ItemRestorer, plainText: Bool = false) async {
-        await handle(await restorer.restore(row, plainText: plainText))
+        handle(await restorer.restore(row, plainText: plainText))
     }
 
     private func handle(_ outcome: ItemRestorer.Outcome) {
