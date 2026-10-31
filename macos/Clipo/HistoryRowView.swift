@@ -13,6 +13,7 @@ final class HistoryRowView: NSTableCellView {
     let title = NSTextField(labelWithString: "")
     let detail = NSTextField(labelWithString: "")
     private let pin = NSImageView()
+    let shortcut = NSTextField(labelWithString: "")
 
     init() {
         super.init(frame: NSRect(x: 0, y: 0, width: 300, height: Self.height))
@@ -39,12 +40,17 @@ final class HistoryRowView: NSTableCellView {
         pin.contentTintColor = .secondaryLabelColor
         pin.setContentHuggingPriority(.required, for: .horizontal)
 
+        shortcut.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        shortcut.textColor = .tertiaryLabelColor
+        shortcut.setContentHuggingPriority(.required, for: .horizontal)
+        shortcut.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         let lines = NSStackView(views: [title, detail])
         lines.orientation = .vertical
         lines.alignment = .leading
         lines.spacing = 1
 
-        let row = NSStackView(views: [icon, lines, pin])
+        let row = NSStackView(views: [icon, lines, shortcut, pin])
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 8
@@ -65,8 +71,10 @@ final class HistoryRowView: NSTableCellView {
         fatalError("HistoryRowView is built in code")
     }
 
-    /// Fills the row with `item`; `now` dates its copy time.
-    func show(_ item: ItemPreview, now: Date) {
+    /// Fills the row with `item`; `now` dates its copy time. `quickPaste` is
+    /// the digit of its Cmd+digit shortcut, if it has one.
+    func show(_ item: ItemPreview, now: Date, quickPaste: Int? = nil) {
+        shortcut.stringValue = quickPaste.map { "⌘\($0)" } ?? ""
         title.stringValue = PopupText.title(item.content)
         detail.stringValue = PopupText.detail(item, now: now)
         icon.image = Self.icon(for: item.content)

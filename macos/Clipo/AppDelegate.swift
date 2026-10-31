@@ -13,7 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popup: PopupController?
     private var hotkey: GlobalHotkey?
     private let settings = SettingsCoordinator()
-    private let settingsWindow = SettingsWindowController()
+    private let extras = ExtrasModel()
+    private lazy var settingsWindow = SettingsWindowController(extras: extras)
+    private var snippetRestorer: ItemRestorer?
     private var explainedAccessibility = false
 
     private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
@@ -26,6 +28,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.onRetry = { [weak self] in self?.openHistory() }
         statusMenu.onShowHistory = { [weak self] in self?.togglePopup() }
         statusMenu.onShowSettings = { [weak self] in self?.settingsWindow.show() }
+        statusMenu.onPasteSnippet = { [weak self] snippet in self?.paste(snippet) }
+        extras.onSnippetsChange = { [weak self] in
+            guard let self else { return }
+            statusMenu.showSnippets(extras.snippets)
+        }
+        extras.onImported = { [weak self] count in self?.historyChanged(itemCount: count) }
         statusItem = statusMenu.install()
 
         let hotkey = GlobalHotkey { [weak self] in self?.togglePopup() }
@@ -58,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 statusMenu.show(.ready(itemCount: itemCount))
                 startCapturing(into: store)
                 settings.attach(store)
+                await extras.attach(store)
             case .keyProblem:
                 statusMenu.show(.unavailable)
                 offerNewHistory()
@@ -133,19 +142,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let popup = PopupController(model: model)
         let restorer = ItemRestorer()
         restorer.load = { id in History.item(id, in: store) }
+        restorer.loadPlainText = { id in History.plainText(id, in: store) }
         restorer.bump = { id in History.bump(id, in: store) }
         restorer.didWrite = { [weak self] in self?.watcher?.skipCurrent() }
         popup.onChoose = { [weak self] row in
             Task { await self?.restore(row, with: restorer) }
         }
+        popup.onChoosePlain = { [weak self] row in
+            Task { await self?.restore(row, with: restorer, plainText: true) }
+        }
+        snippetRestorer = restorer
         return popup
+    }
+
+    /// Pastes a snippet picked from the menu. The menu does not take focus
+    /// from the app in front, so auto-paste lands there.
+    private func paste(_ snippet: Snippet) {
+        guard let restorer = snippetRestorer else {
+            NSSound.beep()
+            return
+        }
+        Task { await handle(await restorer.restore(text: snippet.body)) }
     }
 
     /// Puts the picked item on the clipboard. When auto-paste is on but macOS
     /// has not given Clipo the Accessibility permission, the item stays on the
     /// clipboard and the user is told why nothing was pasted.
-    private func restore(_ row: ItemPreview, with restorer: ItemRestorer) async {
-        switch await restorer.restore(row) {
+    private func restore(_ row: ItemPreview, with restorer: ItemRestorer, plainText: Bool = false) async {
+        await handle(await restorer.restore(row, plainText: plainText))
+    }
+
+    private func handle(_ outcome: ItemRestorer.Outcome) {
+        switch outcome {
         case .restored, .pasted:
             break
         case .needsAccessibility:

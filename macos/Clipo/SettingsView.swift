@@ -2,6 +2,8 @@ import SwiftUI
 
 /// The Settings window's content: one tab per topic.
 struct SettingsView: View {
+    let extras: ExtrasModel
+
     var body: some View {
         TabView {
             GeneralSettingsView()
@@ -10,6 +12,10 @@ struct SettingsView: View {
                 .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
             PrivacySettingsView()
                 .tabItem { Label("Privacy", systemImage: "hand.raised") }
+            SnippetsSettingsView(model: extras)
+                .tabItem { Label("Snippets", systemImage: "text.badge.plus") }
+            DataSettingsView(model: extras)
+                .tabItem { Label("Data", systemImage: "square.and.arrow.up.on.square") }
         }
         .frame(width: 500, height: 420)
     }

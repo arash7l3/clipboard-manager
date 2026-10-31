@@ -1,4 +1,5 @@
 import AppKit
+import ClipoCore
 
 /// The menu-bar icon and its menu.
 @MainActor
@@ -21,7 +22,12 @@ final class StatusMenu: NSObject {
     /// Called when the user picks "Settings…".
     var onShowSettings: (@MainActor () -> Void)?
 
+    /// Called with the snippet the user picked from the Snippets submenu.
+    var onPasteSnippet: (@MainActor (Snippet) -> Void)?
+
     let statusLine = NSMenuItem()
+    let snippetsItem = NSMenuItem()
+    let snippetsMenu = NSMenu()
     let retryItem = NSMenuItem()
     let showHistoryItem = NSMenuItem()
     let settingsItem = NSMenuItem()
@@ -47,6 +53,10 @@ final class StatusMenu: NSObject {
         showHistoryItem.target = self
         showHistoryItem.action = #selector(showHistory)
 
+        snippetsItem.title = String(localized: "Snippets", comment: "Menu item with the list of saved snippets")
+        snippetsItem.submenu = snippetsMenu
+        showSnippets([])
+
         settingsItem.title = String(localized: "Settings…", comment: "Menu item that opens the Settings window")
         settingsItem.target = self
         settingsItem.action = #selector(showSettings)
@@ -61,7 +71,7 @@ final class StatusMenu: NSObject {
         quitItem.keyEquivalent = "q"
 
         menu.items = [
-            statusLine, retryItem, showHistoryItem, .separator(), settingsItem, aboutItem, .separator(), quitItem
+            statusLine, retryItem, showHistoryItem, snippetsItem, .separator(), settingsItem, aboutItem, .separator(), quitItem
         ]
         show(.opening)
     }
@@ -113,6 +123,38 @@ final class StatusMenu: NSObject {
     func showShortcut(_ combo: KeyCombo?) {
         showHistoryItem.keyEquivalent = combo?.character ?? ""
         showHistoryItem.keyEquivalentModifierMask = combo?.modifiers ?? []
+    }
+
+    private var snippets: [Snippet] = []
+
+    /// Lists `snippets` in the Snippets submenu; picking one calls
+    /// ``onPasteSnippet``.
+    func showSnippets(_ snippets: [Snippet]) {
+        self.snippets = snippets
+        snippetsMenu.removeAllItems()
+        if snippets.isEmpty {
+            // No action, so the menu shows it disabled.
+            let empty = NSMenuItem()
+            empty.title = String(
+                localized: "No snippets. Add them in Settings.",
+                comment: "Snippets submenu text when no snippet is saved"
+            )
+            snippetsMenu.addItem(empty)
+            return
+        }
+        for (index, snippet) in snippets.enumerated() {
+            let item = NSMenuItem()
+            item.title = snippet.title
+            item.tag = index
+            item.target = self
+            item.action = #selector(snippetChosen(_:))
+            snippetsMenu.addItem(item)
+        }
+    }
+
+    @objc private func snippetChosen(_ sender: NSMenuItem) {
+        guard snippets.indices.contains(sender.tag) else { return }
+        onPasteSnippet?(snippets[sender.tag])
     }
 
     @objc private func retry() {

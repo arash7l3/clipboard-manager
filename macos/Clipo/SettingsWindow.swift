@@ -5,6 +5,11 @@ import SwiftUI
 @MainActor
 final class SettingsWindowController {
     private var window: NSWindow?
+    private let extras: ExtrasModel
+
+    init(extras: ExtrasModel) {
+        self.extras = extras
+    }
 
     /// Brings Settings to the front. Clipo has no Dock icon, so it activates
     /// itself first.
@@ -16,7 +21,7 @@ final class SettingsWindowController {
     }
 
     private func makeWindow() -> NSWindow {
-        let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
+        let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(extras: extras)))
         window.title = String(localized: "Clipo Settings", comment: "Title of the Settings window")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.isReleasedWhenClosed = false
