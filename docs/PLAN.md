@@ -48,7 +48,7 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 | Done |
 | 5.2 | 5 Packaging | macOS signing, notarization, dmg | Opus 5.5 | high | S18 | Done |
 | 5.3 | 5 Packaging | Windows MSIX installer and signing | Sonnet 5.5 | high | S19 | Done |
-| 5.4 | 5 Packaging | Final security and privacy review | Opus 5.5 | xhigh | S20 (fresh) |  |
+| 5.4 | 5 Packaging | Final security and privacy review | Opus 5.5 | xhigh | S20 (fresh) | Done |
 
 ## Session rules
 
@@ -62,4 +62,5 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 
 - The macOS dmg (5.2) is ad-hoc signed until there is an Apple Developer account. Turning on Developer ID signing and notarization is a setup task, not code: see [decision 0023](decisions/0023-macos-dmg-and-signing.md). The move to the data protection keychain waits for the same account.
 - The Windows MSIX (5.3) is test-signed until there is a code-signing certificate. Turning on real signing is a setup task, not code: see [decision 0025](decisions/0025-windows-msix.md). The package has not been installed on a Windows PC yet.
+- The security and privacy review (5.4) is in [security-review.md](security-review.md). Its recommendations before release, above all keeping the Developer ID off the Mac that runs pull requests, are setup tasks.
 - Windows builds and tests run on GitHub's hosted `windows-latest` runner (`.github/workflows/windows.yml`), free while the repository is public. Running the app still needs a Windows 11 PC.

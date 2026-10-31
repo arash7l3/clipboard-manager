@@ -141,7 +141,12 @@ public sealed class ClipboardWatcher : IDisposable
             {
                 return;
             }
-            var content = ClipboardReader.Read((long)Math.Min(store.Limits().MaxItemBytes, long.MaxValue));
+            // Earlier changes may have kept the worker busy, and the clipboard
+            // may have changed again meanwhile. Its data then belongs to the
+            // app that owns it now, which has to be allowed as well.
+            var content = ClipboardReader.Read(
+                (long)Math.Min(store.Limits().MaxItemBytes, long.MaxValue),
+                () => CaptureSettings.AllowsReading(SourceAppResolver.CurrentWithoutName(), _rules()));
             if (content is null)
             {
                 return;

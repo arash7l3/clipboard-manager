@@ -29,6 +29,9 @@ struct DataSettingsView: View {
 
     private static let fileType = UTType(filenameExtension: "clipoexport") ?? .data
 
+    /// Largest file offered to import, as on Windows.
+    static let maxImportBytes = 512 * 1024 * 1024
+
     private func export() async {
         guard confirmExport() else { return }
         let panel = NSSavePanel()
@@ -45,15 +48,33 @@ struct DataSettingsView: View {
             return
         }
         do {
-            try data.write(to: url, options: .atomic)
-            // Clipboard content: readable by the user only.
-            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            try Self.writePrivately(data, to: url)
             message = String(localized: "Exported.", comment: "Settings message after a successful export")
         } catch {
             message = String(
                 localized: "The file could not be written.",
                 comment: "Settings message when the export file could not be saved"
             )
+        }
+    }
+
+    /// Writes `data` to a new file at `url` that only the user can read from
+    /// the moment it exists: it holds clipboard content. Replaces a file
+    /// already there, which the save panel asked about.
+    static func writePrivately(_ data: Data, to url: URL) throws {
+        try? FileManager.default.removeItem(at: url)
+        // O_EXCL: never through a link someone left at the path.
+        let descriptor = Darwin.open(url.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
+        guard descriptor >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        do {
+            try handle.write(contentsOf: data)
+            try handle.close()
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            throw error
         }
     }
 
@@ -81,6 +102,12 @@ struct DataSettingsView: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        // A file this large is not an export; reading it would only fill memory.
+        let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        guard size <= Self.maxImportBytes else {
+            message = Self.text(for: .invalid)
+            return
+        }
         busy = true
         defer { busy = false }
         guard let data = try? Data(contentsOf: url) else {

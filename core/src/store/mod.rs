@@ -393,7 +393,8 @@ fn create_private_file(path: &Path) -> Result<(), CoreError> {
 
 /// Keys the connection and proves the key works.
 fn unlock(conn: &Connection, key: &DatabaseKey) -> Result<(), CoreError> {
-    conn.execute_batch(&key.unlock_sql())?;
+    conn.execute_batch(&key.unlock_sql())
+        .map_err(|err| unlock_error(&err))?;
 
     // Plain SQLite ignores `PRAGMA key` silently and would store everything in
     // the clear. Only SQLCipher answers `cipher_version`.
@@ -414,6 +415,18 @@ fn unlock(conn: &Connection, key: &DatabaseKey) -> Result<(), CoreError> {
         }
         Err(err) => Err(err.into()),
     }
+}
+
+/// The error for a failed `PRAGMA key`, by SQLite code only. rusqlite puts
+/// the statement's text in some errors, and this statement holds the key in
+/// hex; the apps log core errors.
+fn unlock_error(err: &rusqlite::Error) -> CoreError {
+    let reason = match err {
+        rusqlite::Error::SqliteFailure(code, _)
+        | rusqlite::Error::SqlInputError { error: code, .. } => code.to_string(),
+        _ => "unexpected error".to_owned(),
+    };
+    CoreError::Storage(format!("unlocking the database failed: {reason}"))
 }
 
 fn configure(conn: &Connection) -> Result<(), CoreError> {

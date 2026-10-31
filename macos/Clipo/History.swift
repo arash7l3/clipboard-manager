@@ -25,7 +25,7 @@ enum History {
 
     /// `Clipo/history.db` inside `applicationSupport` (the user's
     /// Application Support folder by default). Creates the `Clipo` folder,
-    /// readable by the user only.
+    /// readable by the user only and left out of backups.
     static func databaseURL(in applicationSupport: URL? = nil) throws -> URL {
         let support = try applicationSupport ?? FileManager.default.url(
             for: .applicationSupportDirectory,
@@ -33,12 +33,18 @@ enum History {
             appropriateFor: nil,
             create: true
         )
-        let folder = support.appendingPathComponent("Clipo", isDirectory: true)
+        var folder = support.appendingPathComponent("Clipo", isDirectory: true)
         try FileManager.default.createDirectory(
             at: folder,
             withIntermediateDirectories: true,
             attributes: [.posixPermissions: 0o700]
         )
+        // A backup would keep items after they are deleted here, and the key
+        // that opens them is backed up with the login keychain. Best effort:
+        // the history works either way.
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? folder.setResourceValues(values)
         return folder.appendingPathComponent("history.db", isDirectory: false)
     }
 

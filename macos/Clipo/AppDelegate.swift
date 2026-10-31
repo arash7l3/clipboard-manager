@@ -91,8 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // The settings themselves, not the store's copy: the store gets a
+        // change a moment later, off the main thread, and a copy made in
+        // that moment would be read under the old rules.
         let watcher = PasteboardWatcher(shouldRead: { app in
-            CaptureSettings.allowsReading(from: app, under: store.rules())
+            CaptureSettings.allowsReading(from: app, under: CaptureSettings.rules())
         })
         self.watcher = watcher
         watcher.start()

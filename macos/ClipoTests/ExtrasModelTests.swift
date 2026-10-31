@@ -81,6 +81,17 @@ final class ExtrasModelTests {
         #expect(try targetStore.count() == 1)
     }
 
+    @Test func exportFileIsTheUsersAloneAndReplacesAnOldOne() throws {
+        let url = folder.appendingPathComponent("Clipo Export.clipoexport")
+        try Data("an older, longer export".utf8).write(to: url)
+
+        try DataSettingsView.writePrivately(Data("new".utf8), to: url)
+
+        #expect(try Data(contentsOf: url) == Data("new".utf8))
+        let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        #expect((attributes[.posixPermissions] as? Int) == 0o600)
+    }
+
     @Test func garbageIsNotAnExport() async throws {
         let (model, _) = try await openModel()
 

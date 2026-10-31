@@ -12,6 +12,10 @@ on:
       - macos/scripts/**
       - .github/workflows/macos-dmg.yml
 
+# The token can only read the repository; no job here writes to GitHub.
+permissions:
+  contents: read
+
 concurrency:
   group: macos-dmg-${{ github.ref }}
   cancel-in-progress: true
@@ -24,6 +28,11 @@ jobs:
   dmg:
     name: macOS dmg
     runs-on: [self-hosted, macOS, clipboard-manager]
+    # Code from forks never runs on the self-hosted Mac, which keeps state
+    # between runs and will hold the signing identity. A fork could edit this
+    # line too, so the repository's approval setting for outside
+    # contributors stays the first guard.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4

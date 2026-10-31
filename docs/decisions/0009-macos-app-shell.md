@@ -7,7 +7,7 @@ Status: accepted
 - `macos/Clipo.xcodeproj` has two targets: the app `Clipo` and its hosted unit tests `ClipoTests` (Swift Testing). Both build in Swift 6 language mode with warnings treated as errors. Folders are file-system synchronized (Xcode 16 project format): a Swift file added to `macos/Clipo` or `macos/ClipoTests` is built without editing the project.
 - The app starts from an AppKit `@main`, has `LSUIElement` set (no Dock icon, no main window) and shows one `NSStatusItem` with a menu.
 - The core is linked as the local Swift package `core/dist/apple/ClipoCore` that `cargo xtask package macos` writes (decision 0008). Run it before opening or building the project.
-- The history is `~/Library/Application Support/Clipo/history.db`, in a folder only the user can read. Its key is a generic password in the login keychain, service `io.github.arash7l3.Clipo`, account `history-key`.
+- The history is `~/Library/Application Support/Clipo/history.db`, in a folder only the user can read and left out of backups (decision 0026). Its key is a generic password in the login keychain, service `io.github.arash7l3.Clipo`, account `history-key`.
 - The bundle identifier is `io.github.arash7l3.Clipo`. The app is not sandboxed and uses the hardened runtime.
 
 **Why.**

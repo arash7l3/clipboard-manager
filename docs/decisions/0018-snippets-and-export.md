@@ -20,6 +20,6 @@ Status: accepted
 - Imported items rank as the most recent copies, in their original order, then the history limit is applied. Importing an old export into a full history can therefore push out existing unpinned items. Pinned items are never pushed out.
 
 **Consequences.**
-- **The export is not encrypted.** It holds clipboard content, possibly passwords, in the clear. The apps must say so before writing one (steps 4.2, 4.3). A passphrase-protected export needs an AEAD and a key-derivation function; it is left for the final security review (5.4) to decide.
+- **The export is not encrypted.** It holds clipboard content, possibly passwords, in the clear. The apps must say so before writing one (steps 4.2, 4.3). A passphrase-protected export needs an AEAD and a key-derivation function; the security review (5.4) kept the export unencrypted (decision 0026).
 - An export is a plain file the user can lose or sync to a cloud folder. Clipo cannot protect it after it is written.
-- Deleting a snippet purges the WAL like deleting an item, so its text does not stay in the file.
+- Deleting or editing a snippet purges the WAL like deleting an item, so its old text does not stay in the file.

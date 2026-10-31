@@ -61,6 +61,8 @@ impl Store {
     }
 
     /// Changes a snippet's title and body, recording `at` as the update time.
+    /// The old text is overwritten in the database file, as with
+    /// [`Store::delete_snippet`].
     ///
     /// # Errors
     ///
@@ -81,6 +83,7 @@ impl Store {
         if changed == 0 {
             return Err(CoreError::SnippetNotFound(id));
         }
+        self.purge_deleted()?;
         self.snippet(id)?.ok_or(CoreError::SnippetNotFound(id))
     }
 
