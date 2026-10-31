@@ -172,4 +172,160 @@
     <value>چسباندن پس از انتخاب</value>
     <comment>Tray menu check item: picking an item also pastes it into the app in front</comment>
   </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>تنظیمات…</value>
+    <comment>Tray menu item that opens the Settings window</comment>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>تنظیمات Clipo</value>
+    <comment>Title of the Settings window</comment>
+  </data>
+  <data name="SettingsTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>بخش‌های تنظیمات</value>
+    <comment>Screen reader name of the tab bar in Settings</comment>
+  </data>
+  <data name="SettingsTabGeneral.Text" xml:space="preserve">
+    <value>عمومی</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabHistory.Text" xml:space="preserve">
+    <value>تاریخچه</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabPrivacy.Text" xml:space="preserve">
+    <value>حریم خصوصی</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="StartAtLoginBox.Content" xml:space="preserve">
+    <value>اجرای Clipo هنگام ورود به ویندوز</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="LoginDisabledNote.Text" xml:space="preserve">
+    <value>ویندوز اجرای خودکار Clipo را خاموش کرده است. آن را در «تنظیمات &gt; برنامه‌ها &gt; راه‌اندازی» روشن کنید.</value>
+    <comment>Shown when the user switched Clipo off in Task Manager or Windows Settings</comment>
+  </data>
+  <data name="OpenStartupSettingsButton.Content" xml:space="preserve">
+    <value>باز کردن تنظیمات راه‌اندازی</value>
+    <comment>Opens the Startup page of Windows Settings</comment>
+  </data>
+  <data name="LoginFailedNote.Text" xml:space="preserve">
+    <value>ویندوز اجازه نداد Clipo مورد راه‌اندازی خودکار را تغییر دهد.</value>
+    <comment>Shown when writing the startup entry failed</comment>
+  </data>
+  <data name="ThemeBox.Header" xml:space="preserve">
+    <value>ظاهر</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="ThemeSystem.Content" xml:space="preserve">
+    <value>مطابق ویندوز</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="ThemeLight.Content" xml:space="preserve">
+    <value>روشن</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="ThemeDark.Content" xml:space="preserve">
+    <value>تیره</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="LanguageBox.Header" xml:space="preserve">
+    <value>زبان</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="LanguageSystem.Content" xml:space="preserve">
+    <value>مطابق ویندوز</value>
+    <comment>Language choice: follow the Windows display language</comment>
+  </data>
+  <data name="RestartNote.Text" xml:space="preserve">
+    <value>برای تغییر زبان، Clipo را دوباره راه‌اندازی کنید.</value>
+    <comment>Shown after the language was changed</comment>
+  </data>
+  <data name="RestartButton.Content" xml:space="preserve">
+    <value>راه‌اندازی دوباره</value>
+    <comment>Restarts Clipo</comment>
+  </data>
+  <data name="HotkeyBox.Header" xml:space="preserve">
+    <value>باز کردن تاریخچه با</value>
+    <comment>Settings drop-down for the shortcut</comment>
+  </data>
+  <data name="HotkeyRefusedNote.Text" xml:space="preserve">
+    <value>برنامه‌ای دیگر از این میانبر استفاده می‌کند؛ میانبر قبلی می‌ماند.</value>
+    <comment>Shown when the chosen shortcut could not be registered</comment>
+  </data>
+  <data name="AutoPasteBox.Content" xml:space="preserve">
+    <value>چسباندن خودکار پس از انتخاب مورد</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="AutoPasteNote.Text" xml:space="preserve">
+    <value>وقتی خاموش است، مورد فقط به کلیپ‌بورد برمی‌گردد. در برنامه‌هایی که با دسترسی مدیر اجرا می‌شوند کار نمی‌کند.</value>
+    <comment>Explains the auto-paste check box</comment>
+  </data>
+  <data name="MaxItemsBox.Header" xml:space="preserve">
+    <value>تعداد موردهای نگه‌داری‌شده</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="MaxItemsNote.Text" xml:space="preserve">
+    <value>موردهای سنجاق‌شده هرگز برای باز کردن جا حذف نمی‌شوند.</value>
+    <comment>Explains the items to keep setting</comment>
+  </data>
+  <data name="AutoClearBox.Header" xml:space="preserve">
+    <value>حذف موردهای سنجاق‌نشده</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="AutoClearNever.Content" xml:space="preserve">
+    <value>هرگز</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear1.Content" xml:space="preserve">
+    <value>پس از ۱ روز</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear7.Content" xml:space="preserve">
+    <value>پس از ۷ روز</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear30.Content" xml:space="preserve">
+    <value>پس از ۳۰ روز</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="PrivateModeBox.Content" xml:space="preserve">
+    <value>حالت خصوصی</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="PrivateModeNote.Text" xml:space="preserve">
+    <value>وقتی روشن است، هیچ چیزی که کپی می‌کنید ذخیره نمی‌شود. تاریخچهٔ موجود حفظ می‌شود.</value>
+    <comment>Explains private mode</comment>
+  </data>
+  <data name="IgnoredAppsHeader.Text" xml:space="preserve">
+    <value>هرگز از این برنامه‌ها کپی ذخیره نشود</value>
+    <comment>Heading of the list of ignored apps</comment>
+  </data>
+  <data name="IgnoredAppsList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>برنامه‌های نادیده‌گرفته‌شده</value>
+    <comment>Screen reader name of the list of ignored apps</comment>
+  </data>
+  <data name="RemoveAppButton.Content" xml:space="preserve">
+    <value>حذف مورد انتخاب‌شده</value>
+    <comment>Removes the selected app from the list of ignored apps</comment>
+  </data>
+  <data name="AppNameBox.PlaceholderText" xml:space="preserve">
+    <value>نام برنامه، مانند Vault.exe</value>
+    <comment>Hint in the field for adding an ignored app</comment>
+  </data>
+  <data name="AppNameBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>برنامه‌ای که نادیده گرفته شود</value>
+    <comment>Screen reader name of the field for adding an ignored app</comment>
+  </data>
+  <data name="AddAppButton.Content" xml:space="preserve">
+    <value>افزودن</value>
+    <comment>Adds the typed program to the ignored apps</comment>
+  </data>
+  <data name="ChooseAppButton.Content" xml:space="preserve">
+    <value>انتخاب برنامه…</value>
+    <comment>Opens a file picker for an ignored app</comment>
+  </data>
+  <data name="IgnoredAppsNote.Text" xml:space="preserve">
+    <value>مدیرهای گذرواژه مانند 1Password و Bitwarden همیشه نادیده گرفته می‌شوند.</value>
+    <comment>Explains the built-in ignore list</comment>
+  </data>
 </root>

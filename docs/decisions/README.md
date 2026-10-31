@@ -20,3 +20,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0014](0014-windows-app-shell.md) | Windows app: WinUI 3 unpackaged, core as a class library, Credential Manager key |
 | [0015](0015-windows-capture-tray-hotkey.md) | Windows capture, tray icon and shortcut: clipboard listener, native tray, RegisterHotKey |
 | [0016](0016-windows-popup-and-restore.md) | Windows popup, restore and auto-paste: a WinUI window that takes the keyboard, SendInput for Ctrl+V |
+| [0017](0017-windows-settings.md) | Windows settings: a WinUI window over a JSON file, Run-key login item, language by restart |

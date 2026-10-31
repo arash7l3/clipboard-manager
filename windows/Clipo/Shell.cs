@@ -1,4 +1,5 @@
 using System.Globalization;
+using Clipo.Core;
 using Clipo.Services;
 using Microsoft.Windows.ApplicationModel.Resources;
 
@@ -14,8 +15,9 @@ namespace Clipo;
 internal sealed class Shell : IDisposable
 {
     private const int OpenId = 1;
-    private const int AutoPasteId = 2;
-    private const int QuitId = 3;
+    private const int SettingsId = 2;
+    private const int AutoPasteId = 3;
+    private const int QuitId = 4;
 
     private static readonly ResourceLoader s_strings = new();
 
@@ -23,7 +25,9 @@ internal sealed class Shell : IDisposable
     private readonly TrayIcon _tray;
     private readonly GlobalHotkey _hotkey;
 
-    public Shell()
+    /// <param name="chord">The shortcut that opens the history.</param>
+    /// <param name="rules">The capture rules in force, asked before every copy is read.</param>
+    public Shell(HotkeyChord chord, Func<CaptureRules> rules)
     {
         _tray = new TrayIcon(_messages, Path.Combine(AppContext.BaseDirectory, "Clipo.ico"), s_strings.GetString("TrayTooltip"));
         _tray.Activated += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
@@ -31,10 +35,9 @@ internal sealed class Shell : IDisposable
 
         _hotkey = new GlobalHotkey(_messages);
         _hotkey.Pressed += (_, _) => HotkeyPressed?.Invoke(this, EventArgs.Empty);
-        HotkeyRegistered = _hotkey.Register(HotkeyChord.ShowHistory);
+        HotkeyRegistered = _hotkey.Register(chord);
 
-        var rules = CaptureSettings.Rules();
-        Watcher = new ClipboardWatcher(_messages, new ClipboardRecorder(new CaptureBuilder(new ImageProcessor())), () => rules);
+        Watcher = new ClipboardWatcher(_messages, new ClipboardRecorder(new CaptureBuilder(new ImageProcessor())), rules);
         Watcher.Start();
     }
 
@@ -43,6 +46,9 @@ internal sealed class Shell : IDisposable
 
     /// <summary>The user pressed the shortcut.</summary>
     public event EventHandler? HotkeyPressed;
+
+    /// <summary>The user picked Settings in the tray menu.</summary>
+    public event EventHandler? SettingsRequested;
 
     /// <summary>The user picked Paste After Choosing in the tray menu.</summary>
     public event EventHandler? AutoPasteToggled;
@@ -61,6 +67,24 @@ internal sealed class Shell : IDisposable
     /// <summary>Whether the shortcut was registered; another app may hold it.</summary>
     public bool HotkeyRegistered { get; }
 
+    /// <summary>
+    /// Moves the shortcut to <paramref name="chord"/>. Returns whether it
+    /// worked; if another app holds the new one, the old one is registered again.
+    /// </summary>
+    public bool ChangeHotkey(HotkeyChord chord)
+    {
+        var previous = _hotkey.Chord;
+        if (_hotkey.Register(chord))
+        {
+            return true;
+        }
+        if (previous is { } old)
+        {
+            _hotkey.Register(old);
+        }
+        return false;
+    }
+
     public void Dispose()
     {
         Watcher.Store = null;
@@ -78,6 +102,7 @@ internal sealed class Shell : IDisposable
         var entries = new[]
         {
             new MenuEntry(OpenId, openText),
+            new MenuEntry(SettingsId, s_strings.GetString("MenuSettings")),
             new MenuEntry(AutoPasteId, s_strings.GetString("MenuAutoPaste"), IsChecked: AutoPaste),
             MenuEntry.Separator,
             new MenuEntry(QuitId, s_strings.GetString("MenuQuit")),
@@ -88,6 +113,9 @@ internal sealed class Shell : IDisposable
         {
             case OpenId:
                 OpenRequested?.Invoke(this, EventArgs.Empty);
+                break;
+            case SettingsId:
+                SettingsRequested?.Invoke(this, EventArgs.Empty);
                 break;
             case AutoPasteId:
                 AutoPasteToggled?.Invoke(this, EventArgs.Empty);

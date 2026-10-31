@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Clipo's settings: one tab per topic, as on the Mac. Every control changes
+  its setting at once; see SettingsWindow.xaml.cs. Closing the window hides it.
+-->
+<Window
+    x:Class="Clipo.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Clipo">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="Root" Padding="24,16,24,16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <SelectorBar x:Name="Tabs" x:Uid="SettingsTabs" SelectionChanged="OnTabChanged">
+            <SelectorBarItem x:Uid="SettingsTabGeneral" IsSelected="True" />
+            <SelectorBarItem x:Uid="SettingsTabHistory" />
+            <SelectorBarItem x:Uid="SettingsTabPrivacy" />
+        </SelectorBar>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <!-- General -->
+                <StackPanel x:Name="GeneralPanel" Spacing="16">
+                    <StackPanel Spacing="6">
+                        <CheckBox x:Name="StartAtLoginBox" x:Uid="StartAtLoginBox" Click="OnStartAtLoginClick" />
+                        <TextBlock x:Name="LoginFailedNote" x:Uid="LoginFailedNote" Style="{StaticResource CaptionTextBlockStyle}"
+                                   TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed" />
+                        <StackPanel x:Name="LoginDisabledPanel" Spacing="6" Visibility="Collapsed">
+                            <TextBlock x:Uid="LoginDisabledNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Button x:Uid="OpenStartupSettingsButton" Click="OnOpenStartupSettings" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <ComboBox x:Name="ThemeBox" x:Uid="ThemeBox" HorizontalAlignment="Stretch" SelectionChanged="OnThemeChanged">
+                        <ComboBoxItem x:Uid="ThemeSystem" />
+                        <ComboBoxItem x:Uid="ThemeLight" />
+                        <ComboBoxItem x:Uid="ThemeDark" />
+                    </ComboBox>
+
+                    <StackPanel Spacing="6">
+                        <ComboBox x:Name="LanguageBox" x:Uid="LanguageBox" HorizontalAlignment="Stretch" SelectionChanged="OnLanguageChanged">
+                            <ComboBoxItem x:Uid="LanguageSystem" />
+                            <ComboBoxItem Content="English" />
+                            <ComboBoxItem Content="فارسی" />
+                        </ComboBox>
+                        <Grid x:Name="RestartPanel" ColumnSpacing="12" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Uid="RestartNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                       VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Button Grid.Column="1" x:Uid="RestartButton" Click="OnRestart" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <ComboBox x:Name="HotkeyBox" x:Uid="HotkeyBox" HorizontalAlignment="Stretch" SelectionChanged="OnHotkeyChanged" />
+                        <TextBlock x:Name="HotkeyRefusedNote" x:Uid="HotkeyRefusedNote" Style="{StaticResource CaptionTextBlockStyle}"
+                                   TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed"
+                                   AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <CheckBox x:Name="AutoPasteBox" x:Uid="AutoPasteBox" Click="OnAutoPasteClick" />
+                        <TextBlock x:Uid="AutoPasteNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- History -->
+                <StackPanel x:Name="HistoryPanel" Spacing="16" Visibility="Collapsed">
+                    <StackPanel Spacing="6">
+                        <ComboBox x:Name="MaxItemsBox" x:Uid="MaxItemsBox" HorizontalAlignment="Stretch" SelectionChanged="OnMaxItemsChanged" />
+                        <TextBlock x:Uid="MaxItemsNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ComboBox x:Name="AutoClearBox" x:Uid="AutoClearBox" HorizontalAlignment="Stretch" SelectionChanged="OnAutoClearChanged">
+                        <ComboBoxItem x:Uid="AutoClearNever" />
+                        <ComboBoxItem x:Uid="AutoClear1" />
+                        <ComboBoxItem x:Uid="AutoClear7" />
+                        <ComboBoxItem x:Uid="AutoClear30" />
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Privacy -->
+                <StackPanel x:Name="PrivacyPanel" Spacing="16" Visibility="Collapsed">
+                    <StackPanel Spacing="6">
+                        <CheckBox x:Name="PrivateModeBox" x:Uid="PrivateModeBox" Click="OnPrivateModeClick" />
+                        <TextBlock x:Uid="PrivateModeNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="IgnoredAppsHeader" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                        <ListView x:Name="IgnoredList" x:Uid="IgnoredAppsList" SelectionMode="Single" MaxHeight="150"
+                                  BorderThickness="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                  SelectionChanged="OnIgnoredSelectionChanged" />
+                        <Button x:Name="RemoveAppButton" x:Uid="RemoveAppButton" IsEnabled="False" Click="OnRemoveApp" />
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="AppNameBox" x:Uid="AppNameBox" IsSpellCheckEnabled="False" KeyDown="OnAppNameKeyDown" />
+                            <Button Grid.Column="1" x:Uid="AddAppButton" Click="OnAddApp" />
+                            <Button Grid.Column="2" x:Uid="ChooseAppButton" Click="OnChooseApp" />
+                        </Grid>
+                        <TextBlock x:Uid="IgnoredAppsNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>

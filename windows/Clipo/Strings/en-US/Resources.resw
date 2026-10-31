@@ -172,4 +172,160 @@
     <value>Paste After Choosing</value>
     <comment>Tray menu check item: picking an item also pastes it into the app in front</comment>
   </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>Settings…</value>
+    <comment>Tray menu item that opens the Settings window</comment>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Clipo Settings</value>
+    <comment>Title of the Settings window</comment>
+  </data>
+  <data name="SettingsTabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings sections</value>
+    <comment>Screen reader name of the tab bar in Settings</comment>
+  </data>
+  <data name="SettingsTabGeneral.Text" xml:space="preserve">
+    <value>General</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabHistory.Text" xml:space="preserve">
+    <value>History</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabPrivacy.Text" xml:space="preserve">
+    <value>Privacy</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="StartAtLoginBox.Content" xml:space="preserve">
+    <value>Start Clipo when I sign in to Windows</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="LoginDisabledNote.Text" xml:space="preserve">
+    <value>Windows has Clipo turned off at startup. Turn it on in Settings &gt; Apps &gt; Startup.</value>
+    <comment>Shown when the user switched Clipo off in Task Manager or Windows Settings</comment>
+  </data>
+  <data name="OpenStartupSettingsButton.Content" xml:space="preserve">
+    <value>Open Startup Settings</value>
+    <comment>Opens the Startup page of Windows Settings</comment>
+  </data>
+  <data name="LoginFailedNote.Text" xml:space="preserve">
+    <value>Windows did not let Clipo change its startup entry.</value>
+    <comment>Shown when writing the startup entry failed</comment>
+  </data>
+  <data name="ThemeBox.Header" xml:space="preserve">
+    <value>Appearance</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="ThemeSystem.Content" xml:space="preserve">
+    <value>Match Windows</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="ThemeLight.Content" xml:space="preserve">
+    <value>Light</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="ThemeDark.Content" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Appearance choice</comment>
+  </data>
+  <data name="LanguageBox.Header" xml:space="preserve">
+    <value>Language</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="LanguageSystem.Content" xml:space="preserve">
+    <value>Match Windows</value>
+    <comment>Language choice: follow the Windows display language</comment>
+  </data>
+  <data name="RestartNote.Text" xml:space="preserve">
+    <value>Restart Clipo to change the language.</value>
+    <comment>Shown after the language was changed</comment>
+  </data>
+  <data name="RestartButton.Content" xml:space="preserve">
+    <value>Restart</value>
+    <comment>Restarts Clipo</comment>
+  </data>
+  <data name="HotkeyBox.Header" xml:space="preserve">
+    <value>Open history with</value>
+    <comment>Settings drop-down for the shortcut</comment>
+  </data>
+  <data name="HotkeyRefusedNote.Text" xml:space="preserve">
+    <value>Another app already uses that shortcut, so the previous one stays.</value>
+    <comment>Shown when the chosen shortcut could not be registered</comment>
+  </data>
+  <data name="AutoPasteBox.Content" xml:space="preserve">
+    <value>Paste automatically after choosing an item</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="AutoPasteNote.Text" xml:space="preserve">
+    <value>Off, an item is only put back on the clipboard. Doesn't work in apps running as administrator.</value>
+    <comment>Explains the auto-paste check box</comment>
+  </data>
+  <data name="MaxItemsBox.Header" xml:space="preserve">
+    <value>Items to keep</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="MaxItemsNote.Text" xml:space="preserve">
+    <value>Pinned items are never removed to make room.</value>
+    <comment>Explains the items to keep setting</comment>
+  </data>
+  <data name="AutoClearBox.Header" xml:space="preserve">
+    <value>Remove unpinned items</value>
+    <comment>Settings drop-down</comment>
+  </data>
+  <data name="AutoClearNever.Content" xml:space="preserve">
+    <value>Never</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear1.Content" xml:space="preserve">
+    <value>After 1 day</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear7.Content" xml:space="preserve">
+    <value>After 7 days</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="AutoClear30.Content" xml:space="preserve">
+    <value>After 30 days</value>
+    <comment>Auto-clear choice</comment>
+  </data>
+  <data name="PrivateModeBox.Content" xml:space="preserve">
+    <value>Private mode</value>
+    <comment>Settings check box</comment>
+  </data>
+  <data name="PrivateModeNote.Text" xml:space="preserve">
+    <value>While on, nothing you copy is stored. Existing history is kept.</value>
+    <comment>Explains private mode</comment>
+  </data>
+  <data name="IgnoredAppsHeader.Text" xml:space="preserve">
+    <value>Never store copies from these apps</value>
+    <comment>Heading of the list of ignored apps</comment>
+  </data>
+  <data name="IgnoredAppsList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Ignored apps</value>
+    <comment>Screen reader name of the list of ignored apps</comment>
+  </data>
+  <data name="RemoveAppButton.Content" xml:space="preserve">
+    <value>Remove Selected</value>
+    <comment>Removes the selected app from the list of ignored apps</comment>
+  </data>
+  <data name="AppNameBox.PlaceholderText" xml:space="preserve">
+    <value>Program name, such as Vault.exe</value>
+    <comment>Hint in the field for adding an ignored app</comment>
+  </data>
+  <data name="AppNameBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Program to ignore</value>
+    <comment>Screen reader name of the field for adding an ignored app</comment>
+  </data>
+  <data name="AddAppButton.Content" xml:space="preserve">
+    <value>Add</value>
+    <comment>Adds the typed program to the ignored apps</comment>
+  </data>
+  <data name="ChooseAppButton.Content" xml:space="preserve">
+    <value>Choose App…</value>
+    <comment>Opens a file picker for an ignored app</comment>
+  </data>
+  <data name="IgnoredAppsNote.Text" xml:space="preserve">
+    <value>Password managers such as 1Password and Bitwarden are always ignored.</value>
+    <comment>Explains the built-in ignore list</comment>
+  </data>
 </root>
