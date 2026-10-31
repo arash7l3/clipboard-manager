@@ -17,8 +17,10 @@ namespace Clipo;
 /// The history popup. It opens at the mouse pointer and takes the keyboard;
 /// the search field keeps it the whole time. Typing searches; Up, Down,
 /// Page Up, Page Down, Home and End move the selection; Tab and Shift+Tab
-/// switch tabs; Enter picks the selected item; Esc closes. A click on a row
-/// picks it, and clicking anywhere else closes the popup.
+/// switch tabs; Enter picks the selected item; Esc closes. Ctrl+1 to Ctrl+9
+/// pick the first nine rows. Holding Shift while picking, with Enter or a
+/// click, pastes without formatting. A click on a row picks it, and clicking
+/// anywhere else closes the popup.
 /// </summary>
 public sealed partial class PopupWindow : Window
 {
@@ -64,7 +66,7 @@ public sealed partial class PopupWindow : Window
     }
 
     /// <summary>Raised with the row the user picked, after the popup closed and gave the focus back.</summary>
-    public event EventHandler<ItemPreview>? Chosen;
+    public event EventHandler<PopupChoice>? Chosen;
 
     public bool IsShown { get; private set; }
 
@@ -140,10 +142,10 @@ public sealed partial class PopupWindow : Window
         Close();
     }
 
-    private void Choose(ItemPreview row)
+    private void Choose(ItemPreview row, bool plain)
     {
         Dismiss(restoreFocus: true);
-        Chosen?.Invoke(this, row);
+        Chosen?.Invoke(this, new PopupChoice(row, plain));
     }
 
     private void Place()
@@ -161,7 +163,7 @@ public sealed partial class PopupWindow : Window
     private void ShowRows()
     {
         var now = DateTime.UtcNow;
-        var rows = _model.Rows.Select(row => PopupRow.Create(row, _text, now)).ToList();
+        var rows = _model.Rows.Select((row, position) => PopupRow.Create(row, _text, now, position + 1)).ToList();
         HistoryList.ItemsSource = rows;
         var empty = rows.Count == 0 && !_model.IsLoading;
         EmptyText.Text = empty ? _text.EmptyList(_model.Failed, _model.SearchText.Length > 0) : "";
@@ -201,6 +203,14 @@ public sealed partial class PopupWindow : Window
     private void OnSearchKeyDown(object sender, KeyRoutedEventArgs e)
     {
         e.Handled = true;
+        if (Desktop.IsControlDown() && QuickPasteNumber(e.Key) is { } number)
+        {
+            if (_model.RowForShortcut(number) is { } quick)
+            {
+                Choose(quick, plain: Desktop.IsShiftDown());
+            }
+            return;
+        }
         switch (e.Key)
         {
             case VirtualKey.Down:
@@ -228,7 +238,7 @@ public sealed partial class PopupWindow : Window
             case VirtualKey.Enter:
                 if (_model.SelectedRow is { } row)
                 {
-                    Choose(row);
+                    Choose(row, plain: Desktop.IsShiftDown());
                 }
                 break;
             case VirtualKey.Escape:
@@ -239,6 +249,14 @@ public sealed partial class PopupWindow : Window
                 break;
         }
     }
+
+    /// <summary>1 to 9 for the digit keys, in the top row or on the number pad.</summary>
+    private static int? QuickPasteNumber(VirtualKey key) => key switch
+    {
+        >= VirtualKey.Number1 and <= VirtualKey.Number9 => key - VirtualKey.Number0,
+        >= VirtualKey.NumberPad1 and <= VirtualKey.NumberPad9 => key - VirtualKey.NumberPad0,
+        _ => null,
+    };
 
     private void OnTabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
@@ -254,7 +272,7 @@ public sealed partial class PopupWindow : Window
     {
         if (e.ClickedItem is PopupRow row)
         {
-            Choose(row.Preview);
+            Choose(row.Preview, plain: Desktop.IsShiftDown());
         }
     }
 
@@ -277,3 +295,8 @@ public sealed partial class PopupWindow : Window
         }
     }
 }
+
+/// <summary>What the user picked in the popup.</summary>
+/// <param name="Row">The item.</param>
+/// <param name="Plain">Paste it as plain text, without formatting.</param>
+public sealed record PopupChoice(ItemPreview Row, bool Plain);

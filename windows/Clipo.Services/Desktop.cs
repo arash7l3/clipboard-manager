@@ -49,6 +49,9 @@ public static unsafe class Desktop
     /// <summary>Whether a Shift key is held down, for Shift+Tab.</summary>
     public static bool IsShiftDown() => NativeMethods.GetKeyState(VkShift) < 0;
 
+    /// <summary>Whether a Ctrl key is held down, for the quick-paste shortcuts.</summary>
+    public static bool IsControlDown() => NativeMethods.GetKeyState(VkControl) < 0;
+
     /// <summary>The default "something went wrong" sound.</summary>
     public static void Beep() => NativeMethods.MessageBeep(0xFFFFFFFF);
 

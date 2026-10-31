@@ -328,4 +328,140 @@
     <value>مدیرهای گذرواژه مانند 1Password و Bitwarden همیشه نادیده گرفته می‌شوند.</value>
     <comment>Explains the built-in ignore list</comment>
   </data>
+  <data name="SettingsTabSnippets.Text" xml:space="preserve">
+    <value>متن‌های آماده</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="SettingsTabData.Text" xml:space="preserve">
+    <value>داده‌ها</value>
+    <comment>Settings tab</comment>
+  </data>
+  <data name="MenuSnippets" xml:space="preserve">
+    <value>متن‌های آماده</value>
+    <comment>Tray menu item that opens the list of snippets</comment>
+  </data>
+  <data name="MenuNoSnippets" xml:space="preserve">
+    <value>متنی ذخیره نشده</value>
+    <comment>Disabled line in the empty snippets submenu</comment>
+  </data>
+  <data name="QuickPasteKey" xml:space="preserve">
+    <value>Ctrl+{0}</value>
+    <comment>Quick-paste key shown on a popup row; {0} is 1 to 9</comment>
+  </data>
+  <data name="SnippetsNone" xml:space="preserve">
+    <value>هنوز متنی ذخیره نشده است.</value>
+    <comment>Shown in Settings when there are no snippets</comment>
+  </data>
+  <data name="SnippetsUnavailable" xml:space="preserve">
+    <value>تاریخچه باز نیست، پس متن‌های آماده نمایش داده نمی‌شوند.</value>
+    <comment>Shown in Settings when the history failed to open</comment>
+  </data>
+  <data name="SnippetList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>متن‌های آماده</value>
+    <comment>Screen reader name of the snippet list</comment>
+  </data>
+  <data name="SnippetTitleBox.Header" xml:space="preserve">
+    <value>نام</value>
+    <comment>Label of the snippet name field</comment>
+  </data>
+  <data name="SnippetBodyBox.Header" xml:space="preserve">
+    <value>متن</value>
+    <comment>Label of the snippet text field</comment>
+  </data>
+  <data name="SaveSnippetButton.Content" xml:space="preserve">
+    <value>ذخیره متن</value>
+    <comment>Saves the snippet being edited</comment>
+  </data>
+  <data name="NewSnippetButton.Content" xml:space="preserve">
+    <value>متن تازه</value>
+    <comment>Empties the fields to write another snippet</comment>
+  </data>
+  <data name="DeleteSnippetButton.Content" xml:space="preserve">
+    <value>حذف</value>
+    <comment>Deletes the selected snippet</comment>
+  </data>
+  <data name="SnippetInvalid" xml:space="preserve">
+    <value>متن آماده به نام و متن نیاز دارد.</value>
+    <comment>Shown when saving a blank snippet</comment>
+  </data>
+  <data name="SnippetSaved" xml:space="preserve">
+    <value>ذخیره شد.</value>
+    <comment>Shown after a snippet was saved</comment>
+  </data>
+  <data name="SnippetFailed" xml:space="preserve">
+    <value>متن آماده ذخیره نشد.</value>
+    <comment>Shown when the store refused a snippet change</comment>
+  </data>
+  <data name="SnippetsNote.Text" xml:space="preserve">
+    <value>برای چسباندن یک متن آماده به‌صورت متن ساده، آن را از منوی نماد Clipo در نوار وظیفه انتخاب کنید. متن‌های آماده بخشی از تاریخچه نیستند.</value>
+    <comment>Explains snippets</comment>
+  </data>
+  <data name="ExportButton.Content" xml:space="preserve">
+    <value>خروجی گرفتن از تاریخچه و متن‌ها…</value>
+    <comment>Starts an export</comment>
+  </data>
+  <data name="ImportButton.Content" xml:space="preserve">
+    <value>وارد کردن…</value>
+    <comment>Starts an import</comment>
+  </data>
+  <data name="DataNote.Text" xml:space="preserve">
+    <value>فایل خروجی رمزگذاری نمی‌شود. همه آنچه را کپی کرده‌اید، شاید شامل گذرواژه‌ها، در آن است. آن را در جای امنی نگه دارید و وقتی دیگر لازم نیست حذفش کنید.</value>
+    <comment>Warns about the export file</comment>
+  </data>
+  <data name="ExportConfirmTitle" xml:space="preserve">
+    <value>خروجی بدون رمزگذاری؟</value>
+    <comment>Title of the export warning dialog</comment>
+  </data>
+  <data name="ExportConfirmText" xml:space="preserve">
+    <value>خروجی رمزگذاری نمی‌شود. هر کسی که فایل را به دست آورد می‌تواند آنچه کپی کرده‌اید را بخواند.</value>
+    <comment>Body of the export warning dialog</comment>
+  </data>
+  <data name="ExportConfirmButton" xml:space="preserve">
+    <value>خروجی گرفتن</value>
+    <comment>Confirms the export</comment>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>انصراف</value>
+    <comment>Cancels a dialog</comment>
+  </data>
+  <data name="ExportFileName" xml:space="preserve">
+    <value>خروجی Clipo</value>
+    <comment>Suggested name of the export file, without extension</comment>
+  </data>
+  <data name="ExportFileType" xml:space="preserve">
+    <value>خروجی Clipo</value>
+    <comment>Name of the export file type in the save dialog</comment>
+  </data>
+  <data name="ExportDone" xml:space="preserve">
+    <value>خروجی گرفته شد.</value>
+    <comment>Shown after a successful export</comment>
+  </data>
+  <data name="ExportFailed" xml:space="preserve">
+    <value>خروجی گرفتن ناموفق بود.</value>
+    <comment>Shown when the store could not export</comment>
+  </data>
+  <data name="FileNotWritten" xml:space="preserve">
+    <value>فایل ذخیره نشد.</value>
+    <comment>Shown when writing the export file failed</comment>
+  </data>
+  <data name="FileNotRead" xml:space="preserve">
+    <value>فایل خوانده نشد.</value>
+    <comment>Shown when reading the import file failed</comment>
+  </data>
+  <data name="ImportDone" xml:space="preserve">
+    <value>{0} مورد و {1} متن آماده وارد شد. {2} مورد تکراری و {3} مورد بیش از حد بزرگ نادیده گرفته شد.</value>
+    <comment>Result of an import; the numbers are items added, snippets added, duplicates, items too large</comment>
+  </data>
+  <data name="ImportInvalid" xml:space="preserve">
+    <value>این فایل خروجی Clipo نیست یا آسیب دیده است.</value>
+    <comment>Shown when the import file is not valid</comment>
+  </data>
+  <data name="ImportTooNew" xml:space="preserve">
+    <value>این خروجی از نسخه جدیدتری از Clipo است.</value>
+    <comment>Shown when the import file is newer</comment>
+  </data>
+  <data name="ImportFailed" xml:space="preserve">
+    <value>وارد کردن ناموفق بود.</value>
+    <comment>Shown when the store could not import</comment>
+  </data>
 </root>

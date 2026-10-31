@@ -10,7 +10,7 @@ namespace Clipo;
 /// <summary>One history item as a popup row shows it: an icon or thumbnail, a title, a details line and a pin mark.</summary>
 public sealed class PopupRow
 {
-    private PopupRow(ItemPreview preview, string title, string detail, string accessibleName, string glyph, ImageSource? thumbnail)
+    private PopupRow(ItemPreview preview, string title, string detail, string accessibleName, string glyph, ImageSource? thumbnail, string shortcut)
     {
         Preview = preview;
         Title = title;
@@ -18,6 +18,7 @@ public sealed class PopupRow
         AccessibleName = accessibleName;
         Glyph = glyph;
         Thumbnail = thumbnail;
+        Shortcut = shortcut;
     }
 
     public ItemPreview Preview { get; }
@@ -34,6 +35,9 @@ public sealed class PopupRow
 
     public ImageSource? Thumbnail { get; }
 
+    /// <summary>The quick-paste key, such as "Ctrl+1"; empty past the ninth row.</summary>
+    public string Shortcut { get; }
+
     public Visibility GlyphVisibility => Thumbnail is null ? Visibility.Visible : Visibility.Collapsed;
 
     public Visibility ThumbnailVisibility => Thumbnail is null ? Visibility.Collapsed : Visibility.Visible;
@@ -43,8 +47,11 @@ public sealed class PopupRow
     /// <summary>The list item's name for screen readers comes from here.</summary>
     public override string ToString() => AccessibleName;
 
-    /// <summary>A row for <paramref name="preview"/>. Call it on the UI thread: it creates the thumbnail image.</summary>
-    public static PopupRow Create(ItemPreview preview, PopupText text, DateTime now)
+    /// <summary>
+    /// A row for <paramref name="preview"/>, the <paramref name="position"/>th in the list (from 1), which
+    /// the first nine rows show as their quick-paste key. Call it on the UI thread: it creates the thumbnail image.
+    /// </summary>
+    public static PopupRow Create(ItemPreview preview, PopupText text, DateTime now, int position)
     {
         ArgumentNullException.ThrowIfNull(preview);
         ArgumentNullException.ThrowIfNull(text);
@@ -55,7 +62,8 @@ public sealed class PopupRow
             text.Detail(preview, now),
             text.AccessibleName(preview, now),
             GlyphFor(preview.Content),
-            thumbnail);
+            thumbnail,
+            position <= PopupModel.QuickPasteCount ? text.Shortcut(position) : "");
     }
 
     private static string GlyphFor(PreviewContent content) => content switch

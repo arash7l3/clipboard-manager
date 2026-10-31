@@ -25,12 +25,14 @@ public enum RestoreOutcome
 /// <param name="bump">Moves an item to the top of the history, as if it was copied again. Runs off the UI thread.</param>
 /// <param name="autoPaste">Whether to paste after restoring, read at each pick.</param>
 /// <param name="paste">Sends Ctrl+V to the app in front.</param>
+/// <param name="plainText">Loads an item's plain text by id, for pasting without formatting; <c>null</c> if it has none, such as an image. Disk I/O, so it runs off the UI thread.</param>
 public sealed class ItemRestorer(
     Func<long, ClipItem?> load,
     Func<ItemContent, Task<bool>> write,
     Action<long> bump,
     Func<bool> autoPaste,
-    Action paste)
+    Action paste,
+    Func<long, string?>? plainText = null)
 {
     /// <summary>Pause between giving the app underneath its focus back and pressing Ctrl+V.</summary>
     public static readonly TimeSpan PasteDelay = TimeSpan.FromMilliseconds(120);
@@ -38,10 +40,26 @@ public sealed class ItemRestorer(
     public TimeSpan Delay { get; init; } = PasteDelay;
 
     /// <summary>Restores the full item <paramref name="id"/>.</summary>
-    public async Task<RestoreOutcome> RestoreAsync(long id)
+    public Task<RestoreOutcome> RestoreAsync(long id) => RestoreAsync(id, plain: false);
+
+    /// <summary>
+    /// Restores item <paramref name="id"/>, as its plain text if
+    /// <paramref name="plain"/>: no formatting, files as their paths. An item
+    /// without plain text, such as an image, is unavailable then.
+    /// </summary>
+    public async Task<RestoreOutcome> RestoreAsync(long id, bool plain)
     {
-        var item = await Task.Run(() => Load(id)).ConfigureAwait(true);
-        if (item is null || !await write(item.Content).ConfigureAwait(true))
+        ItemContent? content;
+        if (plain)
+        {
+            var text = await Task.Run(() => LoadPlain(id)).ConfigureAwait(true);
+            content = string.IsNullOrEmpty(text) ? null : new ItemContent.Text(new TextContent(text));
+        }
+        else
+        {
+            content = (await Task.Run(() => Load(id)).ConfigureAwait(true))?.Content;
+        }
+        if (content is null || !await write(content).ConfigureAwait(true))
         {
             return RestoreOutcome.Unavailable;
         }
@@ -49,6 +67,25 @@ public sealed class ItemRestorer(
         // The pick counts as a fresh copy: same item, same source, moved to the top.
         _ = Task.Run(() => Bump(id));
 
+        return await FinishAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Puts a snippet's <paramref name="text"/> on the clipboard as plain text.
+    /// A snippet is not history, so nothing moves to the top.
+    /// </summary>
+    public async Task<RestoreOutcome> RestoreTextAsync(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (text.Length == 0 || !await write(new ItemContent.Text(new TextContent(text))).ConfigureAwait(true))
+        {
+            return RestoreOutcome.Unavailable;
+        }
+        return await FinishAsync().ConfigureAwait(true);
+    }
+
+    private async Task<RestoreOutcome> FinishAsync()
+    {
         if (!autoPaste())
         {
             return RestoreOutcome.Restored;
@@ -56,6 +93,19 @@ public sealed class ItemRestorer(
         await Task.Delay(Delay).ConfigureAwait(true);
         paste();
         return RestoreOutcome.Pasted;
+    }
+
+    private string? LoadPlain(long id)
+    {
+        try
+        {
+            return plainText?.Invoke(id);
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"loading the plain text of item {id} failed: {e.GetType().Name}: {e.Message}");
+            return null;
+        }
     }
 
     private ClipItem? Load(long id)

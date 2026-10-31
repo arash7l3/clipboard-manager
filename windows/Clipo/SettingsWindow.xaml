@@ -22,6 +22,8 @@
             <SelectorBarItem x:Uid="SettingsTabGeneral" IsSelected="True" />
             <SelectorBarItem x:Uid="SettingsTabHistory" />
             <SelectorBarItem x:Uid="SettingsTabPrivacy" />
+            <SelectorBarItem x:Uid="SettingsTabSnippets" />
+            <SelectorBarItem x:Uid="SettingsTabData" />
         </SelectorBar>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -118,6 +120,39 @@
                         <TextBlock x:Uid="IgnoredAppsNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
+                </StackPanel>
+
+                <!-- Snippets -->
+                <StackPanel x:Name="SnippetsPanel" Spacing="12" Visibility="Collapsed">
+                    <TextBlock x:Name="SnippetsEmptyText" x:Uid="SnippetsEmptyText" Style="{StaticResource CaptionTextBlockStyle}"
+                               TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ListView x:Name="SnippetList" x:Uid="SnippetList" SelectionMode="Single" MaxHeight="150"
+                              BorderThickness="1" BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                              SelectionChanged="OnSnippetSelectionChanged" />
+                    <TextBox x:Name="SnippetTitleBox" x:Uid="SnippetTitleBox" IsSpellCheckEnabled="False" />
+                    <TextBox x:Name="SnippetBodyBox" x:Uid="SnippetBodyBox" AcceptsReturn="True" TextWrapping="Wrap"
+                             MinHeight="110" MaxHeight="200" IsSpellCheckEnabled="False" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="SaveSnippetButton" x:Uid="SaveSnippetButton" Style="{StaticResource AccentButtonStyle}" Click="OnSaveSnippet" />
+                        <Button x:Uid="NewSnippetButton" Click="OnNewSnippet" />
+                        <Button x:Name="DeleteSnippetButton" x:Uid="DeleteSnippetButton" IsEnabled="False" Click="OnDeleteSnippet" />
+                    </StackPanel>
+                    <TextBlock x:Name="SnippetStatus" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.LiveSetting="Polite" />
+                    <TextBlock x:Uid="SnippetsNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <!-- Data -->
+                <StackPanel x:Name="DataPanel" Spacing="12" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="ExportButton" x:Uid="ExportButton" Click="OnExport" />
+                        <Button x:Name="ImportButton" x:Uid="ImportButton" Click="OnImport" />
+                    </StackPanel>
+                    <TextBlock x:Name="DataStatus" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Polite" />
+                    <TextBlock x:Uid="DataNote" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
             </Grid>
         </ScrollViewer>

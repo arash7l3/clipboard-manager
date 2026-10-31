@@ -51,6 +51,9 @@ public sealed class PopupText(Func<string, string> strings, CultureInfo culture)
         return string.Join(strings("LabelSeparator"), parts.Where(part => part.Length > 0));
     }
 
+    /// <summary>The quick-paste key of the <paramref name="number"/>th row, such as "Ctrl+1".</summary>
+    public string Shortcut(int number) => Format("QuickPasteKey", number);
+
     /// <summary>What the list says when it has no rows.</summary>
     public string EmptyList(bool failed, bool searching) =>
         strings(failed ? "StatusUnavailable" : searching ? "NoMatches" : "NoItems");
