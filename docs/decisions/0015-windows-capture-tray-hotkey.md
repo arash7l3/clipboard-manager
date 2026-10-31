@@ -12,7 +12,7 @@ Status: accepted
 - **Limits** as on macOS (decision 0010): at most 1000 files, 100 million pixels, nothing over the core's `MaxItemBytes`. A bitmap over 128 MiB uncompressed is not read. Images are stored as PNG: a PNG on the clipboard as it is, a DIB re-encoded through the Windows Imaging Component. Thumbnails are PNGs up to 256 px.
 - **Tray icon.** `Shell_NotifyIcon` with notify-icon version 4, on the same message window, from `Clipo.ico` (made from the SVG by `assets/make-windows-icon.py`). Click or keyboard select opens Clipo; the context menu is a native popup menu with Open (showing the shortcut) and Quit, laid out right to left when the UI language is. The icon is added again when Explorer restarts (`TaskbarCreated`).
 - **Shortcut.** Ctrl+Shift+V (decision 0004) through `RegisterHotKey` with `MOD_NOREPEAT`, delivered as `WM_HOTKEY` to the message window. If another app holds it, the status window says so and the tray icon is the way in.
-- **Until the popup (step 3.3)** the tray icon, its Open item and the shortcut show the status window. Closing that window hides it; Quit in the tray menu ends the app.
+- The tray icon, its Show Clipboard History item and the shortcut open the history popup (decision 0016). Closing the status window hides it; Quit in the tray menu ends the app.
 - **Where code lives.** Everything that talks to Win32 is in `Clipo.Services` (plain `net10.0`, so it compiles and its logic is tested on any OS). `Clipo` holds only what needs WinUI: `ImageProcessor` (WinRT imaging), `Shell` (wiring) and the windows.
 
 **Why.**

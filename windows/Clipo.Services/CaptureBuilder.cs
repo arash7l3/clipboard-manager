@@ -16,6 +16,13 @@ public interface IImageProcessor
     /// <paramref name="maxPixels"/> pixels.
     /// </summary>
     Task<ProcessedImage?> ProcessAsync(byte[] encoded, bool isPng, long maxPixels, int thumbnailPixels);
+
+    /// <summary>
+    /// <paramref name="encoded"/> as a device-independent bitmap
+    /// (<c>CF_DIB</c>), for apps that cannot paste a PNG. <c>null</c> if it
+    /// cannot be decoded.
+    /// </summary>
+    Task<byte[]?> ToBitmapAsync(byte[] encoded);
 }
 
 /// <summary>Turns a clipboard change into a capture for the core.</summary>

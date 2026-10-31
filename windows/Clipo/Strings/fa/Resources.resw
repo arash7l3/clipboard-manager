@@ -57,8 +57,8 @@
     <comment>Tooltip of the tray icon, read out by screen readers</comment>
   </data>
   <data name="MenuOpen" xml:space="preserve">
-    <value>باز کردن Clipo</value>
-    <comment>Tray menu item that opens Clipo; the shortcut is shown after it</comment>
+    <value>نمایش تاریخچه کلیپ‌بورد</value>
+    <comment>Tray menu item that opens the history popup; the shortcut is shown after it</comment>
   </data>
   <data name="MenuQuit" xml:space="preserve">
     <value>خروج از Clipo</value>
@@ -67,5 +67,109 @@
   <data name="HotkeyUnavailable" xml:space="preserve">
     <value>میانبر {0} را برنامه‌ای دیگر استفاده می‌کند و نمی‌تواند Clipo را باز کند. به‌جای آن از آیکون سینی سیستم استفاده کنید.</value>
     <comment>Shown in the status window when the global shortcut could not be registered; {0} is the shortcut, such as Ctrl+Shift+V</comment>
+  </data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve">
+    <value>جستجو</value>
+    <comment>Placeholder of the popup's search field</comment>
+  </data>
+  <data name="SearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>جستجو در تاریخچه کلیپ‌بورد</value>
+    <comment>Screen-reader name of the popup's search field</comment>
+  </data>
+  <data name="Tabs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>دسته‌ها</value>
+    <comment>Screen-reader name of the popup's tabs</comment>
+  </data>
+  <data name="HistoryList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>تاریخچه کلیپ‌بورد</value>
+    <comment>Screen-reader name of the popup's list of items</comment>
+  </data>
+  <data name="TabAll.Text" xml:space="preserve">
+    <value>همه</value>
+    <comment>Popup tab listing every item</comment>
+  </data>
+  <data name="TabText.Text" xml:space="preserve">
+    <value>متن</value>
+    <comment>Popup tab listing text items</comment>
+  </data>
+  <data name="TabImages.Text" xml:space="preserve">
+    <value>تصویرها</value>
+    <comment>Popup tab listing images</comment>
+  </data>
+  <data name="TabFiles.Text" xml:space="preserve">
+    <value>فایل‌ها</value>
+    <comment>Popup tab listing copied files</comment>
+  </data>
+  <data name="TabPinned.Text" xml:space="preserve">
+    <value>سنجاق‌شده</value>
+    <comment>Popup tab listing pinned items</comment>
+  </data>
+  <data name="KindText" xml:space="preserve">
+    <value>متن</value>
+    <comment>Screen-reader name of copied text</comment>
+  </data>
+  <data name="KindLink" xml:space="preserve">
+    <value>پیوند</value>
+    <comment>Screen-reader name of a copied link</comment>
+  </data>
+  <data name="KindCode" xml:space="preserve">
+    <value>کد</value>
+    <comment>Screen-reader name of copied source code</comment>
+  </data>
+  <data name="KindImage" xml:space="preserve">
+    <value>تصویر</value>
+    <comment>Screen-reader name of a copied image</comment>
+  </data>
+  <data name="KindFiles" xml:space="preserve">
+    <value>فایل‌ها</value>
+    <comment>Screen-reader name of copied files</comment>
+  </data>
+  <data name="ImageTitle" xml:space="preserve">
+    <value>تصویر {0} × {1}</value>
+    <comment>Popup row title of an image: its width and height in pixels</comment>
+  </data>
+  <data name="FilesTitle" xml:space="preserve">
+    <value>{0} و {1} مورد دیگر</value>
+    <comment>Popup row title of several copied files: the first file's name and how many others</comment>
+  </data>
+  <data name="RowDetail" xml:space="preserve">
+    <value>{0} · {1}</value>
+    <comment>Popup row details: the app an item was copied from, then when</comment>
+  </data>
+  <data name="PinnedNote" xml:space="preserve">
+    <value>سنجاق‌شده</value>
+    <comment>Screen-reader note that an item is pinned</comment>
+  </data>
+  <data name="LabelSeparator" xml:space="preserve">
+    <value>، </value>
+    <comment>Separator between the parts of a screen-reader label</comment>
+  </data>
+  <data name="NoItems" xml:space="preserve">
+    <value>موردی نیست</value>
+    <comment>Popup message when a tab is empty</comment>
+  </data>
+  <data name="NoMatches" xml:space="preserve">
+    <value>چیزی پیدا نشد</value>
+    <comment>Popup message when the search finds nothing</comment>
+  </data>
+  <data name="TimeNow" xml:space="preserve">
+    <value>همین حالا</value>
+    <comment>Popup row time of an item copied less than a minute ago</comment>
+  </data>
+  <data name="TimeMinutes" xml:space="preserve">
+    <value>{0} دقیقه پیش</value>
+    <comment>Popup row time: minutes since the copy</comment>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{0} ساعت پیش</value>
+    <comment>Popup row time: hours since the copy</comment>
+  </data>
+  <data name="TimeDays" xml:space="preserve">
+    <value>{0} روز پیش</value>
+    <comment>Popup row time: days since the copy</comment>
+  </data>
+  <data name="MenuAutoPaste" xml:space="preserve">
+    <value>چسباندن پس از انتخاب</value>
+    <comment>Tray menu check item: picking an item also pastes it into the app in front</comment>
   </data>
 </root>

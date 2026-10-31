@@ -22,11 +22,6 @@ public static unsafe class ClipboardReader
     private const int OpenRetryMilliseconds = 30;
     private const uint FirstRegisteredFormat = 0xC000;
 
-    private static readonly uint s_rtf = NativeMethods.RegisterClipboardFormat("Rich Text Format");
-    private static readonly uint s_html = NativeMethods.RegisterClipboardFormat("HTML Format");
-    private static readonly uint s_png = NativeMethods.RegisterClipboardFormat("PNG");
-    private static readonly uint s_canIncludeInHistory = NativeMethods.RegisterClipboardFormat(ConcealedFormats.CanIncludeInHistory);
-
     /// <summary>
     /// The clipboard's content, or <c>null</c> if it is concealed, empty,
     /// larger than <paramref name="maxItemBytes"/>, held by another app for
@@ -85,8 +80,8 @@ public static unsafe class ClipboardReader
         {
             return true;
         }
-        return formats.Contains(s_canIncludeInHistory)
-            && ReadBytes(s_canIncludeInHistory, 16) is { } value
+        return formats.Contains(ClipboardFormats.CanIncludeInHistory)
+            && ReadBytes(ClipboardFormats.CanIncludeInHistory, 16) is { } value
             && ConcealedFormats.OptsOutOfHistory(value);
     }
 
@@ -152,10 +147,10 @@ public static unsafe class ClipboardReader
             return null;
         }
         // Latin-1 accepts any bytes: RTF is ASCII with escapes.
-        var rtf = formats.Contains(s_rtf) && ReadBytes(s_rtf, maxItemBytes) is { } rtfBytes
+        var rtf = formats.Contains(ClipboardFormats.Rtf) && ReadBytes(ClipboardFormats.Rtf, maxItemBytes) is { } rtfBytes
             ? Terminated(Encoding.Latin1.GetString(rtfBytes))
             : null;
-        var html = formats.Contains(s_html) && ReadBytes(s_html, maxItemBytes) is { } htmlBytes
+        var html = formats.Contains(ClipboardFormats.Html) && ReadBytes(ClipboardFormats.Html, maxItemBytes) is { } htmlBytes
             ? CfHtml.ExtractFragment(htmlBytes)
             : null;
         return new ClipboardContent.Text(plain, rtf, html);
@@ -163,7 +158,7 @@ public static unsafe class ClipboardReader
 
     private static ClipboardContent.Image? ReadImage(HashSet<uint> formats, long maxItemBytes)
     {
-        if (formats.Contains(s_png) && ReadBytes(s_png, maxItemBytes) is { } png)
+        if (formats.Contains(ClipboardFormats.Png) && ReadBytes(ClipboardFormats.Png, maxItemBytes) is { } png)
         {
             return new ClipboardContent.Image(png, IsPng: true);
         }

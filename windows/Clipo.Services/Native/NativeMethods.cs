@@ -16,7 +16,77 @@ internal static unsafe partial class NativeMethods
     public const uint WmContextMenu = 0x007B;
     public const uint WmApp = 0x8000;
 
-    public static readonly nint HwndMessage = -3;
+        public static readonly nint HwndMessage = -3;
+
+    public const uint InputKeyboard = 1;
+    public const uint KeyEventKeyUp = 0x2;
+
+    /// <summary>POINT from windef.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Point
+    {
+        public int X;
+        public int Y;
+    }
+
+    /// <summary>RECT from windef.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    /// <summary>MONITORINFO from winuser.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MonitorInfo
+    {
+        public uint Size;
+        public Rect Monitor;
+        public Rect Work;
+        public uint Flags;
+    }
+
+    /// <summary>INPUT from winuser.h. The union is as large as its mouse member.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Input
+    {
+        public uint Type;
+        public InputUnion Data;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct InputUnion
+    {
+        [FieldOffset(0)]
+        public MouseInput Mouse;
+
+        [FieldOffset(0)]
+        public KeyboardInput Keyboard;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MouseInput
+    {
+        public int X;
+        public int Y;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public nint ExtraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KeyboardInput
+    {
+        public ushort VirtualKey;
+        public ushort ScanCode;
+        public uint Flags;
+        public uint Time;
+        public nint ExtraInfo;
+    }
 
     /// <summary>WNDCLASSEXW from winuser.h.</summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -111,6 +181,19 @@ internal static unsafe partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool RemoveClipboardFormatListener(nint window);
 
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool EmptyClipboard();
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial nint SetClipboardData(uint format, nint memory);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    public static partial nint GlobalAlloc(uint flags, nuint bytes);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial nint GlobalFree(nint memory);
+
     [LibraryImport("kernel32.dll")]
     public static partial void* GlobalLock(nint memory);
 
@@ -199,6 +282,36 @@ internal static unsafe partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     public static partial int TrackPopupMenu(nint menu, uint flags, int x, int y, int reserved, nint window, nint rect);
+
+    // Input, screens and focus
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    public static partial uint SendInput(uint count, Input* inputs, int size);
+
+    [LibraryImport("user32.dll")]
+    public static partial short GetKeyState(int virtualKey);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorPos(out Point point);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint MonitorFromPoint(Point point, uint flags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetMonitorInfo(nint monitor, MonitorInfo* info);
+
+    [LibraryImport("shcore.dll")]
+    public static partial int GetDpiForMonitor(nint monitor, int type, out uint dpiX, out uint dpiY);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool IsWindow(nint window);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool MessageBeep(uint type);
 
     // Processes
 
