@@ -45,11 +45,11 @@ final class PopupModel {
         selection.map { rows[$0] }
     }
 
-    /// Back to the All tab with no search and no rows until they load, for a
-    /// freshly opened popup: Enter must not pick a row left from last time.
+    /// Back to the `start` tab with no search and no rows until they load, for
+    /// a freshly opened popup: Enter must not pick a row left from last time.
     @discardableResult
-    func reset() -> Task<Void, Never> {
-        category = .all
+    func reset(to start: ClipoCore.Category = .all) -> Task<Void, Never> {
+        category = start
         searchText = ""
         let task = reload(keepingSelection: false)
         rows = []

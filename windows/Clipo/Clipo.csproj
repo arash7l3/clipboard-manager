@@ -31,6 +31,7 @@
   <!-- The tray icon and the window icon are loaded from this file at run time. -->
   <ItemGroup>
     <None Update="Clipo.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="ClipoPrivate.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -122,6 +122,7 @@ public sealed partial class SettingsWindow : Window
             ThemeBox.SelectedIndex = (int)settings.Theme;
             LanguageBox.SelectedIndex = (int)settings.Language;
             HotkeyBox.SelectedIndex = (int)settings.Hotkey;
+            StartTabBox.SelectedIndex = (int)settings.StartTab;
             AutoPasteBox.IsChecked = settings.AutoPaste;
             ShowMaxItems(settings.MaxItems);
             AutoClearBox.SelectedIndex = AppSettings.AutoClearDaysChoices.ToList().IndexOf(settings.AutoClearDays);
@@ -439,6 +440,14 @@ public sealed partial class SettingsWindow : Window
         {
             HotkeyRefusedNote.Visibility = Visibility.Collapsed;
             Change(_settings with { Hotkey = Enum.GetValues<HotkeyChoice>()[HotkeyBox.SelectedIndex] });
+        }
+    }
+
+    private void OnStartTabChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (StartTabBox.SelectedIndex >= 0)
+        {
+            Change(_settings with { StartTab = Enum.GetValues<StartTab>()[StartTabBox.SelectedIndex] });
         }
     }
 

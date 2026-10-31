@@ -28,6 +28,9 @@ final class PopupController: NSViewController {
     let table = NSTableView()
     let emptyLabel = NSTextField(labelWithString: "")
     private let scrollView = NSScrollView()
+    let privateNote = NSTextField(labelWithString: "")
+    private var scrollTopPlain: NSLayoutConstraint?
+    private var scrollTopBelowNote: NSLayoutConstraint?
     private var isDismissing = false
     private lazy var panel: PopupPanel = {
         let panel = PopupPanel(content: view)
@@ -68,7 +71,8 @@ final class PopupController: NSViewController {
     func show(at cursor: NSPoint) {
         loadViewIfNeeded()
         searchField.stringValue = ""
-        model.reset()
+        model.reset(to: PopupSettings.startTab().category(lastUsed: model.category))
+        showPrivateNote(UserDefaults.standard.bool(forKey: CaptureSettings.privateModeKey))
         if let visible = PopupPlacement.visibleFrame(around: cursor) {
             let frame = PopupPlacement.frame(
                 size: panel.frame.size,
@@ -108,6 +112,7 @@ final class PopupController: NSViewController {
         emptyLabel.textColor = .secondaryLabelColor
         emptyLabel.alignment = .center
         emptyLabel.isHidden = true
+        configurePrivateNote()
         view = layOut()
     }
 
@@ -139,6 +144,24 @@ final class PopupController: NSViewController {
             localized: "Categories",
             comment: "Screen-reader label of the popup's tabs"
         ))
+    }
+
+    private func configurePrivateNote() {
+        privateNote.stringValue = String(
+            localized: "Private mode is on. Nothing you copy is saved.",
+            comment: "Note at the top of the popup while private mode is on"
+        )
+        privateNote.font = .systemFont(ofSize: 11)
+        privateNote.textColor = .systemOrange
+        privateNote.lineBreakMode = .byTruncatingTail
+        privateNote.isHidden = true
+    }
+
+    /// Shows or hides the note about private mode and moves the list under it.
+    func showPrivateNote(_ visible: Bool) {
+        privateNote.isHidden = !visible
+        scrollTopPlain?.isActive = !visible
+        scrollTopBelowNote?.isActive = visible
     }
 
     private func configureTable() {
@@ -175,7 +198,7 @@ final class PopupController: NSViewController {
     /// trailing edges so the layout mirrors in right-to-left languages.
     private func layOut() -> NSView {
         let root = NSView(frame: NSRect(origin: .zero, size: PopupPanel.defaultSize))
-        for subview in [searchField, tabs, scrollView, emptyLabel] {
+        for subview in [searchField, tabs, privateNote, scrollView, emptyLabel] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(subview)
         }
@@ -187,7 +210,9 @@ final class PopupController: NSViewController {
             tabs.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 8),
             tabs.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: margin),
             tabs.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
-            scrollView.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 8),
+            privateNote.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 6),
+            privateNote.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: margin),
+            privateNote.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -margin),
             scrollView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -6),
@@ -196,6 +221,11 @@ final class PopupController: NSViewController {
             emptyLabel.leadingAnchor.constraint(greaterThanOrEqualTo: root.leadingAnchor, constant: margin),
             emptyLabel.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -margin)
         ])
+        let plain = scrollView.topAnchor.constraint(equalTo: tabs.bottomAnchor, constant: 8)
+        let belowNote = scrollView.topAnchor.constraint(equalTo: privateNote.bottomAnchor, constant: 6)
+        plain.isActive = true
+        scrollTopPlain = plain
+        scrollTopBelowNote = belowNote
         return root
     }
 
@@ -241,7 +271,7 @@ final class PopupController: NSViewController {
     // MARK: Actions
 
     /// Rows that fit in the list, less one, for Page Up and Page Down.
-    private var pageRows: Int {
+    var pageRows: Int {
         max(1, Int(scrollView.contentView.bounds.height / table.rowHeight) - 1)
     }
 
@@ -286,78 +316,6 @@ extension PopupController {
         }
         model.select(index)
         chooseSelected()
-    }
-}
-
-extension PopupController: NSSearchFieldDelegate {
-    func controlTextDidChange(_ obj: Notification) {
-        model.setSearchText(searchField.stringValue)
-    }
-
-    /// Keys typed in the search field that drive the list instead of the text.
-    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        handle(commandSelector)
-    }
-
-    /// Runs the list command for a key binding selector. Returns whether it
-    /// was one; other selectors are left to the text field.
-    @discardableResult
-    func handle(_ command: Selector) -> Bool {
-        if let move = selectionMove(for: command) {
-            apply(move)
-            return true
-        }
-        switch command {
-        case #selector(NSResponder.insertTab(_:)):
-            model.moveCategory(by: 1)
-        case #selector(NSResponder.insertBacktab(_:)):
-            model.moveCategory(by: -1)
-        case #selector(NSResponder.insertNewline(_:)):
-            chooseSelected()
-        case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
-            // Option+Return.
-            chooseSelected(plain: true)
-        case #selector(NSResponder.cancelOperation(_:)):
-            dismiss()
-        default:
-            return false
-        }
-        return true
-    }
-
-    private func apply(_ move: SelectionMove) {
-        switch move {
-        case let .offset(rows): model.moveSelection(by: rows)
-        case .first: model.select(0)
-        case .last: model.select(model.rows.count - 1)
-        }
-    }
-
-    private enum SelectionMove {
-        case offset(Int)
-        case first
-        case last
-    }
-
-    private func selectionMove(for command: Selector) -> SelectionMove? {
-        switch command {
-        case #selector(NSResponder.moveUp(_:)):
-            .offset(-1)
-        case #selector(NSResponder.moveDown(_:)):
-            .offset(1)
-        case #selector(NSResponder.pageUp(_:)), #selector(NSResponder.scrollPageUp(_:)):
-            .offset(-pageRows)
-        case #selector(NSResponder.pageDown(_:)), #selector(NSResponder.scrollPageDown(_:)):
-            .offset(pageRows)
-        case #selector(NSResponder.moveToBeginningOfDocument(_:)),
-             #selector(NSResponder.scrollToBeginningOfDocument(_:)):
-            .first
-        case #selector(NSResponder.moveToEndOfDocument(_:)),
-             #selector(NSResponder.scrollToEndOfDocument(_:)):
-            .last
-        default:
-            nil
-        }
     }
 }
 

@@ -75,6 +75,15 @@ public sealed partial class PopupWindow : Window
 
     public bool IsShown { get; private set; }
 
+    /// <summary>
+    /// The tab to open on, given the tab the popup was on when it was last
+    /// open. All, until the app says otherwise.
+    /// </summary>
+    public Func<Category, Category> StartCategory { get; set; } = _ => Category.All;
+
+    /// <summary>Shows a note at the top of the popup while private mode is on.</summary>
+    public void ShowPrivateMode(bool on) => PrivateNote.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+
     /// <summary>Gives the popup the theme the user chose.</summary>
     public void ApplyTheme(AppTheme theme) => Appearance.ApplyTheme(Root, theme);
 
@@ -91,7 +100,7 @@ public sealed partial class PopupWindow : Window
         }
     }
 
-    /// <summary>Opens the popup at the mouse pointer on the All tab with an empty search.</summary>
+    /// <summary>Opens the popup at the mouse pointer on the chosen start tab with an empty search.</summary>
     public void Show()
     {
         if (IsShown)
@@ -99,7 +108,7 @@ public sealed partial class PopupWindow : Window
             return;
         }
         _previous = Desktop.ForegroundWindow();
-        _ = _model.ResetAsync();
+        _ = _model.ResetAsync(StartCategory(_model.Category));
         SearchBox.Text = "";
         ShowTab();
         Place();

@@ -317,6 +317,17 @@
         }
       }
     },
+    "Clipo clipboard history, private mode is on" : {
+      "comment" : "Screen-reader label and tooltip of the menu-bar icon while private mode is on",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تاریخچه کلیپ‌بورد Clipo، حالت خصوصی روشن است"
+          }
+        }
+      }
+    },
     "Clipo history key" : {
       "comment" : "Name of the keychain item that holds the history's encryption key",
       "localizations" : {
@@ -559,6 +570,17 @@
         }
       }
     },
+    "Last used tab" : {
+      "comment" : "Start tab choice: the tab that was last open",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آخرین تب استفاده‌شده"
+          }
+        }
+      }
+    },
     "Light" : {
       "comment" : "Settings choice: light appearance",
       "localizations" : {
@@ -691,6 +713,17 @@
         }
       }
     },
+    "Open history on" : {
+      "comment" : "Settings picker: which tab the popup opens on",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باز شدن تاریخچه روی"
+          }
+        }
+      }
+    },
     "Open history with" : {
       "comment" : "Settings picker: the shortcut that opens the popup",
       "localizations" : {
@@ -779,6 +812,17 @@
         }
       }
     },
+    "Private Mode" : {
+      "comment" : "Menu item that turns private mode on or off: nothing copied is saved while it is on",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حالت خصوصی"
+          }
+        }
+      }
+    },
     "Private mode" : {
       "comment" : "Settings switch: pause capturing",
       "localizations" : {
@@ -786,6 +830,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "حالت خصوصی"
+          }
+        }
+      }
+    },
+    "Private mode is on. Nothing you copy is saved." : {
+      "comment" : "Note at the top of the popup while private mode is on",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حالت خصوصی روشن است. چیزی که کپی می‌کنید ذخیره نمی‌شود."
           }
         }
       }

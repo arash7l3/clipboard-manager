@@ -80,6 +80,8 @@ public partial class App : Application
         _popup = popup;
         popup.Chosen += (_, choice) => _ = RestoreAsync(choice);
         popup.PinRequested += (_, pin) => _ = PinAsync(pin);
+        popup.StartCategory = last => _settings.StartCategory(last);
+        popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
             WriteToClipboardAsync,
@@ -89,12 +91,13 @@ public partial class App : Application
             id => _store?.PlainText(id));
 
         var chord = HotkeyChoices.Chord(_settings.Hotkey);
-        var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste };
+        var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste, PrivateMode = _settings.PrivateMode };
         _shell = shell;
         shell.OpenRequested += (_, _) => ShowHistory(toggle: false);
         shell.HotkeyPressed += (_, _) => ShowHistory(toggle: true);
         shell.SettingsRequested += (_, _) => ShowSettings();
         shell.AutoPasteToggled += (_, _) => SetAutoPaste(!_settings.AutoPaste);
+        shell.PrivateModeToggled += (_, _) => SetPrivateMode(!_settings.PrivateMode);
         shell.SnippetChosen += (_, snippet) => _ = PasteSnippetAsync(snippet);
         shell.QuitRequested += (_, _) => Quit();
         shell.Watcher.Recorded += OnRecorded;
@@ -259,6 +262,12 @@ public partial class App : Application
         _settingsWindow?.Reflect(_settings);
     }
 
+    private void SetPrivateMode(bool on)
+    {
+        ApplySettings(_settings with { PrivateMode = on });
+        _settingsWindow?.Reflect(_settings);
+    }
+
     /// <summary>
     /// Saves <paramref name="requested"/> and puts each change to work: the
     /// shortcut, the theme, the capture rules and the history's limits. A
@@ -282,7 +291,9 @@ public partial class App : Application
         if (_shell is { } current)
         {
             current.AutoPaste = next.AutoPaste;
+            current.PrivateMode = next.PrivateMode;
         }
+        _popup?.ShowPrivateMode(next.PrivateMode);
         if (next.Theme != before.Theme)
         {
             ApplyTheme();

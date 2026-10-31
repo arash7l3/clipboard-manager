@@ -53,3 +53,10 @@ Record anything that fails as a new step in `PLAN.md`.
 - [ ] Cmd+P pins the selected row (pin mark appears); again unpins it; the Pinned tab lists it.
 - [ ] Right-click a row: the menu says Pin or Unpin, and the popup stays open while it is shown.
 - [ ] Unpinning in the Pinned tab removes the row; Farsi labels are translated.
+
+## Start tab and private mode (step 4.5), still to try on a Mac
+
+- [ ] Settings > General > Open history on: each choice opens the popup on that tab; "Last used tab" reopens the tab you left.
+- [ ] Menu-bar menu > Private Mode toggles the check mark, matches the Settings > Privacy check box, and turns the icon orange with a crossed-out eye (and back).
+- [ ] While private mode is on the popup shows the orange note, the list sits below it, and copies are not recorded.
+- [ ] Farsi: the new labels are translated and the note is not cut off.

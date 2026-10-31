@@ -226,6 +226,44 @@ public sealed class SettingsTests : IDisposable
     }
 
     [Fact]
+    public void StartTabDefaultsToAllAndIsSavedAndLoaded()
+    {
+        var store = new AppSettingsStore(Path.Combine(_folder, "settings.json"));
+        Assert.Equal(StartTab.All, store.Load().StartTab);
+
+        Assert.True(store.Save(new AppSettings { StartTab = StartTab.LastUsed }));
+
+        Assert.Equal(StartTab.LastUsed, store.Load().StartTab);
+    }
+
+    [Fact]
+    public void UnknownStartTabInAHandEditedFileBecomesAll()
+    {
+        var path = Path.Combine(_folder, "settings.json");
+        File.WriteAllText(path, """{"StartTab": 42}""");
+
+        Assert.Equal(StartTab.All, new AppSettingsStore(path).Load().StartTab);
+    }
+
+    [Theory]
+    [InlineData(StartTab.All, Category.Images, Category.All)]
+    [InlineData(StartTab.Text, Category.Images, Category.Text)]
+    [InlineData(StartTab.Images, Category.All, Category.Images)]
+    [InlineData(StartTab.Files, Category.All, Category.Files)]
+    [InlineData(StartTab.Pinned, Category.All, Category.Pinned)]
+    [InlineData(StartTab.LastUsed, Category.Files, Category.Files)]
+    [InlineData(StartTab.LastUsed, Category.All, Category.All)]
+    public void StartCategoryFollowsTheChoice(StartTab choice, Category lastUsed, Category expected) =>
+        Assert.Equal(expected, new AppSettings { StartTab = choice }.StartCategory(lastUsed));
+
+    [Fact]
+    public void StartTabDoesNotChangeTheRetention()
+    {
+        Assert.True(new AppSettings().HasSameRetentionAs(new AppSettings { StartTab = StartTab.Pinned }));
+        Assert.NotEqual(new AppSettings(), new AppSettings { StartTab = StartTab.Pinned });
+    }
+
+    [Fact]
     public void EveryHotkeyChoiceIsADifferentChordOnTheVKey()
     {
         var chords = Enum.GetValues<HotkeyChoice>().Select(HotkeyChoices.Chord).ToList();

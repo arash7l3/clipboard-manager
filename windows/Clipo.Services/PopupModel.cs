@@ -56,12 +56,13 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
         number >= 1 && number <= QuickPasteCount && number <= Rows.Count ? Rows[number - 1] : null;
 
     /// <summary>
-    /// Back to the All tab with no search and no rows until they load, for a
-    /// freshly opened popup: Enter must not pick a row left from last time.
+    /// Back to the <paramref name="start"/> tab with no search and no rows
+    /// until they load, for a freshly opened popup: Enter must not pick a row
+    /// left from last time.
     /// </summary>
-    public Task ResetAsync()
+    public Task ResetAsync(Category start = Category.All)
     {
-        Category = Category.All;
+        Category = start;
         SearchText = "";
         var task = ReloadAsync(keepSelection: false, TimeSpan.Zero);
         Rows = [];
