@@ -2,10 +2,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using Clipo.Core;
 using Clipo.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.AppLifecycle;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace Clipo;
@@ -35,7 +37,9 @@ public partial class App : Application
     private AppSettingsStore? _settingsStore;
     private AppSettings _settings = new();
     private readonly AppLanguage _launchLanguage;
-    private readonly LoginItem _login = new(new RegistryStartup(), Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "Clipo.exe"));
+    private readonly ILoginItem _login = PackageIdentity.IsPackaged
+        ? new PackagedLoginItem()
+        : new LoginItem(new RegistryStartup(), Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "Clipo.exe"));
     private readonly SemaphoreSlim _trimming = new(1, 1);
     private readonly CancellationTokenSource _quit = new();
 
@@ -61,7 +65,7 @@ public partial class App : Application
         var arguments = Environment.GetCommandLineArgs();
         var restarted = arguments.Contains(RestartedArgument);
         // Started by Windows at sign-in, or by Settings: the tray icon is enough, no window.
-        var quiet = restarted || arguments.Contains(LoginItem.BackgroundArgument);
+        var quiet = restarted || arguments.Contains(LoginItem.BackgroundArgument) || StartedByStartupTask();
 
         // Two copies would record every copy twice.
         if (!ClaimSingleInstance(restarted ? s_restartWait : TimeSpan.Zero))
@@ -116,6 +120,23 @@ public partial class App : Application
         }
         _ = OpenHistoryAsync(window);
         _ = TrimHourlyAsync();
+    }
+
+    /// <summary>Whether Windows started this copy at sign-in through the package's startup task, which cannot pass an argument.</summary>
+    private static bool StartedByStartupTask()
+    {
+        if (!PackageIdentity.IsPackaged)
+        {
+            return false;
+        }
+        try
+        {
+            return AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.StartupTask;
+        }
+        catch (Exception e) when (e is InvalidOperationException or COMException)
+        {
+            return false;
+        }
     }
 
     /// <summary>Stops listening, closes the history and ends the app.</summary>

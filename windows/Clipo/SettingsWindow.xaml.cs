@@ -36,7 +36,7 @@ public sealed partial class SettingsWindow : Window
 
     private const string ExportExtension = ".clipoexport";
 
-    private readonly LoginItem _login;
+    private readonly ILoginItem _login;
     private readonly Extras _extras;
     private List<Snippet> _snippets = [];
     private long? _editingSnippet;
@@ -51,7 +51,7 @@ public sealed partial class SettingsWindow : Window
     /// <param name="launchLanguage">The language Clipo started with; a different choice needs a restart.</param>
     /// <param name="login">Whether Clipo starts with Windows; kept by Windows, not in the settings file.</param>
     /// <param name="extras">Snippets and export / import on the open history.</param>
-    public SettingsWindow(AppSettings settings, AppLanguage launchLanguage, LoginItem login, Extras extras)
+    public SettingsWindow(AppSettings settings, AppLanguage launchLanguage, ILoginItem login, Extras extras)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(login);

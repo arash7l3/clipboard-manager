@@ -1,7 +1,8 @@
 <!--
-  The Clipo app: WinUI 3 on the Windows App SDK, unpackaged for now (MSIX
-  comes in step 5.3). The Windows App SDK is bundled with the app
-  (self-contained), so nothing has to be installed to run it.
+  The Clipo app: WinUI 3 on the Windows App SDK. By default it is unpackaged
+  (a folder or zip); windows/scripts/make-msix.ps1 builds the MSIX package
+  with -p:WindowsPackageType=MSIX (decision 0025). The Windows App SDK is
+  bundled with the app (self-contained), so nothing has to be installed.
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -28,10 +29,20 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <!-- The tray icon and the window icon are loaded from this file at run time. -->
-  <ItemGroup>
+  <!-- The tray icon and the window icon are loaded from these files at run time. -->
+  <ItemGroup Condition="'$(WindowsPackageType)' != 'MSIX'">
     <None Update="Clipo.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Update="ClipoPrivate.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- A package holds Content items, not None items. -->
+  <ItemGroup Condition="'$(WindowsPackageType)' == 'MSIX'">
+    <None Remove="Clipo.ico;ClipoPrivate.ico" />
+    <Content Include="Clipo.ico;ClipoPrivate.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The package's logos, named in Package.appxmanifest. Package.appxmanifest itself is found by convention. -->
+  <ItemGroup Condition="'$(WindowsPackageType)' == 'MSIX'">
+    <Content Include="Assets\*.png" />
   </ItemGroup>
 
   <ItemGroup>

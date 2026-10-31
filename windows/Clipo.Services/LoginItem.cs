@@ -22,8 +22,24 @@ public interface IStartupRegistry
     void ClearDisabledByUser(string name);
 }
 
+/// <summary>Whether Windows starts Clipo when the user signs in.</summary>
+public interface ILoginItem
+{
+    /// <summary>Whether Clipo is set to start at sign-in.</summary>
+    bool IsOn { get; }
+
+    /// <summary>The user switched it off in Windows: only they can turn it back on.</summary>
+    bool NeedsApproval { get; }
+
+    /// <summary>Adds or removes Clipo from the programs started at sign-in. Returns whether it worked.</summary>
+    bool SetOn(bool wanted);
+
+    /// <summary>Keeps an existing entry working after the app moved or was updated.</summary>
+    void Repair();
+}
+
 /// <summary>
-/// Whether Windows starts Clipo when the user signs in. An unpackaged app
+/// The unpackaged app's login item. An unpackaged app
 /// does it with a value in the per-user <c>Run</c> key, which needs no
 /// administrator rights. The user can still switch it off in Task Manager or
 /// Settings; Windows keeps that choice apart from the value (the
@@ -31,10 +47,13 @@ public interface IStartupRegistry
 /// </summary>
 /// <param name="registry">Where the value lives.</param>
 /// <param name="executablePath">Clipo's own executable.</param>
-public sealed class LoginItem(IStartupRegistry registry, string executablePath)
+public sealed class LoginItem(IStartupRegistry registry, string executablePath) : ILoginItem
 {
     /// <summary>The name of the value.</summary>
     public const string ValueName = "Clipo";
+
+    /// <summary>The <c>TaskId</c> of the startup task in the MSIX manifest, which the packaged app uses instead of the value.</summary>
+    public const string StartupTaskId = "ClipoStartup";
 
     /// <summary>
     /// Given to the copy that Windows starts: it opens the history without
