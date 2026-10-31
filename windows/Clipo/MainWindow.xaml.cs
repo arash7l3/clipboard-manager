@@ -14,10 +14,19 @@ public sealed partial class MainWindow : Window
 {
     private static readonly ResourceLoader s_strings = new();
 
+    /// <summary>The status window's size, in effective pixels.</summary>
+    private static readonly SizeInt32 s_statusSize = new(440, 240);
+
+    /// <summary>
+    /// Room for the start-over dialog, which is laid out inside the window:
+    /// its text, longer in Farsi, was cut off at the status size.
+    /// </summary>
+    private static readonly SizeInt32 s_dialogSize = new(560, 440);
+
     public MainWindow()
     {
         InitializeComponent();
-        Resize(440, 240);
+        Resize(s_statusSize);
         ShowOpening();
     }
 
@@ -49,7 +58,15 @@ public sealed partial class MainWindow : Window
             // The safe choice is the default.
             DefaultButton = ContentDialogButton.Close,
         };
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        Resize(s_dialogSize);
+        try
+        {
+            return await dialog.ShowAsync() == ContentDialogResult.Primary;
+        }
+        finally
+        {
+            Resize(s_statusSize);
+        }
     }
 
     private void ShowStatus(string text, bool canRetry)
@@ -80,11 +97,11 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>Sets the size in effective pixels, scaled for the monitor's DPI.</summary>
-    private void Resize(int width, int height)
+    private void Resize(SizeInt32 size)
     {
         var dpi = GetDpiForWindow(Win32Interop.GetWindowFromWindowId(AppWindow.Id));
         var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-        AppWindow.Resize(new SizeInt32((int)(width * scale), (int)(height * scale)));
+        AppWindow.Resize(new SizeInt32((int)(size.Width * scale), (int)(size.Height * scale)));
     }
 
     [LibraryImport("user32.dll")]
