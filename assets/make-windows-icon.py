@@ -10,6 +10,10 @@ PNG images inside the .ico, which Windows Vista and later read.
 
 The second form writes the MSIX package's logos (Package.appxmanifest) into a folder.
 
+    python3 assets/make-windows-icon.py --appiconset macos/Clipo/Assets.xcassets/AppIcon.appiconset
+
+writes the macOS app icon: the same shapes with the margin macOS app icons have.
+
 The "private" variant is the tray icon while private mode is on: a grey
 tile with an orange badge, so it differs at a glance, also in grey tones.
 """
@@ -49,17 +53,19 @@ def inside(px, py, x, y, w, h, r):
     return (px - cx) ** 2 + (py - cy) ** 2 <= r * r
 
 
-def render(size, shapes):
-    scale = 1024 / (size * SS)
+def render(size, shapes, margin=0, ss=SS):
+    # The artwork fills 1024 - 2 * margin of the canvas; the rest stays transparent.
+    scale = 1024 / (size * ss)
+    zoom = 1024 / (1024 - 2 * margin)
     rows = []
     for j in range(size):
         row = bytearray([0])  # PNG filter: none
         for i in range(size):
             r = g = b = a = 0.0
-            for sj in range(SS):
-                for si in range(SS):
-                    px = (i * SS + si + 0.5) * scale
-                    py = (j * SS + sj + 0.5) * scale
+            for sj in range(ss):
+                for si in range(ss):
+                    px = ((i * ss + si + 0.5) * scale - margin) * zoom
+                    py = ((j * ss + sj + 0.5) * scale - margin) * zoom
                     hit = None
                     for x, y, w, h, rad, color in reversed(shapes):
                         if inside(px, py, x, y, w, h, rad):
@@ -70,7 +76,7 @@ def render(size, shapes):
                         g += hit[1]
                         b += hit[2]
                         a += 1
-            n = SS * SS
+            n = ss * ss
             if a:
                 row += bytes([round(r / a), round(g / a), round(b / a), round(255 * a / n)])
             else:
@@ -99,6 +105,27 @@ def write_logos(folder):
             f.write(render(size, SHAPES))
 
 
+# The macOS app icon set: point size, scale.
+APPICONSET = [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1), (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)]
+
+
+def write_appiconset(folder):
+    import json
+
+    os.makedirs(folder, exist_ok=True)
+    images = []
+    for points, factor in APPICONSET:
+        pixels = points * factor
+        name = f"icon_{points}x{points}@{factor}x.png"
+        # Large sizes need fewer samples per pixel to look smooth, and render much faster.
+        with open(os.path.join(folder, name), "wb") as f:
+            f.write(render(pixels, SHAPES, margin=100, ss=SS if pixels <= 128 else 2))
+        images.append({"filename": name, "idiom": "mac", "scale": f"{factor}x", "size": f"{points}x{points}"})
+    with open(os.path.join(folder, "Contents.json"), "w") as f:
+        json.dump({"images": images, "info": {"author": "xcode", "version": 1}}, f, indent=2)
+        f.write("\n")
+
+
 def main(path, variant):
     shapes = PRIVATE_SHAPES if variant == "private" else SHAPES
     images = [render(size, shapes) for size in SIZES]
@@ -116,5 +143,8 @@ def main(path, variant):
 if __name__ == "__main__":
     if sys.argv[1] == "--logos":
         write_logos(sys.argv[2])
+        sys.exit()
+    if sys.argv[1] == "--appiconset":
+        write_appiconset(sys.argv[2])
         sys.exit()
     main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "")

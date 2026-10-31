@@ -132,14 +132,29 @@ final class StatusMenu: NSObject {
                 comment: "Screen-reader label and tooltip of the menu-bar icon while private mode is on"
             )
             : String(localized: "Clipo clipboard history", comment: "Screen-reader label of the menu-bar icon")
-        let image = NSImage(
-            systemSymbolName: isPrivate ? Self.privateSymbolName : Self.symbolName,
-            accessibilityDescription: label
-        )
-        image?.isTemplate = true
-        button.image = image
-        button.contentTintColor = isPrivate ? .systemOrange : nil
+        button.image = Self.icon(isPrivate: isPrivate, label: label)
+        // The icon is drawn in its final colour, so it never depends on how the
+        // menu bar tints a template image.
+        button.contentTintColor = nil
         button.toolTip = isPrivate ? label : nil
+        // Private mode only changes how the icon looks; it never takes it away.
+        statusItem?.isVisible = true
+    }
+
+    /// The menu-bar icon: the clipboard, or an orange crossed-out eye while
+    /// private mode is on. Never `nil`, or the item would be empty and vanish
+    /// from the menu bar.
+    static func icon(isPrivate: Bool, label: String) -> NSImage {
+        if isPrivate,
+           let eye = NSImage(systemSymbolName: privateSymbolName, accessibilityDescription: label),
+           let orange = eye.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [.systemOrange])) {
+            orange.isTemplate = false
+            return orange
+        }
+        let clipboard = NSImage(systemSymbolName: symbolName, accessibilityDescription: label)
+            ?? NSImage(size: NSSize(width: 18, height: 18))
+        clipboard.isTemplate = true
+        return clipboard
     }
 
     func show(_ status: Status) {
