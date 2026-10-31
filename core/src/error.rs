@@ -3,7 +3,7 @@
 use thiserror::Error;
 
 use crate::key::KeyStoreError;
-use crate::model::ItemId;
+use crate::model::{ItemId, SnippetId};
 
 /// Any error returned by the core.
 #[derive(Debug, Clone, PartialEq, Eq, Error)]
@@ -14,6 +14,24 @@ pub enum CoreError {
     /// No item with this id exists.
     #[error("item {} not found", .0.as_raw())]
     ItemNotFound(ItemId),
+    /// No snippet with this id exists.
+    #[error("snippet {} not found", .0.as_raw())]
+    SnippetNotFound(SnippetId),
+    /// A snippet failed validation and was not stored.
+    #[error("invalid snippet: {0}")]
+    InvalidSnippet(#[from] InvalidSnippet),
+    /// The data given to import is not a Clipo export. The message names the
+    /// structural problem, never the content.
+    #[error("not a valid Clipo export: {0}")]
+    InvalidExport(&'static str),
+    /// The export was written by a newer version of Clipo.
+    #[error("export format version {found} is newer than supported version {supported}")]
+    UnsupportedExport {
+        /// Version found in the data.
+        found: u32,
+        /// Newest version this build understands.
+        supported: u32,
+    },
     /// An item with identical content is already stored.
     #[error("an item with the same content already exists")]
     DuplicateContent,
@@ -91,4 +109,15 @@ pub enum InvalidContent {
     /// File item containing an empty path.
     #[error("file path is empty")]
     EmptyFilePath,
+}
+
+/// Why a snippet was rejected.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
+pub enum InvalidSnippet {
+    /// The title is empty or only whitespace.
+    #[error("title is empty")]
+    EmptyTitle,
+    /// The body is empty.
+    #[error("body is empty")]
+    EmptyBody,
 }

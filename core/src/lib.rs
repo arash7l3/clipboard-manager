@@ -14,11 +14,11 @@ pub mod key;
 pub mod model;
 pub mod store;
 
-pub use error::{CoreError, InvalidContent};
+pub use error::{CoreError, InvalidContent, InvalidSnippet};
 pub use key::{DatabaseKey, KeyStore, KeyStoreError, KEY_LEN};
 pub use model::{
     Capture, Category, ClipItem, ContentHash, FileRef, ImageContent, ImageFormat, ItemContent,
-    ItemId, ItemKind, ItemPreview, PreviewContent, RichText, RichTextFormat, SourceApp,
-    TextContent, TextHint, Timestamp,
+    ItemId, ItemKind, ItemPreview, PreviewContent, RichText, RichTextFormat, Snippet, SnippetId,
+    SourceApp, TextContent, TextHint, Timestamp,
 };
-pub use store::{CaptureRules, HistoryLimits, Query, Recorded, SkipReason, Store};
+pub use store::{CaptureRules, HistoryLimits, ImportSummary, Query, Recorded, SkipReason, Store};

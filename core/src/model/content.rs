@@ -1,5 +1,6 @@
 //! The payload of a history item: text, an image or a list of files.
 
+use std::borrow::Cow;
 use std::ffi::OsStr;
 use std::fmt;
 use std::path::Path;
@@ -157,6 +158,24 @@ impl ItemContent {
             Self::Text(t) => t.plain.len() + t.rich.as_ref().map_or(0, |r| r.data.len()),
             Self::Image(i) => i.data.len() + i.thumbnail.as_ref().map_or(0, Vec::len),
             Self::Files(files) => files.iter().map(|f| f.path.len()).sum(),
+        }
+    }
+
+    /// The content as plain text, for "paste as plain text". Text gives its
+    /// plain form without formatting; files give their paths, one per line;
+    /// an image has no text form.
+    #[must_use]
+    pub fn plain_text(&self) -> Option<Cow<'_, str>> {
+        match self {
+            Self::Text(t) => Some(Cow::Borrowed(&t.plain)),
+            Self::Image(_) => None,
+            Self::Files(files) => Some(Cow::Owned(
+                files
+                    .iter()
+                    .map(|f| f.path.as_str())
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            )),
         }
     }
 

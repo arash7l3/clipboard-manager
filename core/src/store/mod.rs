@@ -10,7 +10,10 @@ mod history;
 mod rules;
 mod schema;
 mod search;
+mod snippets;
+mod transfer;
 
+use std::borrow::Cow;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -25,6 +28,7 @@ use codec::{item_columns, ItemColumns, RawItem};
 pub use history::{HistoryLimits, Recorded, SkipReason, DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEM_BYTES};
 pub use rules::CaptureRules;
 pub use search::Query;
+pub use transfer::ImportSummary;
 
 /// How long a write waits for a lock held by another connection.
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);
@@ -124,68 +128,19 @@ impl Store {
         source_app: Option<SourceApp>,
         at: Timestamp,
     ) -> Result<ClipItem, CoreError> {
-        content.validate()?;
-        let hash = content.content_hash();
-        let columns = ItemColumns::new(&content)?;
-
         let tx = self.conn.transaction()?;
-        let inserted = tx.execute(
-            "INSERT INTO items (kind, content_hash, source_app_id, source_app_name, \
-             created_at, last_copied_at, byte_size, text_plain, rich_format, rich_data, \
-             image_format, image_width, image_height, image_data, thumbnail, copy_order) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, \
-             (SELECT coalesce(max(copy_order), 0) + 1 FROM items))",
-            params![
-                columns.kind,
-                hash.as_bytes().as_slice(),
-                source_app.as_ref().map(|app| app.id.as_str()),
-                source_app.as_ref().and_then(|app| app.name.as_deref()),
-                at.as_millis(),
-                columns.byte_size,
-                columns.text_plain,
-                columns.rich_format,
-                columns.rich_data,
-                columns.image_format,
-                columns.image_width,
-                columns.image_height,
-                columns.image_data,
-                columns.thumbnail,
-            ],
-        );
-        match inserted {
-            Err(err) if is_unique_violation(&err) => return Err(CoreError::DuplicateContent),
-            other => other?,
-        };
-        let id = tx.last_insert_rowid();
-
-        if let ItemContent::Files(files) = &content {
-            let mut stmt = tx.prepare_cached(
-                "INSERT INTO item_files (item_id, position, path, size_bytes) \
-                 VALUES (?1, ?2, ?3, ?4)",
-            )?;
-            for (position, file) in files.iter().enumerate() {
-                let size = file
-                    .size_bytes
-                    .map(|s| codec::to_i64(s, "file size"))
-                    .transpose()?;
-                stmt.execute(params![
-                    id,
-                    codec::to_i64(position, "file position")?,
-                    file.path,
-                    size
-                ])?;
-            }
-        }
+        let item = insert_row(
+            &tx,
+            NewItem {
+                content,
+                source_app,
+                pinned: false,
+                created_at: at,
+                last_copied_at: at,
+            },
+        )?;
         tx.commit()?;
-
-        Ok(ClipItem {
-            id: ItemId::from_raw(id),
-            content,
-            pinned: false,
-            source_app,
-            created_at: at,
-            last_copied_at: at,
-        })
+        Ok(item)
     }
 
     /// The item with this id, if it exists.
@@ -268,6 +223,17 @@ impl Store {
         self.purge_deleted()
     }
 
+    /// The item's content as plain text, for "paste as plain text": the text
+    /// without formatting, or the file paths one per line. `None` for an image.
+    ///
+    /// # Errors
+    ///
+    /// [`CoreError::ItemNotFound`] if no item has this id.
+    pub fn plain_text(&self, id: ItemId) -> Result<Option<String>, CoreError> {
+        let item = self.get(id)?.ok_or(CoreError::ItemNotFound(id))?;
+        Ok(item.content.plain_text().map(Cow::into_owned))
+    }
+
     /// Number of stored items.
     ///
     /// # Errors
@@ -320,6 +286,89 @@ impl Store {
             .map(|(path, size)| codec::file_ref(path, size))
             .collect()
     }
+}
+
+/// An item to store, with the fields the store otherwise sets itself.
+struct NewItem {
+    content: ItemContent,
+    source_app: Option<SourceApp>,
+    pinned: bool,
+    created_at: Timestamp,
+    last_copied_at: Timestamp,
+}
+
+/// Writes `item` (and its files) on top of the history. The caller owns the
+/// transaction, so several items can be stored all or nothing.
+fn insert_row(conn: &Connection, item: NewItem) -> Result<ClipItem, CoreError> {
+    let NewItem {
+        content,
+        source_app,
+        pinned,
+        created_at,
+        last_copied_at,
+    } = item;
+    content.validate()?;
+    let hash = content.content_hash();
+    let columns = ItemColumns::new(&content)?;
+
+    let inserted = conn.execute(
+        "INSERT INTO items (kind, content_hash, pinned, source_app_id, source_app_name, \
+         created_at, last_copied_at, byte_size, text_plain, rich_format, rich_data, \
+         image_format, image_width, image_height, image_data, thumbnail, copy_order) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, \
+         (SELECT coalesce(max(copy_order), 0) + 1 FROM items))",
+        params![
+            columns.kind,
+            hash.as_bytes().as_slice(),
+            pinned,
+            source_app.as_ref().map(|app| app.id.as_str()),
+            source_app.as_ref().and_then(|app| app.name.as_deref()),
+            created_at.as_millis(),
+            last_copied_at.as_millis(),
+            columns.byte_size,
+            columns.text_plain,
+            columns.rich_format,
+            columns.rich_data,
+            columns.image_format,
+            columns.image_width,
+            columns.image_height,
+            columns.image_data,
+            columns.thumbnail,
+        ],
+    );
+    match inserted {
+        Err(err) if is_unique_violation(&err) => return Err(CoreError::DuplicateContent),
+        other => other?,
+    };
+    let id = conn.last_insert_rowid();
+
+    if let ItemContent::Files(files) = &content {
+        let mut stmt = conn.prepare_cached(
+            "INSERT INTO item_files (item_id, position, path, size_bytes) \
+             VALUES (?1, ?2, ?3, ?4)",
+        )?;
+        for (position, file) in files.iter().enumerate() {
+            let size = file
+                .size_bytes
+                .map(|s| codec::to_i64(s, "file size"))
+                .transpose()?;
+            stmt.execute(params![
+                id,
+                codec::to_i64(position, "file position")?,
+                file.path,
+                size
+            ])?;
+        }
+    }
+
+    Ok(ClipItem {
+        id: ItemId::from_raw(id),
+        content,
+        pinned,
+        source_app,
+        created_at,
+        last_copied_at,
+    })
 }
 
 /// Creates `path` (and its parent directories) if missing, so SQLite opens a
@@ -397,6 +446,8 @@ fn expect_one(changed: usize, id: ItemId) -> Result<(), CoreError> {
     }
 }
 
+#[cfg(test)]
+mod extras_tests;
 #[cfg(test)]
 mod history_tests;
 #[cfg(test)]

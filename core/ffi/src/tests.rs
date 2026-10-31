@@ -558,3 +558,75 @@ fn error_messages_do_not_quote_content() {
     let callback = KeyStoreError::from(uniffi::UnexpectedUniFFICallbackError::new("boom"));
     assert_eq!(callback.to_string(), "unexpected key store error: boom");
 }
+
+#[test]
+fn plain_text_comes_through() {
+    let fx = Fixture::new();
+    let item = added(fx.store.record(capture(text("hello"), 1)).unwrap());
+    assert_eq!(
+        fx.store.plain_text(item.id).unwrap().as_deref(),
+        Some("hello")
+    );
+    assert_eq!(
+        fx.store.plain_text(item.id + 1),
+        Err(ClipoError::ItemNotFound { id: item.id + 1 })
+    );
+}
+
+#[test]
+fn snippets_round_trip() {
+    let fx = Fixture::new();
+    let sig = fx
+        .store
+        .add_snippet("Signature", "Regards", at(10))
+        .unwrap();
+    assert_eq!(sig.created_at, at(10));
+    let edited = fx
+        .store
+        .update_snippet(sig.id, "Sign-off", "Best", at(20))
+        .unwrap();
+    assert_eq!(
+        (edited.title.as_str(), edited.updated_at),
+        ("Sign-off", at(20))
+    );
+    assert_eq!(fx.store.snippets("best").unwrap().len(), 1);
+    assert_eq!(fx.store.snippets("regards").unwrap().len(), 0);
+
+    assert_eq!(
+        fx.store.add_snippet(" ", "x", at(1)).err(),
+        Some(ClipoError::InvalidSnippet {
+            reason: InvalidSnippet::EmptyTitle
+        })
+    );
+    fx.store.delete_snippet(sig.id).unwrap();
+    assert_eq!(
+        fx.store.delete_snippet(sig.id),
+        Err(ClipoError::SnippetNotFound { id: sig.id })
+    );
+}
+
+#[test]
+fn export_and_import_move_history_and_snippets() {
+    let source = Fixture::new();
+    source.store.record(capture(text("one"), 1)).unwrap();
+    source.store.add_snippet("s", "body", at(2)).unwrap();
+    let data = source.store.export_data().unwrap();
+
+    let target = Fixture::new();
+    let summary = target.store.import_data(&data).unwrap();
+    assert_eq!(
+        summary,
+        ImportSummary {
+            items_added: 1,
+            items_duplicate: 0,
+            items_too_large: 0,
+            snippets_added: 1,
+            snippets_duplicate: 0,
+        }
+    );
+    assert_eq!(target.store.import_data(&data).unwrap().items_duplicate, 1);
+    assert!(matches!(
+        target.store.import_data(b"junk"),
+        Err(ClipoError::InvalidExport { .. })
+    ));
+}
