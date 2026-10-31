@@ -106,9 +106,9 @@ final class StatusMenu: NSObject {
 
     /// Shows whether private mode is on: a checked menu item and, at a
     /// glance, a different orange icon.
-    func showPrivateMode(_ on: Bool) {
-        isPrivate = on
-        privateModeItem.state = on ? .on : .off
+    func showPrivateMode(_ enabled: Bool) {
+        isPrivate = enabled
+        privateModeItem.state = enabled ? .on : .off
         updateIcon()
     }
 

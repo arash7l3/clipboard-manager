@@ -43,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.hotkey = hotkey
 
         settings.onHotkeyChange = { [weak self] choice in self?.moveHotkey(to: choice) ?? false }
-        settings.onPrivateModeChange = { [weak self] on in self?.statusMenu.showPrivateMode(on) }
+        settings.onPrivateModeChange = { [weak self] enabled in self?.statusMenu.showPrivateMode(enabled) }
         settings.onHistoryTrimmed = { [weak self] count in self?.historyChanged(itemCount: count) }
         settings.start()
 

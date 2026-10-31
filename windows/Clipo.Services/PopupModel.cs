@@ -64,12 +64,13 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     {
         Category = start;
         SearchText = "";
-        var task = ReloadAsync(keepSelection: false, TimeSpan.Zero);
+        // Cleared before the load starts: a quick answer must not be wiped by this.
         Rows = [];
         Selection = null;
         Failed = false;
+        IsLoading = true;
         RowsChanged?.Invoke(this, EventArgs.Empty);
-        return task;
+        return ReloadAsync(keepSelection: false, TimeSpan.Zero);
     }
 
     public Task SetCategoryAsync(Category category)
