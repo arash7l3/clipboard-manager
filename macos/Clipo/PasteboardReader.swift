@@ -53,10 +53,11 @@ enum PasteboardReader {
     static func content(of pasteboard: NSPasteboard) -> PasteboardContent? {
         guard !isConcealed(pasteboard) else { return nil }
 
-        let urls = pasteboard.readObjects(
+        let read = pasteboard.readObjects(
             forClasses: [NSURL.self],
             options: [.urlReadingFileURLsOnly: true]
         ) as? [URL] ?? []
+        let urls = read.compactMap(pathURL)
         if !urls.isEmpty {
             return .files(urls)
         }
@@ -73,6 +74,20 @@ enum PasteboardReader {
         }
         return nil
     }
+
+    /// `url` as a plain absolute file path, or `nil` if it has none. Finder
+    /// copies file reference URLs (`file:///.file/id=…`); their path names no
+    /// file, and AppKit silently drops such a URL when it is written back, which
+    /// left the clipboard empty.
+    static func pathURL(_ url: URL) -> URL? {
+        guard let resolved = (url as NSURL).filePathURL else { return nil }
+        let path = resolved.path
+        guard path.hasPrefix("/"), !path.hasPrefix(referencePrefix) else { return nil }
+        return resolved
+    }
+
+    /// How the path of a file reference URL starts.
+    static let referencePrefix = "/.file/id="
 
     /// The capture for `content`, or `nil` if it is not worth keeping or is
     /// larger than `maxItemBytes` (the core would skip those anyway; this

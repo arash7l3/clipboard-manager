@@ -33,3 +33,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0027](0027-github-releases.md) | Releases: a `v*` tag attaches the dmg and the MSIX to a GitHub release |
 | [0028](0028-app-icon-file-private-badge-tray-focus.md) | macOS icon as an .icns file, a badge for private mode, and the tray menu's focus on Windows |
 | [0029](0029-stable-signature-build-number-snippet-history.md) | A stable self-signed signature, a build number per release, and snippets in the history |
+| [0030](0030-macos-file-references-on-restore.md) | macOS keeps copied files as plain paths and never empties the clipboard on restore |
