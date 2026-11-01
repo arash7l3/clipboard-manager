@@ -18,3 +18,5 @@ Status: accepted
 - The self-signed certificate is not trusted by Gatekeeper, so the first launch still goes through Privacy & Security > Open Anyway, as before.
 - Anyone who can run code as the build Mac's user can sign with the certificate. That user can already change the app being built, so this adds no new access; forks never run on that Mac.
 - Decisions 0019 and 0020 said a snippet "is not history and moves nothing to the top"; that part is replaced.
+
+**Update.** Snippets stay out of the history again, at the user's request: picking one tells the watcher to skip the write, on macOS and Windows, as before 0.1.4.

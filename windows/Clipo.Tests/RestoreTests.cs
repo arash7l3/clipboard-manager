@@ -82,26 +82,6 @@ public sealed class RestoreTests : IDisposable
     }
 
     [Fact]
-    public async Task SnippetIsWrittenSoTheHistoryRecordsIt()
-    {
-        string? written = null;
-        var restorer = new ItemRestorer(
-            _ => s_item,
-            _ => throw new InvalidOperationException("an item write would keep the snippet out of the history"),
-            _ => { },
-            () => false,
-            () => { },
-            writeSnippet: content =>
-            {
-                written = Assert.IsType<ItemContent.Text>(content).TextValue.Plain;
-                return Task.FromResult(true);
-            });
-
-        Assert.Equal(RestoreOutcome.Restored, await restorer.RestoreTextAsync("signature"));
-        Assert.Equal("signature", written);
-    }
-
-    [Fact]
     public async Task EmptySnippetIsUnavailable()
     {
         Assert.Equal(RestoreOutcome.Unavailable, await Restorer(autoPaste: true).RestoreTextAsync(""));

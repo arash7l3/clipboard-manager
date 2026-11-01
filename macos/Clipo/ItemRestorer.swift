@@ -64,11 +64,11 @@ final class ItemRestorer {
         return await pasteIfWanted()
     }
 
-    /// Puts `text`, a snippet, on the clipboard as plain text. Unlike an
-    /// item it is not hidden from the watcher, so the history records it like
-    /// any copy and it shows at the top; the snippet itself stays as it is.
+    /// Puts `text`, for example a snippet, on the clipboard as plain text.
+    /// It is not history, so nothing moves to the top.
     func restore(text: String) async -> Outcome {
         guard writeString(text) else { return .unavailable }
+        didWrite()
         return await pasteIfWanted()
     }
 
