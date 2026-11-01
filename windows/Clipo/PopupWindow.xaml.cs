@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Clipo.Core;
 using Clipo.Services;
@@ -27,6 +28,7 @@ namespace Clipo;
 /// clicking anywhere else, or another window coming to the front, closes the
 /// popup.
 /// </summary>
+[SuppressMessage("Design", "CA1001", Justification = "Lives as long as the app; the input thread is disposed in Quit.")]
 public sealed partial class PopupWindow : Window
 {
     /// <summary>The popup's size, in effective pixels.</summary>

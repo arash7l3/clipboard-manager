@@ -27,6 +27,12 @@ public sealed class ShellSurfacesTests
         Assert.True(ShellSurfaces.CountsAsApp(7, Own, "Notepad", visible: true, extendedStyle: 0));
 
     [Theory]
+    [InlineData("Progman")]
+    [InlineData("WorkerW")]
+    public void TheDesktopCountsEvenAsAToolWindow(string className) =>
+        Assert.True(ShellSurfaces.CountsAsApp(7, Own, className, visible: true, extendedStyle: 0x80));
+
+    [Theory]
     // Clipo's own windows, such as the tray menu's hidden owner.
     [InlineData(Own, "io.github.arash7l3.Clipo.MessageWindow", true, 0x80)]
     [InlineData(Own, "WinUIDesktopWin32WindowClass", true, 0)]

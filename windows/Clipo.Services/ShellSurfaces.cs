@@ -37,14 +37,17 @@ public static class ShellSurfaces
     /// <summary>
     /// Whether a window counts as one the user works in: another process's,
     /// shown, not a tool window (the taskbar, its flyouts and Clipo's own
-    /// helper windows are) and not one of the shell's surfaces.
+    /// helper windows are) and not one of the shell's surfaces. The desktop
+    /// counts, whatever its style: files are pasted there.
     /// </summary>
     public static bool CountsAsApp(uint processId, uint ownProcessId, string? className, bool visible, long extendedStyle) =>
         processId != 0
         && processId != ownProcessId
         && visible
-        && (extendedStyle & ToolWindow) == 0
+        && ((extendedStyle & ToolWindow) == 0 || IsDesktop(className))
         && !Contains(className);
+
+    private static bool IsDesktop(string? className) => className is "Progman" or "WorkerW";
 
     /// <summary>
     /// Whether a window shows a folder, where a paste takes files and not
