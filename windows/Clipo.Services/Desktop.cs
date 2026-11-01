@@ -39,6 +39,13 @@ public static unsafe class Desktop
     private const uint NoMove = 0x2;
     private const uint NoActivateWindow = 0x10;
     private const int ClassNameLength = 256;
+    private const int WindowProcedure = -4;
+    private const uint WmMouseActivate = 0x0021;
+    private const nint MouseNoActivate = 3;
+
+    /// <summary>The window made non-activating, and the window procedure it had; there is one, the popup.</summary>
+    private static nint s_nonActivating;
+    private static nint s_previousProcedure;
 
     /// <summary>The window the user is working in.</summary>
     public static nint ForegroundWindow() => NativeMethods.GetForegroundWindow();
@@ -52,7 +59,9 @@ public static unsafe class Desktop
 
     /// <summary>
     /// Keeps clicks on <paramref name="window"/> from activating it, so the
-    /// app the user works in keeps the focus.
+    /// app the user works in keeps the focus: the window gets the
+    /// no-activate style, and it answers every click's activation request
+    /// with "no", whatever its content would answer. For one window only.
     /// </summary>
     public static void MakeNonActivating(nint window)
     {
@@ -60,6 +69,12 @@ public static unsafe class Desktop
         if ((style & NoActivate) == 0)
         {
             NativeMethods.SetWindowLongPtr(window, ExtendedStyle, (nint)(style | NoActivate));
+        }
+        if (s_nonActivating == 0)
+        {
+            s_nonActivating = window;
+            s_previousProcedure = NativeMethods.SetWindowLongPtr(
+                window, WindowProcedure, (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&NonActivatingProcedure);
         }
     }
 
@@ -139,6 +154,12 @@ public static unsafe class Desktop
         var dpi = NativeMethods.GetDpiForMonitor(monitor, EffectiveDpi, out var dpiX, out _) == 0 && dpiX != 0 ? dpiX : 96;
         return new PointerScreen(new ScreenPoint(cursor.X, cursor.Y), work, dpi);
     }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint NonActivatingProcedure(nint window, uint message, nint wParam, nint lParam) =>
+        message == WmMouseActivate
+            ? MouseNoActivate
+            : NativeMethods.CallWindowProc(s_previousProcedure, window, message, wParam, lParam);
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static int FindFolderView(nint child, nint found)

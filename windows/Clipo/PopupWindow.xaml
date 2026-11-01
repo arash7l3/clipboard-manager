@@ -24,8 +24,7 @@
 
         <!-- Shows the search typed into the popup; read-only, because it never has the focus. -->
         <TextBox x:Name="SearchBox" x:Uid="SearchBox" IsSpellCheckEnabled="False" IsReadOnly="True"
-                 IsTabStop="False" AllowFocusOnInteraction="False" IsHitTestVisible="False"
-                 TextChanged="OnSearchChanged" />
+                 IsTabStop="False" AllowFocusOnInteraction="False" IsHitTestVisible="False" />
 
         <Grid Grid.Row="1" ColumnSpacing="8">
             <Grid.ColumnDefinitions>

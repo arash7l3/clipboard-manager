@@ -276,6 +276,9 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
     public static partial nint SetWindowLongPtr(nint window, int index, nint value);
 
+    [LibraryImport("user32.dll", EntryPoint = "CallWindowProcW")]
+    public static partial nint CallWindowProc(nint procedure, nint window, uint message, nint wParam, nint lParam);
+
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetWindowPos(nint window, nint insertAfter, int x, int y, int width, int height, uint flags);

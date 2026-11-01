@@ -195,11 +195,21 @@ public sealed partial class PopupWindow : Window
     /// <summary>
     /// Told about each window that comes to the front. One other than the
     /// window the user was working in closes the popup, as Alt+Tab or the
-    /// Start menu do; the taskbar the popup was opened from does not.
+    /// Start menu do; the taskbar the popup was opened from does not. Should
+    /// Windows bring the popup itself to the front, it hands the front
+    /// straight back.
     /// </summary>
     public void ForegroundChanged(nint window)
     {
-        if (IsShown && window != _previous && window != _openedOver && !Desktop.IsOwnWindow(window))
+        if (!IsShown)
+        {
+            return;
+        }
+        if (window == Handle)
+        {
+            Desktop.Activate(_previous);
+        }
+        else if (window != _previous && window != _openedOver && !Desktop.IsOwnWindow(window))
         {
             Dismiss(restoreFocus: false);
         }
@@ -279,13 +289,12 @@ public sealed partial class PopupWindow : Window
         }
     }
 
-    private void OnSearchChanged(object sender, TextChangedEventArgs e) => _ = _model.SetSearchTextAsync(SearchBox.Text);
-
-    /// <summary>The search field shows what was typed; it never has the focus.</summary>
+    /// <summary>Searches for <paramref name="text"/> and shows it in the search field, which never has the focus.</summary>
     private void SetSearch(string text)
     {
         SearchBox.Text = text;
         SearchBox.SelectionStart = text.Length;
+        _ = _model.SetSearchTextAsync(text);
     }
 
     private void OnKey(PopupKeyCommand command)
