@@ -124,6 +124,47 @@ public static class History
     });
 
     /// <summary>
+    /// Names item <paramref name="id"/> in <paramref name="store"/>, off the calling thread; a blank
+    /// <paramref name="title"/> takes the name away. Returns whether it worked.
+    /// </summary>
+    public static Task<bool> SetTitleAsync(ClipStore? store, long id, string title) => Task.Run(() =>
+    {
+        try
+        {
+            if (store is null)
+            {
+                return false;
+            }
+            store.SetTitle(id, title);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"renaming item {id} failed: {Describe(e)}");
+            return false;
+        }
+    });
+
+    /// <summary>Deletes item <paramref name="id"/> from <paramref name="store"/>, off the calling thread. Returns whether it worked.</summary>
+    public static Task<bool> DeleteAsync(ClipStore? store, long id) => Task.Run(() =>
+    {
+        try
+        {
+            if (store is null)
+            {
+                return false;
+            }
+            store.Delete(id);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"deleting item {id} failed: {Describe(e)}");
+            return false;
+        }
+    });
+
+    /// <summary>
     /// Clears the <paramref name="category"/> tab in <paramref name="store"/>, off the calling thread:
     /// deletes its unpinned items. Returns how many, or <c>null</c> if it failed.
     /// </summary>

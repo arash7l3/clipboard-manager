@@ -227,7 +227,7 @@ public sealed class PopupModelTests
     }
 
     private static ItemPreview[] Rows(params long[] ids) =>
-        [.. ids.Select(id => new ItemPreview(id, new PreviewContent.Text($"item {id}", false, TextHint.Plain), false, null, s_date))];
+        [.. ids.Select(id => new ItemPreview(id, new PreviewContent.Text($"item {id}", false, TextHint.Plain), false, null, s_date, null))];
 
     private sealed class FakeLoader
     {
@@ -283,6 +283,15 @@ public sealed class PopupTextTests
 
         Assert.Equal("report.pdf", s_text.Title(one));
         Assert.Equal("report.pdf and 2 more", s_text.Title(three));
+    }
+
+    [Fact]
+    public void RowTitleIsTheGivenNameIfAny()
+    {
+        var content = Snippet("hello");
+        Assert.Equal("hello", s_text.Title(new ItemPreview(1, content, false, null, s_now, null)));
+        Assert.Equal("My note", s_text.Title(new ItemPreview(1, content, false, null, s_now, "My note")));
+        Assert.Contains("My note", s_text.AccessibleName(new ItemPreview(1, content, false, null, s_now, "My note"), s_now), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -359,7 +368,7 @@ public sealed class PopupTextTests
     private static PreviewContent.Text Snippet(string text, TextHint hint = TextHint.Plain) => new(text, false, hint);
 
     private static ItemPreview Row(SourceApp? app, bool pinned = false, TextHint hint = TextHint.Plain) =>
-        new(1, Snippet("https://example.com", hint), pinned, app, s_now.AddSeconds(-5));
+        new(1, Snippet("https://example.com", hint), pinned, app, s_now.AddSeconds(-5), null);
 
     private static PopupText Text(string language, string culture)
     {
@@ -409,5 +418,55 @@ public sealed class PopupPlacementTests
         var left = new ScreenRect(-1920, 0, 0, 1040);
 
         Assert.Equal(new ScreenRect(-400, 100, 0, 600), PopupPlacement.Frame(400, 500, new ScreenPoint(-100, 100), left, rightToLeft: false));
+    }
+}
+
+public sealed class PopupRenameTests
+{
+    private static PopupKeyCommand Key(PopupKeyAction action, string text = "") => new(action, Text: text);
+
+    [Fact]
+    public void TheFirstCharacterReplacesTheOldName()
+    {
+        var rename = new PopupRename(7, "hello");
+        Assert.True(rename.IsFresh);
+
+        Assert.Equal(PopupRenameStep.Editing, rename.Handle(Key(PopupKeyAction.Type, "N")));
+        rename.Handle(Key(PopupKeyAction.Type, "ew"));
+        Assert.Equal("New", rename.Text);
+        Assert.False(rename.IsFresh);
+        Assert.Equal(7, rename.Id);
+    }
+
+    [Fact]
+    public void EndKeepsTheOldNameToTypeAfterIt()
+    {
+        var rename = new PopupRename(1, "hello");
+        rename.Handle(Key(PopupKeyAction.End));
+        rename.Handle(Key(PopupKeyAction.Type, " world"));
+        rename.Handle(Key(PopupKeyAction.Backspace));
+        Assert.Equal("hello worl", rename.Text);
+        rename.Handle(Key(PopupKeyAction.DeleteWord));
+        Assert.Equal("hello ", rename.Text);
+    }
+
+    [Fact]
+    public void BackspaceOnTheOldNameClearsIt()
+    {
+        var rename = new PopupRename(1, "hello");
+        rename.Handle(Key(PopupKeyAction.Backspace));
+        Assert.Equal("", rename.Text);
+    }
+
+    [Fact]
+    public void EnterSavesEscCancelsAndOtherKeysWait()
+    {
+        var rename = new PopupRename(1, "hello");
+        Assert.Equal(PopupRenameStep.Editing, rename.Handle(Key(PopupKeyAction.Down)));
+        Assert.Equal(PopupRenameStep.Editing, rename.Handle(Key(PopupKeyAction.NextTab)));
+        Assert.True(rename.IsFresh);
+        Assert.Equal("hello", rename.Text);
+        Assert.Equal(PopupRenameStep.Save, rename.Handle(Key(PopupKeyAction.Pick)));
+        Assert.Equal(PopupRenameStep.Cancel, rename.Handle(Key(PopupKeyAction.Close)));
     }
 }

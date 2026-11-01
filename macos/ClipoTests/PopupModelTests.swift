@@ -19,7 +19,8 @@ enum Rows {
             content: .text(snippet: snippet, truncated: false, hint: hint),
             pinned: pinned,
             sourceApp: app,
-            lastCopiedAt: copiedAt
+            lastCopiedAt: copiedAt,
+            title: nil
         )
     }
 }

@@ -3,12 +3,23 @@ import ClipoCore
 
 extension PopupController: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
+        guard (obj.object as? NSSearchField) === searchField else { return }
         model.setSearchText(searchField.stringValue)
     }
 
-    /// Keys typed in the search field that drive the list instead of the text.
+    func controlTextDidEndEditing(_ obj: Notification) {
+        // A row's rename field; the search field never stops editing for long.
+        guard (obj.object as? NSSearchField) !== searchField else { return }
+        renameFieldEnded()
+    }
+
+    /// Keys typed in the search field that drive the list instead of the
+    /// text, and keys typed in a row's rename field.
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        handle(commandSelector)
+        guard control === searchField else {
+            return handleRename(commandSelector, in: control)
+        }
+        return handle(commandSelector)
     }
 
     /// Runs the list command for a key binding selector. Returns whether it

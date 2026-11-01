@@ -11,6 +11,22 @@ public sealed class PopupText(Func<string, string> strings, CultureInfo culture)
     /// <summary>Longest row title, in characters. The row cuts it to its width anyway; this only keeps the text short.</summary>
     public const int MaxTitleLength = 300;
 
+    /// <summary>The row's title: the name the user gave the item, or else a line describing its content.</summary>
+    public string Title(ItemPreview row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        return row.Title ?? Title(row.Content);
+    }
+
+    /// <summary>The tooltip and name of a row's rename button.</summary>
+    public string RenameItem => strings("RenameItem");
+
+    /// <summary>The tooltip and name of a row's delete button.</summary>
+    public string DeleteItem => strings("DeleteItem");
+
+    /// <summary>The placeholder of the field that shows a row's new name.</summary>
+    public string ItemNameHint => strings("ItemNameHint");
+
     /// <summary>One line describing the content: the first non-blank line of a text, an image's size, or the first file's name.</summary>
     public string Title(PreviewContent content) => content switch
     {
@@ -43,7 +59,7 @@ public sealed class PopupText(Func<string, string> strings, CultureInfo culture)
     public string AccessibleName(ItemPreview row, DateTime now)
     {
         ArgumentNullException.ThrowIfNull(row);
-        List<string> parts = [Kind(row.Content), Title(row.Content), Detail(row, now)];
+        List<string> parts = [Kind(row.Content), Title(row), Detail(row, now)];
         if (row.Pinned)
         {
             parts.Add(strings("PinnedNote"));

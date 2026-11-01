@@ -163,6 +163,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         popup.onClear = { [weak self] category in await self?.clear(category, in: store) }
+        popup.onRename = { row, title in
+            if !(await History.setTitle(row.id, title, in: store)) {
+                NSSound.beep()
+            }
+        }
+        popup.onDelete = { [weak self] row in await self?.delete(row, in: store) }
         snippetRestorer = restorer
         return popup
     }
@@ -170,6 +176,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Deletes the unpinned items of `category`'s tab; a failure beeps.
     private func clear(_ category: ClipoCore.Category, in store: ClipStore) async {
         guard let itemCount = await History.clear(category, in: store) else {
+            NSSound.beep()
+            return
+        }
+        historyChanged(itemCount: itemCount)
+    }
+
+    /// Deletes one item; a failure beeps.
+    private func delete(_ row: ItemPreview, in store: ClipStore) async {
+        guard let itemCount = await History.delete(row.id, in: store) else {
             NSSound.beep()
             return
         }

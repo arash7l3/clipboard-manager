@@ -464,6 +464,18 @@
     <value>وارد کردن ناموفق بود.</value>
     <comment>Shown when the store could not import</comment>
   </data>
+  <data name="RenameItem" xml:space="preserve">
+    <value>تغییر نام</value>
+    <comment>Tooltip of the button at the end of a popup row that renames the item</comment>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>حذف</value>
+    <comment>Tooltip of the button at the end of a popup row that deletes the item</comment>
+  </data>
+  <data name="ItemNameHint" xml:space="preserve">
+    <value>نام</value>
+    <comment>Placeholder of the field that shows a popup row's new name while it is renamed</comment>
+  </data>
   <data name="MenuPin" xml:space="preserve">
     <value>سنجاق کردن</value>
     <comment>Popup row menu item that pins the item</comment>

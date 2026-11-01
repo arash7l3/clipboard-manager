@@ -308,6 +308,19 @@ fn touch_pin_and_delete() {
     fx.store.set_pinned(old.id, true).unwrap();
     assert!(fx.store.get(old.id).unwrap().unwrap().pinned);
 
+    fx.store.set_title(old.id, " Old one ").unwrap();
+    let titles = |store: &ClipStore| -> Vec<Option<String>> {
+        store
+            .previews(all())
+            .unwrap()
+            .into_iter()
+            .map(|p| p.title)
+            .collect()
+    };
+    assert_eq!(titles(&fx.store), [Some("Old one".into()), None]);
+    fx.store.set_title(old.id, "").unwrap();
+    assert_eq!(titles(&fx.store), [None, None]);
+
     fx.store.delete(old.id).unwrap();
     assert_eq!(fx.store.count().unwrap(), 1);
     assert_eq!(
@@ -320,6 +333,10 @@ fn touch_pin_and_delete() {
     );
     assert_eq!(
         fx.store.set_pinned(old.id, false),
+        Err(ClipoError::ItemNotFound { id: old.id })
+    );
+    assert_eq!(
+        fx.store.set_title(old.id, "x"),
         Err(ClipoError::ItemNotFound { id: old.id })
     );
 }

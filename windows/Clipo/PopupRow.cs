@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using Clipo.Core;
 using Clipo.Services;
@@ -7,10 +8,16 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Clipo;
 
-/// <summary>One history item as a popup row shows it: an icon or thumbnail, a title, a details line and a pin mark.</summary>
-public sealed class PopupRow
+/// <summary>
+/// One history item as a popup row shows it: an icon or thumbnail, a title, a details line, a pin mark,
+/// and buttons that rename and delete it. While it is renamed, the new name shows in place of its lines.
+/// </summary>
+public sealed class PopupRow : INotifyPropertyChanged
 {
-    private PopupRow(ItemPreview preview, string title, string detail, string accessibleName, string glyph, ImageSource? thumbnail, string shortcut)
+    private string? _renameText;
+    private bool _renameFresh;
+
+    private PopupRow(ItemPreview preview, string title, string detail, string accessibleName, string glyph, ImageSource? thumbnail, string shortcut, PopupText text)
     {
         Preview = preview;
         Title = title;
@@ -19,7 +26,12 @@ public sealed class PopupRow
         Glyph = glyph;
         Thumbnail = thumbnail;
         Shortcut = shortcut;
+        RenameLabel = text.RenameItem;
+        DeleteLabel = text.DeleteItem;
+        RenameHint = text.ItemNameHint;
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public ItemPreview Preview { get; }
 
@@ -44,6 +56,42 @@ public sealed class PopupRow
 
     public Visibility PinVisibility => Preview.Pinned ? Visibility.Visible : Visibility.Collapsed;
 
+    /// <summary>The rename button's tooltip and name.</summary>
+    public string RenameLabel { get; }
+
+    /// <summary>The delete button's tooltip and name.</summary>
+    public string DeleteLabel { get; }
+
+    /// <summary>What the rename field shows while it is empty.</summary>
+    public string RenameHint { get; }
+
+    /// <summary>The new name typed so far while the row is renamed; <c>null</c> otherwise.</summary>
+    public string? RenameText => _renameText;
+
+    /// <summary><see cref="RenameText"/> for the rename field, which takes no <c>null</c>.</summary>
+    public string RenameShown => _renameText ?? "";
+
+    /// <summary>The old name is still whole; the field shows it selected.</summary>
+    public bool RenameFresh => _renameFresh;
+
+    public Visibility LinesVisibility => _renameText is null ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility RenameVisibility => _renameText is null ? Visibility.Collapsed : Visibility.Visible;
+
+    /// <summary>Shows <paramref name="rename"/>'s name in place of the row's lines, or the lines again for <c>null</c>.</summary>
+    public void ShowRename(PopupRename? rename)
+    {
+        _renameText = rename?.Text;
+        _renameFresh = rename?.IsFresh ?? false;
+        Changed(nameof(RenameText));
+        Changed(nameof(RenameShown));
+        Changed(nameof(RenameFresh));
+        Changed(nameof(LinesVisibility));
+        Changed(nameof(RenameVisibility));
+    }
+
+    private void Changed(string property) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+
     /// <summary>The list item's name for screen readers comes from here.</summary>
     public override string ToString() => AccessibleName;
 
@@ -58,12 +106,13 @@ public sealed class PopupRow
         var thumbnail = preview.Content is PreviewContent.Image { Thumbnail: { Length: > 0 } png } ? LoadThumbnail(png) : null;
         return new PopupRow(
             preview,
-            text.Title(preview.Content),
+            text.Title(preview),
             text.Detail(preview, now),
             text.AccessibleName(preview, now),
             GlyphFor(preview.Content),
             thumbnail,
-            position <= PopupModel.QuickPasteCount ? text.Shortcut(position) : "");
+            position <= PopupModel.QuickPasteCount ? text.Shortcut(position) : "",
+            text);
     }
 
     private static string GlyphFor(PreviewContent content) => content switch

@@ -208,6 +208,22 @@ impl Store {
         expect_one(changed, id)
     }
 
+    /// Gives the item a name to show in place of its content's first line,
+    /// or takes the name away with `None`. The name is trimmed; a blank one
+    /// takes the name away too. The content is never changed.
+    ///
+    /// # Errors
+    ///
+    /// [`CoreError::ItemNotFound`] if no item has this id.
+    pub fn set_title(&mut self, id: ItemId, title: Option<&str>) -> Result<(), CoreError> {
+        let title = title.map(str::trim).filter(|title| !title.is_empty());
+        let changed = self.conn.execute(
+            "UPDATE items SET title = ?2 WHERE id = ?1",
+            params![id.as_raw(), title],
+        )?;
+        expect_one(changed, id)
+    }
+
     /// Deletes the item and its files. The content is overwritten in the
     /// database file and dropped from the WAL, so it cannot be recovered even
     /// with the key.

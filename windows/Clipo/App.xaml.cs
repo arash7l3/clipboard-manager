@@ -86,6 +86,8 @@ public partial class App : Application
         popup.Chosen += (_, choice) => _ = RestoreAsync(choice);
         popup.PinRequested += (_, pin) => _ = PinAsync(pin);
         popup.ClearRequested += (_, category) => _ = ClearAsync(category);
+        popup.RenameRequested += (_, rename) => _ = RenameAsync(rename);
+        popup.DeleteRequested += (_, row) => _ = DeleteAsync(row);
         popup.StartCategory = last => _settings.StartCategory(last);
         popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
@@ -213,6 +215,27 @@ public partial class App : Application
             Desktop.Beep();
         }
         // Unpinning may have evicted items, so the count and the rows change.
+        _ = TrimAsync();
+        _popup?.HistoryChanged();
+    }
+
+    /// <summary>Names an item, or takes its name away; a failure beeps.</summary>
+    private async Task RenameAsync(PopupRenameRequest rename)
+    {
+        if (!await History.SetTitleAsync(_store, rename.Row.Id, rename.Title))
+        {
+            Desktop.Beep();
+        }
+        _popup?.HistoryChanged();
+    }
+
+    /// <summary>Deletes one item; a failure beeps.</summary>
+    private async Task DeleteAsync(ItemPreview row)
+    {
+        if (!await History.DeleteAsync(_store, row.Id))
+        {
+            Desktop.Beep();
+        }
         _ = TrimAsync();
         _popup?.HistoryChanged();
     }

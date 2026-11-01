@@ -482,6 +482,17 @@
         }
       }
     },
+    "Delete Item" : {
+      "comment" : "Tooltip of the button that deletes a history item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف"
+          }
+        }
+      }
+    },
     "Edit" : {
       "comment" : "Settings button that edits a snippet",
       "localizations" : {
@@ -654,6 +665,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "وارد کردن…"
+          }
+        }
+      }
+    },
+    "Item Name" : {
+      "comment" : "Placeholder of the field that renames a history item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نام مورد"
           }
         }
       }
@@ -984,6 +1006,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "حذف موردهای سنجاق‌نشده"
+          }
+        }
+      }
+    },
+    "Rename Item" : {
+      "comment" : "Tooltip of the button that renames a history item",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغییر نام"
           }
         }
       }

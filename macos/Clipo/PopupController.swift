@@ -7,8 +7,9 @@ import ClipoCore
 /// Up, Down, Page Up, Page Down, Home and End move the selection; Tab and
 /// Shift+Tab switch tabs; Enter picks the selected item; Esc closes. Cmd+P,
 /// or Pin in a row's context menu, pins or unpins an item. The button beside
-/// the tabs clears the tab after a second click. A click on a row picks it,
-/// and a click outside the popup closes it.
+/// the tabs clears the tab after a second click. The buttons at the end of a
+/// row rename and delete its item. A click on a row picks it, and a click
+/// outside the popup closes it.
 @MainActor
 final class PopupController: NSViewController {
     let model: PopupModel
@@ -24,6 +25,12 @@ final class PopupController: NSViewController {
     /// Called with the tab to clear after the user clicked Clear twice. The
     /// popup stays open and lists the rows again once this returns.
     var onClear: (@MainActor (ClipoCore.Category) async -> Void)?
+    /// Called with the item and its new name; a blank name takes the name
+    /// away. The popup stays open and lists the rows again once this returns.
+    var onRename: (@MainActor (ItemPreview, String) async -> Void)?
+    /// Called with the item to delete. The popup stays open and lists the
+    /// rows again once this returns.
+    var onDelete: (@MainActor (ItemPreview) async -> Void)?
     /// The current time, for "copied 5 min. ago".
     var now: () -> Date = Date.init
 
@@ -32,6 +39,8 @@ final class PopupController: NSViewController {
     let clearButton = NSButton(title: "", target: nil, action: nil)
     var clearConfirmation = ClearConfirmation()
     var clearTimeout: Task<Void, Never>?
+    /// The item whose row is being renamed, if any.
+    var renamingID: Int64?
     let table = NSTableView()
     let emptyLabel = NSTextField(labelWithString: "")
     private let scrollView = NSScrollView()
@@ -102,6 +111,7 @@ final class PopupController: NSViewController {
         isDismissing = true
         defer { isDismissing = false }
         disarmClear()
+        renamingID = nil
         panel.orderOut(nil)
     }
 
@@ -245,6 +255,7 @@ final class PopupController: NSViewController {
 
     private func rowsChanged() {
         guard isViewLoaded else { return }
+        cancelRenameForReload()
         table.reloadData()
         if let index = model.categories.firstIndex(of: model.category) {
             tabs.selectedSegment = index
@@ -342,7 +353,11 @@ extension PopupController: NSTableViewDataSource, NSTableViewDelegate {
         guard model.rows.indices.contains(row) else { return nil }
         let cell = tableView.makeView(withIdentifier: HistoryRowView.reuseIdentifier, owner: self) as? HistoryRowView
             ?? HistoryRowView()
-        cell.show(model.rows[row], now: now(), quickPaste: row < 9 ? row + 1 : nil)
+        let item = model.rows[row]
+        cell.show(item, now: now(), quickPaste: row < 9 ? row + 1 : nil, renaming: item.id == renamingID)
+        cell.onRename = { [weak self] in self?.beginRename(item.id) }
+        cell.onDelete = { [weak self] in self?.deleteItem(item.id) }
+        cell.editor.delegate = self
         return cell
     }
 

@@ -464,6 +464,18 @@
     <value>The import failed.</value>
     <comment>Shown when the store could not import</comment>
   </data>
+  <data name="RenameItem" xml:space="preserve">
+    <value>Rename</value>
+    <comment>Tooltip of the button at the end of a popup row that renames the item</comment>
+  </data>
+  <data name="DeleteItem" xml:space="preserve">
+    <value>Delete</value>
+    <comment>Tooltip of the button at the end of a popup row that deletes the item</comment>
+  </data>
+  <data name="ItemNameHint" xml:space="preserve">
+    <value>Name</value>
+    <comment>Placeholder of the field that shows a popup row's new name while it is renamed</comment>
+  </data>
   <data name="MenuPin" xml:space="preserve">
     <value>Pin</value>
     <comment>Popup row menu item that pins the item</comment>

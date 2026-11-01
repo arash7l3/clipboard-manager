@@ -15,8 +15,10 @@ use crate::model::{Category, ClipItem, ItemPreview, PREVIEW_FILES};
 /// Name of the SQL function that folds text for matching. See [`fold`].
 const FOLD_FN: &str = "clipo_fold";
 
-/// Match clause for one search word, with two parameters (text, file path).
+/// Match clause for one search word, with three parameters (text, title,
+/// file path).
 const WORD_CLAUSE: &str = " AND (instr(clipo_fold(text_plain), ?) > 0 \
+    OR instr(clipo_fold(title), ?) > 0 \
     OR EXISTS (SELECT 1 FROM item_files \
     WHERE item_id = items.id AND instr(clipo_fold(path), ?) > 0))";
 
@@ -31,7 +33,8 @@ pub struct Query {
     /// Matching ignores case and, for Persian and Arabic text, the difference
     /// between Arabic and Persian letter forms, digit scripts, diacritics and
     /// zero-width non-joiners. Text items match on their plain text and file
-    /// items on their paths; images have no searchable text.
+    /// items on their paths; any item also matches on the name the user gave
+    /// it.
     pub text: String,
     /// Return at most this many items, newest first.
     pub limit: Option<usize>,
@@ -170,6 +173,7 @@ fn filter(query: &Query) -> (String, Vec<Value>) {
     let words = query.text.split_whitespace().map(fold);
     for word in words.filter(|word| !word.is_empty()) {
         sql.push_str(WORD_CLAUSE);
+        args.push(Value::Text(word.clone()));
         args.push(Value::Text(word.clone()));
         args.push(Value::Text(word));
     }

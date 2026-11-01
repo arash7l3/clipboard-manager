@@ -49,6 +49,27 @@ enum PopupText {
         )
     }
 
+    /// The row's title: the name the user gave the item, or else a line
+    /// describing its content.
+    static func title(_ row: ItemPreview) -> String {
+        row.title ?? title(row.content)
+    }
+
+    /// The tooltip and screen-reader label of a row's rename button.
+    static var renameItem: String {
+        String(localized: "Rename Item", comment: "Tooltip of the button that renames a history item")
+    }
+
+    /// The tooltip and screen-reader label of a row's delete button.
+    static var deleteItem: String {
+        String(localized: "Delete Item", comment: "Tooltip of the button that deletes a history item")
+    }
+
+    /// The placeholder of the field that edits an item's name.
+    static var itemNamePlaceholder: String {
+        String(localized: "Item Name", comment: "Placeholder of the field that renames a history item")
+    }
+
     /// One line describing the content: the first line of a text, an image's
     /// size, or the first file's name.
     static func title(_ content: PreviewContent) -> String {
@@ -108,7 +129,7 @@ enum PopupText {
 
     /// Everything a row shows, in one sentence for screen readers.
     static func accessibilityLabel(_ row: ItemPreview, now: Date) -> String {
-        var parts = [kind(row.content), title(row.content), detail(row, now: now)]
+        var parts = [kind(row.content), title(row), detail(row, now: now)]
         if row.pinned {
             parts.append(String(localized: "pinned", comment: "Screen-reader note that an item is pinned"))
         }

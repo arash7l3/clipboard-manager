@@ -141,6 +141,34 @@ enum History {
         }.value
     }
 
+    /// Names the item with `id`, off the main thread; a blank `title` takes
+    /// the name away. Returns whether it worked.
+    static func setTitle(_ id: Int64, _ title: String, in store: ClipStore) async -> Bool {
+        await Task.detached(priority: .userInitiated) {
+            do {
+                try store.setTitle(id: id, title: title)
+                return true
+            } catch {
+                logger.error("renaming an item failed: \(String(describing: error), privacy: .public)")
+                return false
+            }
+        }.value
+    }
+
+    /// Deletes the item with `id`, off the main thread. Returns how many
+    /// items the history holds afterwards, or `nil` if deleting failed.
+    static func delete(_ id: Int64, in store: ClipStore) async -> UInt64? {
+        await Task.detached(priority: .userInitiated) {
+            do {
+                try store.delete(id: id)
+                return try store.count()
+            } catch {
+                logger.error("deleting an item failed: \(String(describing: error), privacy: .public)")
+                return nil
+            }
+        }.value
+    }
+
     /// Clears `category`'s tab, off the main thread: deletes its unpinned
     /// items. Returns how many items the history holds afterwards, or `nil`
     /// if clearing failed.

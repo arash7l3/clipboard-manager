@@ -18,7 +18,9 @@ pub const PREVIEW_FILES: usize = 10;
 /// A history item as the popup lists it. Small and cheap to load: long text is
 /// cut, images come as their thumbnail only, and long file lists are cut. Load
 /// the full item by id when it is picked.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// `Debug` hides the title: the user may have typed something private.
+#[derive(Clone, PartialEq, Eq)]
 pub struct ItemPreview {
     /// Store-assigned identifier.
     pub id: ItemId,
@@ -30,6 +32,22 @@ pub struct ItemPreview {
     pub source_app: Option<SourceApp>,
     /// When the same content was most recently copied.
     pub last_copied_at: Timestamp,
+    /// The name the user gave the item, shown in place of its content's
+    /// first line; `None` if it was never renamed. Never blank.
+    pub title: Option<String>,
+}
+
+impl fmt::Debug for ItemPreview {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ItemPreview")
+            .field("id", &self.id)
+            .field("content", &self.content)
+            .field("pinned", &self.pinned)
+            .field("source_app", &self.source_app)
+            .field("last_copied_at", &self.last_copied_at)
+            .field("title", &self.title.as_ref().map(|t| Redacted(t.len())))
+            .finish()
+    }
 }
 
 /// The part of an item's content a row shows.
