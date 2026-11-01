@@ -98,6 +98,7 @@ public partial class App : Application
         var chord = HotkeyChoices.Chord(_settings.Hotkey);
         var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste, PrivateMode = _settings.PrivateMode };
         _shell = shell;
+        popup.WindowInFront = shell.AppWindowInFront;
         shell.OpenRequested += (_, _) => ShowHistory(toggle: false);
         shell.HotkeyPressed += (_, _) => ShowHistory(toggle: true);
         shell.SettingsRequested += (_, _) => ShowSettings();

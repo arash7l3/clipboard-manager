@@ -34,3 +34,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0028](0028-app-icon-file-private-badge-tray-focus.md) | macOS icon as an .icns file, a badge for private mode, and the tray menu's focus on Windows |
 | [0029](0029-stable-signature-build-number-snippet-history.md) | A stable self-signed signature, a build number per release, and snippets in the history |
 | [0030](0030-macos-file-references-on-restore.md) | macOS keeps copied files as plain paths and never empties the clipboard on restore |
+| [0031](0031-paste-target-and-screenshots.md) | Pasting into the app that was in front, and screenshots in the history |

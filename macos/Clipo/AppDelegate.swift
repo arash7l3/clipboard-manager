@@ -9,7 +9,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var store: ClipStore?
     private var watcher: PasteboardWatcher?
+    private var screenshots: ScreenshotWatcher?
     private var recording: Task<Void, Never>?
+    private var screenshotRecording: Task<Void, Never>?
     private var popup: PopupController?
     private var hotkey: GlobalHotkey?
     private let settings = SettingsCoordinator()
@@ -100,27 +102,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // The settings themselves, not the store's copy: the store gets a
         // change a moment later, off the main thread, and a copy made in
         // that moment would be read under the old rules.
-        let watcher = PasteboardWatcher(shouldRead: { app in
+        let shouldRead: @MainActor (SourceApp?) -> Bool = { app in
             CaptureSettings.allowsReading(from: app, under: CaptureSettings.rules())
-        })
+        }
+        let watcher = PasteboardWatcher(shouldRead: shouldRead)
         self.watcher = watcher
         watcher.start()
+        recording = record(watcher.changes, into: store)
 
-        recording = Task { [weak self] in
-            for await change in watcher.changes {
-                // One change at a time keeps the history in copy order.
-                let outcome = await Task.detached(priority: .utility) { () -> (changed: Bool, itemCount: UInt64?) in
-                    switch ClipboardRecorder.record(change, in: store) {
-                    case .added?: (true, try? store.count())
-                    case .bumped?: (true, nil)
-                    default: (false, nil)
-                    }
-                }.value
-                if outcome.changed {
-                    self?.historyChanged(itemCount: outcome.itemCount)
-                }
-            }
-        }
+        // Screenshots are saved as files, not copied; they join the history too.
+        let screenshots = ScreenshotWatcher(shouldRead: shouldRead)
+        self.screenshots = screenshots
+        screenshots.start()
+        screenshotRecording = record(screenshots.changes, into: store)
     }
 
     /// After a copy was stored or the settings trimmed the history.
@@ -255,6 +249,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         watcher = nil
         recording?.cancel()
         recording = nil
+        screenshots?.stop()
+        screenshots = nil
+        screenshotRecording?.cancel()
+        screenshotRecording = nil
     }
 
     /// The core never replaces a key by itself: the user decides whether to
@@ -288,6 +286,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task {
             if await History.startOverDefault() {
                 openHistory()
+            }
+        }
+    }
+}
+
+private extension AppDelegate {
+    /// Stores each change from `changes` until it finishes.
+    func record(_ changes: AsyncStream<PasteboardChange>, into store: ClipStore) -> Task<Void, Never> {
+        Task { [weak self] in
+            for await change in changes {
+                // One change at a time keeps the history in copy order.
+                let outcome = await Task.detached(priority: .utility) { () -> (changed: Bool, itemCount: UInt64?) in
+                    switch ClipboardRecorder.record(change, in: store) {
+                    case .added?: (true, try? store.count())
+                    case .bumped?: (true, nil)
+                    default: (false, nil)
+                    }
+                }.value
+                if outcome.changed {
+                    self?.historyChanged(itemCount: outcome.itemCount)
+                }
             }
         }
     }

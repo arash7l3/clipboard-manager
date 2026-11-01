@@ -34,11 +34,40 @@ enum Accessibility {
             logger.error("could not build the paste key events")
             return
         }
-        // Only Command, whatever modifiers the user may still be holding.
-        keyDown.flags = .maskCommand
-        keyUp.flags = .maskCommand
+        // Only Command, whatever modifiers the user may still be holding,
+        // with the left Command key's own bit as a real key press has it.
+        let flags = CGEventFlags(rawValue: CGEventFlags.maskCommand.rawValue | leftCommandKey)
+        keyDown.flags = flags
+        keyUp.flags = flags
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
+    }
+
+    /// The device-dependent flag of the left Command key (NX_DEVICELCMDKEYMASK).
+    private static let leftCommandKey: UInt64 = 0x8
+
+    /// Makes the app in front resign and regain active status, so it looks at
+    /// the pasteboard again. Clipo becomes active for a moment and hands back.
+    /// Does nothing if Clipo itself is in front.
+    @MainActor
+    static func reactivateFrontmostApp() async {
+        guard let target = NSWorkspace.shared.frontmostApplication,
+              target.processIdentifier != NSRunningApplication.current.processIdentifier
+        else {
+            return
+        }
+        NSApp.activate()
+        for _ in 0..<10 where !NSApp.isActive {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        NSApp.yieldActivation(to: target)
+        _ = target.activate(from: .current, options: [])
+        for _ in 0..<25 where !target.isActive {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        if !target.isActive {
+            logger.error("the app in front did not become active again before the paste")
+        }
     }
 
     /// Explains why auto-paste needs the permission and offers to grant it.

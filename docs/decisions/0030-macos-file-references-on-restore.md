@@ -17,3 +17,5 @@ A script reading Finder's reference URL got a plain path, so which bad path Clip
 **Consequences.**
 - An old item holding a reference path whose file has since been deleted cannot be resolved; picking it now beeps and keeps the clipboard as it was.
 - Images and text were not affected: they are written as data, and a check showed a PNG lands on the pasteboard with TIFF added by macOS.
+
+**Update (0.1.7).** A later check found that reference URLs were not the cause: Finder received the paste and did nothing. Decision 0031 has the findings and the change.

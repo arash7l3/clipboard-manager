@@ -341,12 +341,15 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Clipo;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.arash7l3.Clipo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -368,12 +371,15 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Clipo;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "Clipo adds the screenshots you take to your clipboard history.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.arash7l3.Clipo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -390,7 +396,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(MARKETING_VERSION)";
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.arash7l3.ClipoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -408,7 +414,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(MARKETING_VERSION)";
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.1.6;
+				MARKETING_VERSION = 0.1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.arash7l3.ClipoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

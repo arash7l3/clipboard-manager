@@ -9,6 +9,7 @@ import Testing
 private final class Effects {
     var pastes = 0
     var writes = 0
+    var refreshes = 0
 }
 
 /// Ids moved to the top, which happens on a background task, so it locks.
@@ -59,6 +60,7 @@ struct ItemRestorerTests {
         restorer.autoPasteEnabled = { autoPaste }
         restorer.hasAccessibility = { accessibility }
         restorer.sendPaste = { [effects] in effects.pastes += 1 }
+        restorer.refreshTarget = { [effects] in effects.refreshes += 1 }
         return restorer
     }
 
@@ -134,6 +136,31 @@ struct ItemRestorerTests {
         #expect(outcome == .pasted)
         #expect(board.pasteboard.string(forType: .string) == "one")
         #expect(effects.pastes == 1)
+        // Text pastes as before; only files and images refresh the app first.
+        #expect(effects.refreshes == 0)
+    }
+
+    private func filesItem(_ id: Int64) -> ClipItem {
+        ClipItem(
+            id: id,
+            content: .files(files: [FileRef(path: "/tmp/clipo-folder", sizeBytes: nil)]),
+            pinned: false,
+            sourceApp: nil,
+            createdAt: Rows.copiedAt,
+            lastCopiedAt: Rows.copiedAt
+        )
+    }
+
+    @Test(arguments: [true, false])
+    func filesRefreshTheAppInFrontFirst(autoPaste: Bool) async {
+        let restorer = restorer(items: [filesItem(9)], autoPaste: autoPaste)
+
+        let outcome = await restorer.restore(Rows.text(9, "clipo-folder"))
+
+        // Also when the user pastes: their own Cmd+V needs the refresh too.
+        #expect(outcome == (autoPaste ? .pasted : .restored))
+        #expect(effects.refreshes == 1)
+        #expect(effects.pastes == (autoPaste ? 1 : 0))
     }
 
     @Test func withoutPermissionTheItemIsRestoredButNotPasted() async {
