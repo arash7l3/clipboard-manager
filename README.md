@@ -46,7 +46,7 @@ To build a dmg (Release, arm64 + x86_64) into `macos/build/dist/`:
 macos/scripts/make-dmg.sh
 ```
 
-Without `CLIPO_SIGN_IDENTITY` and `CLIPO_NOTARY_PROFILE` the dmg is ad-hoc signed. CI builds it for a `v*` tag or a manual run of the "macOS dmg" workflow and uploads `Clipo-macos-dmg`. See [decision 0023](docs/decisions/0023-macos-dmg-and-signing.md) for signing and notarization.
+Without `CLIPO_SIGN_IDENTITY` and `CLIPO_NOTARY_PROFILE` the dmg is signed with a self-signed certificate that `macos/scripts/self-signing.sh` keeps on the build Mac, so macOS keeps Clipo's Accessibility permission across updates; the file is `Clipo-<version>-selfsigned.dmg`. CI builds it for a `v*` tag or a manual run of the "macOS dmg" workflow and uploads `Clipo-macos-dmg`. See [decision 0023](docs/decisions/0023-macos-dmg-and-signing.md) for signing and notarization.
 
 ## Building the Windows app
 
@@ -82,11 +82,11 @@ See [decision 0014](docs/decisions/0014-windows-app-shell.md) for how the app st
 
 ## Install
 
-Pushing a `v*` tag builds the macOS dmg and the Windows MSIX and attaches them, with their `.sha256` files, to a GitHub release (marked pre-release). Without a tag, run the "macOS dmg" or "Windows MSIX" workflow by hand and download its artifact; the plain Windows build is the `Clipo-win-x64` artifact of the "Windows" workflow. Artifacts expire after 14 to 30 days; release files do not.
+Pushing a `v*` tag builds the macOS dmg and the Windows MSIX and attaches them, with their `.sha256` files, to a GitHub release, marked as the latest release. Without a tag, run the "macOS dmg" or "Windows MSIX" workflow by hand and download its artifact; the plain Windows build is the `Clipo-win-x64` artifact of the "Windows" workflow. Artifacts expire after 14 to 30 days; release files do not.
 
-- **macOS:** open the dmg, drag Clipo to Applications, and the first time open it from System Settings > Privacy & Security > Open Anyway.
+- **macOS:** open the dmg, drag Clipo to Applications, and the first time open it from System Settings > Privacy & Security > Open Anyway. For auto-paste, turn Clipo on in Privacy & Security > Accessibility. Coming from 0.1.3 or older, remove Clipo there with "−" first and add it again: those builds were signed differently.
 - **Windows:** in an administrator PowerShell, run `Import-Certificate -FilePath .\Clipo-test-signing.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople`, then `Add-AppxPackage .\Clipo-<version>-x64-selfsigned.msix`.
 
 ## Requirements
 
-macOS 14+ or Windows 11. Builds are unsigned (macOS) or test-signed (Windows MSIX) for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.
+macOS 14+ or Windows 11. Builds are self-signed (macOS) or test-signed (Windows MSIX) for now. On macOS, open the app the first time from System Settings > Privacy & Security > Open Anyway.

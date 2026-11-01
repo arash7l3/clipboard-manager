@@ -26,13 +26,15 @@ public enum RestoreOutcome
 /// <param name="autoPaste">Whether to paste after restoring, read at each pick.</param>
 /// <param name="paste">Sends Ctrl+V to the app in front.</param>
 /// <param name="plainText">Loads an item's plain text by id, for pasting without formatting; <c>null</c> if it has none, such as an image. Disk I/O, so it runs off the UI thread.</param>
+/// <param name="writeSnippet">Puts a snippet on the clipboard without telling the watcher to skip it, so the history records it like any copy. <paramref name="write"/> if not given.</param>
 public sealed class ItemRestorer(
     Func<long, ClipItem?> load,
     Func<ItemContent, Task<bool>> write,
     Action<long> bump,
     Func<bool> autoPaste,
     Action paste,
-    Func<long, string?>? plainText = null)
+    Func<long, string?>? plainText = null,
+    Func<ItemContent, Task<bool>>? writeSnippet = null)
 {
     /// <summary>Pause between giving the app underneath its focus back and pressing Ctrl+V.</summary>
     public static readonly TimeSpan PasteDelay = TimeSpan.FromMilliseconds(120);
@@ -71,13 +73,14 @@ public sealed class ItemRestorer(
     }
 
     /// <summary>
-    /// Puts a snippet's <paramref name="text"/> on the clipboard as plain text.
-    /// A snippet is not history, so nothing moves to the top.
+    /// Puts a snippet's <paramref name="text"/> on the clipboard as plain
+    /// text. The watcher records it like any copy, so it shows at the top of
+    /// the history; the snippet itself stays as it is.
     /// </summary>
     public async Task<RestoreOutcome> RestoreTextAsync(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        if (text.Length == 0 || !await write(new ItemContent.Text(new TextContent(text))).ConfigureAwait(true))
+        if (text.Length == 0 || !await (writeSnippet ?? write)(new ItemContent.Text(new TextContent(text))).ConfigureAwait(true))
         {
             return RestoreOutcome.Unavailable;
         }

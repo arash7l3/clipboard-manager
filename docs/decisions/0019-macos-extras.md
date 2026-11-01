@@ -12,3 +12,5 @@ Status: accepted
 **Why.** Option and Cmd+digit keep the popup's one-keyboard-focus design (ADR 0011). A menu is the lightest place for snippets that does not mix them into history ranking or tabs.
 
 **Consequences.** Snippets cannot be searched from the popup yet; they are a short list in a menu.
+
+**Update (0.1.4).** A snippet picked from the menu is now recorded in the history like any copy (decision 0029).

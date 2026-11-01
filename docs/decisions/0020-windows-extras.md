@@ -15,3 +15,5 @@ Status: accepted
 - Snippets cannot be searched from the popup yet; they are a short list in a menu.
 - The export file is written wherever the user chose; Windows gives it that folder's access rules, and Clipo cannot make it user-only the way the Mac app does. The warning dialog and the note in Settings say it holds everything in the clear.
 - Compiled only by CI (no Windows machine here); the checklist for a first run on a PC is in the PR.
+
+**Update (0.1.4).** A snippet picked from the tray menu is now recorded in the history like any copy (decision 0029).

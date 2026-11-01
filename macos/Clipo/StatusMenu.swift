@@ -264,10 +264,9 @@ final class StatusMenu: NSObject {
     @objc private func showAbout() {
         // A menu-bar app is not active by default; bring the panel to the front.
         NSApp.activate()
-        // The panel's own lookup of the icon came up empty for this menu-bar
-        // app, so it is handed the bundle's icon file (AppIcon.icns).
-        let icon = NSImage(named: "AppIcon") ?? NSApp.applicationIconImage
-        NSApp.orderFrontStandardAboutPanel(options: [.applicationIcon: icon as Any])
+        // Handed over explicitly: the panel's own lookup came up blank before.
+        // AppDelegate sets this image from AppIcon.icns at launch.
+        NSApp.orderFrontStandardAboutPanel(options: [.applicationIcon: NSApp.applicationIconImage as Any])
     }
 }
 

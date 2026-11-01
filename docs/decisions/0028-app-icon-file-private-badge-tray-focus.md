@@ -16,3 +16,5 @@ Status: accepted
 - The private-mode icon is no longer orange; the badge, the tooltip and the checked menu item show it. Template images follow the menu bar's tint in light and dark mode.
 - macOS may keep showing a cached blank icon for an app it saw before. Replacing the app in Applications usually refreshes it; if not, `killall Dock` or a restart does. The Accessibility list may need Clipo removed and added again.
 - The foreground watcher skips the Windows shell by window class (`ShellSurfaces`); a shell surface missing from that list would receive the paste, as before.
+
+**Update (0.1.4).** The blank icon was the system's cache for an unchanged bundle id and build number, not the icon format; decision 0029 gives each release its own build number and sets the icon inside the app.
