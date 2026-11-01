@@ -89,7 +89,7 @@ public partial class App : Application
         popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
-            WriteToClipboardAsync,
+            content => WriteToClipboardAsync(content),
             id => _store?.Touch(id, DateTime.UtcNow),
             () => _settings.AutoPaste,
             () => Desktop.SendPaste(),
