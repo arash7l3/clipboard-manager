@@ -16,6 +16,22 @@ final class TestPasteboard {
         }
     }
 
+    /// A new five-byte file in the temporary folder; the caller deletes it.
+    static func temporaryFile() throws -> URL {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("clipo-test-\(UUID().uuidString).txt")
+        try Data("12345".utf8).write(to: file)
+        return file
+    }
+
+    /// The `file:///.file/id=…` form of `url`, as Finder puts it on the pasteboard.
+    static func referenceString(for url: URL) throws -> String {
+        // The Objective-C method: Swift's URL would turn the reference back into a path.
+        let result = (url as NSURL).perform(#selector(NSURL.fileReferenceURL))
+        let reference = try #require(result?.takeUnretainedValue() as? NSURL)
+        return try #require(reference.absoluteString)
+    }
+
     /// A tiny PNG of `width` by `height` pixels.
     static func png(width: Int, height: Int) throws -> Data {
         let bitmap = try #require(NSBitmapImageRep(
@@ -118,6 +134,25 @@ struct PasteboardReaderTests {
         #expect(files.count == 1)
         #expect(files.first?.path.hasSuffix(file.lastPathComponent) == true)
         #expect(files.first?.sizeBytes == 5)
+    }
+
+    @Test func finderFileReferencesAreKeptAsPaths() throws {
+        let file = try TestPasteboard.temporaryFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let item = NSPasteboardItem()
+        item.setString(try TestPasteboard.referenceString(for: file), forType: .fileURL)
+        board.pasteboard.clearContents()
+        #expect(board.pasteboard.writeObjects([item]))
+
+        guard case let .files(urls)? = PasteboardReader.content(of: board.pasteboard) else {
+            Issue.record("files are read")
+            return
+        }
+        let path = try #require(urls.first?.path)
+        #expect(urls.count == 1)
+        #expect(!path.hasPrefix(PasteboardReader.referencePrefix))
+        #expect(FileManager.default.fileExists(atPath: path))
+        #expect(urls.first?.lastPathComponent == file.lastPathComponent)
     }
 
     @Test func tooManyFilesAreNotKept() {

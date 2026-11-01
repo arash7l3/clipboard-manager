@@ -58,6 +58,36 @@ struct PasteboardWriterTests {
         #expect(urls?.map(\.path) == ["/tmp/b.txt", "/tmp/a.txt"])
     }
 
+    @Test func storedFileReferencePathStillRestores() throws {
+        // Items captured before 0.1.6 kept Finder's reference path.
+        let file = try TestPasteboard.temporaryFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let stored = String(try TestPasteboard.referenceString(for: file).dropFirst("file://".count))
+        #expect(stored.hasPrefix(PasteboardReader.referencePrefix))
+
+        let content = ItemContent.files(files: [FileRef(path: stored, sizeBytes: 5)])
+        let written = PasteboardWriter.write(content, to: board.pasteboard)
+
+        let urls = board.pasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL] ?? []
+        #expect(written)
+        #expect(urls.count == 1)
+        #expect(urls.first.map { FileManager.default.fileExists(atPath: $0.path) } == true)
+        #expect(urls.first?.lastPathComponent == file.lastPathComponent)
+    }
+
+    @Test func filesWithoutUsablePathsLeaveTheClipboardAlone() {
+        board.set("before")
+        let files = [FileRef(path: "", sizeBytes: nil), FileRef(path: "relative/a.txt", sizeBytes: nil)]
+
+        let written = PasteboardWriter.write(.files(files: files), to: board.pasteboard)
+
+        #expect(!written)
+        #expect(board.pasteboard.string(forType: .string) == "before")
+    }
+
     @Test func restoredItemReadsBackLikeTheOriginal() throws {
         // What the reader captures from a copy is what the writer restores.
         board.set("round trip", extra: [.html: Data("<i>round trip</i>".utf8)])

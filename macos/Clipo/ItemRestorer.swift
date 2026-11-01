@@ -1,5 +1,6 @@
 import AppKit
 import ClipoCore
+import os
 
 /// Puts the item the user picked back on the clipboard and, if auto-paste is
 /// on, pastes it into the app that was in front.
@@ -17,6 +18,8 @@ final class ItemRestorer {
         /// The item could not be loaded or the pasteboard refused it.
         case unavailable
     }
+
+    private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "paste")
 
     /// Pause between the popup closing and Cmd+V: the app underneath has to
     /// become the key window again first.
@@ -53,9 +56,14 @@ final class ItemRestorer {
             else { return .unavailable }
         } else {
             let load = self.load
-            guard let item = await Task.detached(priority: .userInitiated, operation: { load(id) }).value,
-                  PasteboardWriter.write(item.content, to: pasteboard)
-            else { return .unavailable }
+            guard let item = await Task.detached(priority: .userInitiated, operation: { load(id) }).value else {
+                return .unavailable
+            }
+            guard PasteboardWriter.write(item.content, to: pasteboard) else {
+                // An id only, never the item's content.
+                Self.logger.error("the pasteboard did not take item \(id, privacy: .public)")
+                return .unavailable
+            }
         }
         didWrite()
 
