@@ -17,7 +17,7 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap desktop rescap">
 
-  <Identity Name="io.github.arash7l3.Clipo" Publisher="CN=Clipo" Version="0.1.6.0" />
+  <Identity Name="io.github.arash7l3.Clipo" Publisher="CN=Clipo" Version="0.1.7.0" />
 
   <Properties>
     <DisplayName>Clipo</DisplayName>

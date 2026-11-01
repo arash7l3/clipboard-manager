@@ -44,6 +44,13 @@ public sealed partial class PopupWindow : Window
 
     /// <summary>The window that was in front before the popup opened; it gets the focus back.</summary>
     private nint _previous;
+
+    /// <summary>
+    /// Asked for the window to give the focus back to when the popup opens.
+    /// The app passes one that skips the taskbar, which is in front after a
+    /// click on the tray icon.
+    /// </summary>
+    public Func<nint> WindowInFront { get; set; } = Desktop.ForegroundWindow;
     private bool _allowClose;
 
     public PopupWindow(PopupModel model)
@@ -124,7 +131,7 @@ public sealed partial class PopupWindow : Window
         {
             return;
         }
-        _previous = Desktop.ForegroundWindow();
+        _previous = WindowInFront();
         _ = _model.ResetAsync(StartCategory(_model.Category));
         SearchBox.Text = "";
         ShowTab();

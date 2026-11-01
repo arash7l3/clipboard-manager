@@ -16,6 +16,20 @@ public static class ShellSurfaces
         "XamlExplorerHostIslandWindow",
     };
 
+    private const long ToolWindow = 0x80;
+
     /// <summary>Whether a window of class <paramref name="className"/> belongs to the shell rather than to an app.</summary>
     public static bool Contains(string? className) => className is not null && s_classNames.Contains(className);
+
+    /// <summary>
+    /// Whether a window counts as one the user works in: another process's,
+    /// shown, not a tool window (the taskbar, its flyouts and Clipo's own
+    /// helper windows are) and not one of the shell's surfaces.
+    /// </summary>
+    public static bool CountsAsApp(uint processId, uint ownProcessId, string? className, bool visible, long extendedStyle) =>
+        processId != 0
+        && processId != ownProcessId
+        && visible
+        && (extendedStyle & ToolWindow) == 0
+        && !Contains(className);
 }

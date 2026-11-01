@@ -8,8 +8,9 @@ namespace Clipo.Services;
 
 /// <summary>
 /// Remembers the last window the user worked in outside Clipo and the
-/// taskbar. A tray menu opens with the taskbar in front, so a snippet picked
-/// there is pasted into this window instead. Create it on the UI thread,
+/// taskbar. The tray icon is clicked with the taskbar in front, so a snippet
+/// picked in its menu, or an item picked in the popup it opens, is pasted
+/// into this window instead. Create it on the UI thread,
 /// which must run a message loop (WinUI does), and dispose it there.
 /// </summary>
 [SupportedOSPlatform("windows")]
@@ -18,6 +19,7 @@ public sealed unsafe class ForegroundTracker : IDisposable
     private const uint EventSystemForeground = 0x3;
     private const uint OutOfContext = 0x0;
     private const int ClassNameLength = 64;
+    private const int ExtendedStyle = -20;
 
     /// <summary>Trackers are found by hook, because the callback is a plain function.</summary>
     private static readonly Dictionary<nint, ForegroundTracker> s_trackers = [];
@@ -42,6 +44,17 @@ public sealed unsafe class ForegroundTracker : IDisposable
     /// <summary>The last app window that was in front, or 0 if none was seen yet.</summary>
     public nint LastAppWindow { get; private set; }
 
+    /// <summary>
+    /// The window in front if it is an app's, otherwise the last app window
+    /// that was. A click on the tray icon puts the taskbar in front first, so
+    /// the window in front alone would hand the focus back to the taskbar.
+    /// </summary>
+    public nint AppWindowInFront()
+    {
+        var window = NativeMethods.GetForegroundWindow();
+        return IsAppWindow(window) ? window : LastAppWindow;
+    }
+
     public void Dispose()
     {
         if (_hook == 0)
@@ -55,16 +68,25 @@ public sealed unsafe class ForegroundTracker : IDisposable
 
     private void Note(nint window)
     {
+        if (IsAppWindow(window))
+        {
+            LastAppWindow = window;
+        }
+    }
+
+    private static bool IsAppWindow(nint window)
+    {
         if (window == 0)
         {
-            return;
+            return false;
         }
         NativeMethods.GetWindowThreadProcessId(window, out var processId);
-        if (processId == 0 || processId == (uint)Environment.ProcessId || ShellSurfaces.Contains(ClassOf(window)))
-        {
-            return;
-        }
-        LastAppWindow = window;
+        return ShellSurfaces.CountsAsApp(
+            processId,
+            (uint)Environment.ProcessId,
+            ClassOf(window),
+            NativeMethods.IsWindowVisible(window),
+            NativeMethods.GetWindowLongPtr(window, ExtendedStyle));
     }
 
     private static string? ClassOf(nint window)

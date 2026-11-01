@@ -102,6 +102,9 @@ internal sealed class Shell : IDisposable
         }
     }
 
+    /// <summary>The app window to paste into: the one in front, or the last one if the taskbar is.</summary>
+    public nint AppWindowInFront() => _foreground.AppWindowInFront();
+
     /// <summary>The window that owns what Clipo writes to the clipboard.</summary>
     public nint ClipboardOwner => _messages.Handle;
 

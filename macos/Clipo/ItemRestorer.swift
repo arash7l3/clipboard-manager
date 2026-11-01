@@ -38,6 +38,9 @@ final class ItemRestorer {
     var autoPasteEnabled: () -> Bool = { PasteSettings.autoPaste() }
     var hasAccessibility: () -> Bool = { Accessibility.isGranted }
     var sendPaste: @MainActor () -> Void = { Accessibility.sendPaste() }
+    /// Lets the app in front resign and regain active status before a file
+    /// or an image is pasted, so it reads the pasteboard again.
+    var refreshTarget: @MainActor () async -> Void = { await Accessibility.reactivateFrontmostApp() }
 
     private let pasteboard: NSPasteboard
 
@@ -49,6 +52,7 @@ final class ItemRestorer {
     /// `plainText` is set. An image has no plain text and is `.unavailable`.
     func restore(_ preview: ItemPreview, plainText: Bool = false) async -> Outcome {
         let id = preview.id
+        var isText = true
         if plainText {
             let load = loadPlainText
             guard let text = await Task.detached(priority: .userInitiated, operation: { load(id) }).value,
@@ -59,6 +63,7 @@ final class ItemRestorer {
             guard let item = await Task.detached(priority: .userInitiated, operation: { load(id) }).value else {
                 return .unavailable
             }
+            isText = item.content.isText
             guard PasteboardWriter.write(item.content, to: pasteboard) else {
                 // An id only, never the item's content.
                 Self.logger.error("the pasteboard did not take item \(id, privacy: .public)")
@@ -69,7 +74,7 @@ final class ItemRestorer {
 
         let bump = self.bump
         Task.detached(priority: .utility) { bump(id) }
-        return await pasteIfWanted()
+        return await pasteIfWanted(refreshingTarget: !isText)
     }
 
     /// Puts `text`, for example a snippet, on the clipboard as plain text.
@@ -85,11 +90,28 @@ final class ItemRestorer {
         return pasteboard.setString(text, forType: .string)
     }
 
-    private func pasteIfWanted() async -> Outcome {
+    /// With `refreshingTarget`, the app in front first resigns and regains
+    /// active status, whether Clipo pastes or the user does. The popup never
+    /// activates Clipo, so the app stays active throughout; Finder then keeps
+    /// its old idea of what it can paste, and Cmd+V with files on the
+    /// pasteboard did nothing there.
+    private func pasteIfWanted(refreshingTarget: Bool = false) async -> Outcome {
+        if refreshingTarget {
+            await refreshTarget()
+        }
         guard autoPasteEnabled() else { return .restored }
         guard hasAccessibility() else { return .needsAccessibility }
         try? await Task.sleep(for: Self.pasteDelay)
         sendPaste()
         return .pasted
+    }
+}
+
+private extension ItemContent {
+    var isText: Bool {
+        if case .text = self {
+            return true
+        }
+        return false
     }
 }
