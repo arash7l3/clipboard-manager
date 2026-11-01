@@ -31,3 +31,5 @@ Status: accepted. Replaces the "5.2 is blocked" part of decision 0006.
 - An ad-hoc signature changes with every build. After each update macOS asks again before giving Clipo its key from the keychain, and Accessibility (for auto-paste) has to be granted again. A Developer ID signature keeps both across updates.
 - Moving the key to the data protection keychain (decision 0009) is not done yet. It needs a keychain access group entitlement, which on macOS needs a provisioning profile from the developer account; an ad-hoc app with that entitlement does not launch. It moves to a later step, once the account exists, with a one-time key migration that copies the key, reads it back and only then deletes the login keychain item.
 - The app has no icon yet, so Finder shows the generic app icon in the dmg and in Applications.
+
+**Update (0.1.4).** Without a Developer ID the app is no longer ad-hoc signed but signed with a self-signed certificate kept on the build Mac, the same in every build, so Accessibility and keychain access survive updates (decision 0029). The file is `Clipo-<version>-selfsigned.dmg`.

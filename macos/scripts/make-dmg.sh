@@ -7,8 +7,12 @@
 #
 # Signing comes from the environment (decision 0023):
 #   CLIPO_SIGN_IDENTITY   A "Developer ID Application: ..." identity in the keychain.
-#                         Unset: an ad-hoc signature. The dmg runs, but Gatekeeper
-#                         blocks it on other Macs until it is opened from Settings.
+#                         Unset: the self-signed identity that self-signing.sh keeps
+#                         on this Mac, the same in every build, so macOS keeps
+#                         Clipo's Accessibility permission across updates. The dmg
+#                         runs, but Gatekeeper blocks it on other Macs until it is
+#                         opened from Settings.
+#   CLIPO_SELF_SIGN       Set to 0 for an ad-hoc signature instead of the self-signed one.
 #   CLIPO_NOTARY_PROFILE  A notarytool keychain profile (xcrun notarytool
 #                         store-credentials). Set: the app and the dmg are notarized
 #                         and stapled. Needs CLIPO_SIGN_IDENTITY.
@@ -42,6 +46,14 @@ if [[ -n $identity ]]; then
         fail "no valid signing identity named \"$identity\" in the keychain"
 fi
 
+self_hash=
+self_keychain=
+if [[ -z $identity && ${CLIPO_SELF_SIGN:-1} != 0 ]]; then
+    self_identity=$("$macos_dir/scripts/self-signing.sh")
+    self_hash=${self_identity%%$'\t'*}
+    self_keychain=${self_identity#*$'\t'}
+fi
+
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
@@ -59,11 +71,18 @@ staging=$work/dmg
 app=$staging/Clipo.app
 mkdir -p "$staging"
 ditto "$derived/Build/Products/Release/Clipo.app" "$app"
+# The build folder keeps the bundle from the first build; a fresh date tells
+# Finder and Launch Services that the app changed.
+touch "$app"
 
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
 if [[ -n ${CLIPO_EXPECT_VERSION:-} && $version != "$CLIPO_EXPECT_VERSION" ]]; then
     fail "the app's version is $version, expected $CLIPO_EXPECT_VERSION (MARKETING_VERSION)"
 fi
+# macOS caches an app's icon by bundle id and build number; one build number
+# for every release kept a blank icon from an early build (decision 0029).
+build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/Info.plist")
+[[ $build == "$version" ]] || fail "the build number is $build, expected $version (CURRENT_PROJECT_VERSION)"
 icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist" 2>/dev/null || true)
 [[ -n $icon && -f $app/Contents/Resources/${icon%.icns}.icns ]] ||
     fail "the app has no icon file (CFBundleIconFile: ${icon:-unset})"
@@ -71,10 +90,12 @@ archs=$(lipo -archs "$app/Contents/MacOS/Clipo")
 [[ $archs == *arm64* && $archs == *x86_64* ]] || fail "the app is not universal: $archs"
 
 # Hardened runtime, no entitlements. A secure timestamp is required for
-# notarization; ad-hoc signatures can't have one.
+# notarization; self-signed and ad-hoc signatures don't get one.
 sign() {
     if [[ -n $identity ]]; then
         codesign --force --options runtime --timestamp --sign "$identity" "$1"
+    elif [[ -n $self_hash ]]; then
+        codesign --force --options runtime --timestamp=none --keychain "$self_keychain" --sign "$self_hash" "$1"
     else
         codesign --force --options runtime --timestamp=none --sign - "$1"
     fi
@@ -82,7 +103,13 @@ sign() {
 
 # The core is linked statically, so nothing should be nested; sign anything
 # that is, innermost first, before the app itself.
-echo "==> Signing with ${identity:-an ad-hoc signature}"
+if [[ -n $identity ]]; then
+    echo "==> Signing with $identity"
+elif [[ -n $self_hash ]]; then
+    echo "==> Signing with the self-signed identity $self_hash"
+else
+    echo "==> Signing with an ad-hoc signature"
+fi
 while IFS= read -r -d '' nested; do
     sign "$nested"
 done < <(find "$app/Contents" -depth \( -name '*.framework' -o -name '*.dylib' -o -name '*.xpc' \) -print0)
@@ -91,6 +118,13 @@ codesign --verify --strict --deep --verbose=2 "$app"
 details=$(codesign --display --verbose=2 "$app" 2>&1)
 grep -q '^CodeDirectory .*flags=.*runtime' <<<"$details" ||
     fail "the app was signed without the hardened runtime"
+# What macOS matches the Accessibility permission against: a certificate,
+# not one build's hash, unless the signature is ad-hoc.
+requirement=$(codesign --display --requirements - "$app" 2>&1 | grep '^designated' || true)
+echo "    $requirement"
+if [[ -n $identity || -n $self_hash ]] && [[ $requirement != *certificate* ]]; then
+    fail "the app's designated requirement names no certificate"
+fi
 
 # Submits a file and waits; prints the notary log and fails unless accepted.
 notarize() {
@@ -119,7 +153,11 @@ fi
 ln -s /Applications "$staging/Applications"
 
 suffix=
-[[ -n $identity ]] || suffix=-unsigned
+if [[ -n $self_hash ]]; then
+    suffix=-selfsigned
+elif [[ -z $identity ]]; then
+    suffix=-unsigned
+fi
 mkdir -p "$out_dir"
 dmg=$(cd "$out_dir" && pwd)/Clipo-$version$suffix.dmg
 rm -f "$dmg" "$dmg.sha256"

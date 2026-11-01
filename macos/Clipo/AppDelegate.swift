@@ -21,6 +21,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // The icon file in the bundle, not the system's cached icon for this
+        // bundle id, which stayed blank across updates. Alerts and the About
+        // panel use this image.
+        if let icon = NSImage(named: "AppIcon") {
+            NSApp.applicationIconImage = icon
+        }
         // Unit tests are hosted in the app. They build what they test
         // themselves and must not touch the user's keychain or history.
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }

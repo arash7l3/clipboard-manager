@@ -72,3 +72,9 @@ Record anything that fails as a new step in `PLAN.md`.
 
 - [ ] After installing the new dmg, Clipo shows its blue clipboard icon in Finder, Spotlight, the About panel and System Settings > Privacy & Security > Accessibility.
 - [ ] Private mode keeps the clipboard in the menu bar with a small crossed-out eye at its bottom-right, in light and dark menu bars.
+
+## Signing, icon cache and snippets (0.1.4), still to try on a Mac
+
+- [ ] After removing the old Clipo from Privacy & Security > Accessibility and adding 0.1.4, auto-paste works; after installing a later build over it, auto-paste still works without granting again.
+- [ ] Clipo's alerts (Clear History…, the Accessibility explanation) show the blue clipboard icon.
+- [ ] Picking a snippet from the menu-bar Snippets submenu puts it on the clipboard, pastes it with auto-paste on, and it shows at the top of the history.
