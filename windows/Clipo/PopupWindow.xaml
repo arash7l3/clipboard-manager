@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   The history popup: a search field, category tabs and the list of items.
-  The search field keeps the keyboard; see PopupWindow.xaml.cs.
+  Nothing in it takes the focus: the app underneath keeps it, and the
+  popup's keys reach it another way; see PopupWindow.xaml.cs.
 -->
 <Window
     x:Class="Clipo.PopupWindow"
@@ -21,8 +22,9 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBox x:Name="SearchBox" x:Uid="SearchBox" IsSpellCheckEnabled="False"
-                 TextChanged="OnSearchChanged" PreviewKeyDown="OnSearchKeyDown" />
+        <!-- Shows the search typed into the popup; read-only, because it never has the focus. -->
+        <TextBox x:Name="SearchBox" x:Uid="SearchBox" IsSpellCheckEnabled="False" IsReadOnly="True"
+                 IsTabStop="False" AllowFocusOnInteraction="False" IsHitTestVisible="False" />
 
         <Grid Grid.Row="1" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
@@ -30,13 +32,13 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Tab and Shift+Tab in the search field switch tabs, so the bar never takes the keyboard. -->
-            <SelectorBar x:Name="Tabs" x:Uid="Tabs" IsTabStop="False" SelectionChanged="OnTabChanged">
-                <SelectorBarItem x:Uid="TabAll" IsSelected="True" />
-                <SelectorBarItem x:Uid="TabText" />
-                <SelectorBarItem x:Uid="TabImages" />
-                <SelectorBarItem x:Uid="TabFiles" />
-                <SelectorBarItem x:Uid="TabPinned" />
+            <!-- Tab and Shift+Tab switch tabs, so the bar never takes the keyboard. -->
+            <SelectorBar x:Name="Tabs" x:Uid="Tabs" IsTabStop="False" AllowFocusOnInteraction="False" SelectionChanged="OnTabChanged">
+                <SelectorBarItem x:Uid="TabAll" IsSelected="True" AllowFocusOnInteraction="False" />
+                <SelectorBarItem x:Uid="TabText" AllowFocusOnInteraction="False" />
+                <SelectorBarItem x:Uid="TabImages" AllowFocusOnInteraction="False" />
+                <SelectorBarItem x:Uid="TabFiles" AllowFocusOnInteraction="False" />
+                <SelectorBarItem x:Uid="TabPinned" AllowFocusOnInteraction="False" />
             </SelectorBar>
 
             <!-- Clears the tab; the first click arms it and a second one within a few seconds clears. -->

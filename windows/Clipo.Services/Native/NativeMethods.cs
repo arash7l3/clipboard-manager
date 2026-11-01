@@ -88,6 +88,40 @@ internal static unsafe partial class NativeMethods
         public nint ExtraInfo;
     }
 
+    /// <summary>MSG from winuser.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WindowMessage
+    {
+        public nint Window;
+        public uint Message;
+        public nint WParam;
+        public nint LParam;
+        public uint Time;
+        public Point Point;
+    }
+
+    /// <summary>KBDLLHOOKSTRUCT from winuser.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct KeyboardHookInfo
+    {
+        public uint VirtualKey;
+        public uint ScanCode;
+        public uint Flags;
+        public uint Time;
+        public nuint ExtraInfo;
+    }
+
+    /// <summary>MSLLHOOKSTRUCT from winuser.h.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MouseHookInfo
+    {
+        public Point Point;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public nuint ExtraInfo;
+    }
+
     /// <summary>WNDCLASSEXW from winuser.h.</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct WindowClass
@@ -239,6 +273,23 @@ internal static unsafe partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetForegroundWindow(nint window);
 
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    public static partial nint SetWindowLongPtr(nint window, int index, nint value);
+
+    [LibraryImport("user32.dll", EntryPoint = "CallWindowProcW")]
+    public static partial nint CallWindowProc(nint procedure, nint window, uint message, nint wParam, nint lParam);
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWindowPos(nint window, nint insertAfter, int x, int y, int width, int height, uint flags);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint WindowFromPoint(Point point);
+
+    [LibraryImport("user32.dll", EntryPoint = "EnumChildWindows")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool EnumChildWindows(nint parent, nint callback, nint parameter);
+
     [LibraryImport("user32.dll", EntryPoint = "GetClassNameW")]
     public static partial int GetClassName(nint window, char* name, int maxChars);
 
@@ -265,6 +316,42 @@ internal static unsafe partial class NativeMethods
 
     [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW", StringMarshalling = StringMarshalling.Utf16)]
     public static partial nint GetModuleHandle(string? name);
+
+    // Message loops, hooks and timers
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMessageW")]
+    public static partial int GetMessage(out WindowMessage message, nint window, uint filterMin, uint filterMax);
+
+    [LibraryImport("user32.dll", EntryPoint = "PeekMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PeekMessage(out WindowMessage message, nint window, uint filterMin, uint filterMax, uint remove);
+
+    [LibraryImport("user32.dll", EntryPoint = "DispatchMessageW")]
+    public static partial nint DispatchMessage(WindowMessage* message);
+
+    [LibraryImport("user32.dll", EntryPoint = "PostThreadMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PostThreadMessage(uint threadId, uint message, nint wParam, nint lParam);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
+
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowsHookExW", SetLastError = true)]
+    public static partial nint SetWindowsHookEx(int hookType, nint callback, nint module, uint threadId);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnhookWindowsHookEx(nint hook);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint CallNextHookEx(nint hook, int code, nint wParam, nint lParam);
+
+    [LibraryImport("user32.dll")]
+    public static partial nuint SetTimer(nint window, nuint id, uint milliseconds, nint callback);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool KillTimer(nint window, nuint id);
 
     // Shortcuts, the tray and menus
 
@@ -310,6 +397,15 @@ internal static unsafe partial class NativeMethods
     public static partial short GetKeyState(int virtualKey);
 
     [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int virtualKey);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint GetKeyboardLayout(uint threadId);
+
+    [LibraryImport("user32.dll")]
+    public static partial int ToUnicodeEx(uint virtualKey, uint scanCode, byte* keyState, char* buffer, int bufferSize, uint flags, nint layout);
+
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out Point point);
 
@@ -345,6 +441,9 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool CloseHandle(nint handle);
+
+    [LibraryImport("kernel32.dll", EntryPoint = "GetFinalPathNameByHandleW", SetLastError = true)]
+    public static partial uint GetFinalPathNameByHandle(nint file, char* path, uint maxChars, uint flags);
 
     [LibraryImport("kernel32.dll", EntryPoint = "QueryFullProcessImageNameW")]
     [return: MarshalAs(UnmanagedType.Bool)]

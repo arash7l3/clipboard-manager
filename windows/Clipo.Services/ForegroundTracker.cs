@@ -18,7 +18,6 @@ public sealed unsafe class ForegroundTracker : IDisposable
 {
     private const uint EventSystemForeground = 0x3;
     private const uint OutOfContext = 0x0;
-    private const int ClassNameLength = 64;
     private const int ExtendedStyle = -20;
 
     /// <summary>Trackers are found by hook, because the callback is a plain function.</summary>
@@ -40,6 +39,9 @@ public sealed unsafe class ForegroundTracker : IDisposable
         }
         s_trackers[_hook] = this;
     }
+
+    /// <summary>Raised on the UI thread with each window that comes to the front.</summary>
+    public event EventHandler<nint>? Changed;
 
     /// <summary>The last app window that was in front, or 0 if none was seen yet.</summary>
     public nint LastAppWindow { get; private set; }
@@ -84,16 +86,9 @@ public sealed unsafe class ForegroundTracker : IDisposable
         return ShellSurfaces.CountsAsApp(
             processId,
             (uint)Environment.ProcessId,
-            ClassOf(window),
+            Desktop.ClassName(window),
             NativeMethods.IsWindowVisible(window),
             NativeMethods.GetWindowLongPtr(window, ExtendedStyle));
-    }
-
-    private static string? ClassOf(nint window)
-    {
-        var name = stackalloc char[ClassNameLength];
-        var length = NativeMethods.GetClassName(window, name, ClassNameLength);
-        return length > 0 ? new string(name, 0, length) : null;
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -105,6 +100,7 @@ public sealed unsafe class ForegroundTracker : IDisposable
             if (kind == EventSystemForeground && s_trackers.TryGetValue(hook, out var tracker))
             {
                 tracker.Note(window);
+                tracker.Changed?.Invoke(tracker, window);
             }
         }
         catch (Exception e)

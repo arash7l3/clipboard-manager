@@ -18,3 +18,5 @@ Status: accepted. Amends decisions 0012, 0010 and 0028; corrects the reasoning o
 - Picking a file or image item makes the menu bar flicker once while Clipo is active.
 - The first screenshot watch asks the user for access to the Desktop (or the Save To folder). Declined, screenshots stay out and the log says the folder cannot be watched. HEIC and PDF screenshots are not kept; Clipo stores PNG, JPEG, TIFF and BMP.
 - The Finder cause could not be confirmed end to end, because CI cannot press keys on the build Mac; if a picked file still does not paste into Finder, the next check is a test with the Accessibility permission on that Mac.
+
+**Update (Windows).** Decision 0032 replaces the Windows part: the popup is never activated, so the app the user was in keeps the focus; after a click on the tray icon Clipo hands the front back to it before the popup opens.

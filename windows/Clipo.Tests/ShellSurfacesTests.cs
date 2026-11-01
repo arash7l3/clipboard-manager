@@ -27,6 +27,12 @@ public sealed class ShellSurfacesTests
         Assert.True(ShellSurfaces.CountsAsApp(7, Own, "Notepad", visible: true, extendedStyle: 0));
 
     [Theory]
+    [InlineData("Progman")]
+    [InlineData("WorkerW")]
+    public void TheDesktopCountsEvenAsAToolWindow(string className) =>
+        Assert.True(ShellSurfaces.CountsAsApp(7, Own, className, visible: true, extendedStyle: 0x80));
+
+    [Theory]
     // Clipo's own windows, such as the tray menu's hidden owner.
     [InlineData(Own, "io.github.arash7l3.Clipo.MessageWindow", true, 0x80)]
     [InlineData(Own, "WinUIDesktopWin32WindowClass", true, 0)]
@@ -40,4 +46,20 @@ public sealed class ShellSurfacesTests
     [InlineData(0u, "Notepad", true, 0)]
     public void ShellClipoAndHiddenWindowsDoNotCount(uint processId, string className, bool visible, long extendedStyle) =>
         Assert.False(ShellSurfaces.CountsAsApp(processId, Own, className, visible, extendedStyle));
+
+    [Theory]
+    [InlineData("CabinetWClass", false)]
+    [InlineData("Progman", false)]
+    [InlineData("WorkerW", false)]
+    // An Open or Save dialog, which holds a folder view.
+    [InlineData("#32770", true)]
+    public void ExplorerTheDesktopAndFolderViewsShowFolders(string className, bool holdsFolderView) =>
+        Assert.True(ShellSurfaces.ShowsFolder(className, holdsFolderView));
+
+    [Theory]
+    [InlineData("Notepad")]
+    [InlineData("Chrome_WidgetWin_1")]
+    [InlineData("#32770")]
+    [InlineData(null)]
+    public void OtherWindowsDoNot(string? className) => Assert.False(ShellSurfaces.ShowsFolder(className, holdsFolderView: false));
 }

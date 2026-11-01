@@ -74,6 +74,13 @@ internal sealed class Shell : IDisposable
     /// <summary>The user picked Quit in the tray menu.</summary>
     public event EventHandler? QuitRequested;
 
+    /// <summary>A window came to the front; raised on the UI thread with the window.</summary>
+    public event EventHandler<nint>? ForegroundChanged
+    {
+        add => _foreground.Changed += value;
+        remove => _foreground.Changed -= value;
+    }
+
     public ClipboardWatcher Watcher { get; }
 
     /// <summary>Whether the tray menu shows Paste After Choosing as checked.</summary>
@@ -110,6 +117,9 @@ internal sealed class Shell : IDisposable
 
     /// <summary>Whether the shortcut was registered; another app may hold it.</summary>
     public bool HotkeyRegistered { get; }
+
+    /// <summary>The registered shortcut, if any.</summary>
+    public HotkeyChord? Hotkey => _hotkey.Chord;
 
     /// <summary>
     /// Moves the shortcut to <paramref name="chord"/>. Returns whether it

@@ -29,6 +29,7 @@ public partial class App : Application
     private static Mutex? s_instance;
 
     private readonly ImageProcessor _images = new();
+    private readonly PastedImages _pastedImages = new(PastedImages.DefaultFolder());
     private MainWindow? _window;
     private PopupWindow? _popup;
     private ItemRestorer? _restorer;
@@ -99,6 +100,8 @@ public partial class App : Application
         var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste, PrivateMode = _settings.PrivateMode };
         _shell = shell;
         popup.WindowInFront = shell.AppWindowInFront;
+        popup.Hotkey = () => shell.Hotkey;
+        shell.ForegroundChanged += (_, window) => popup.ForegroundChanged(window);
         shell.OpenRequested += (_, _) => ShowHistory(toggle: false);
         shell.HotkeyPressed += (_, _) => ShowHistory(toggle: true);
         shell.SettingsRequested += (_, _) => ShowSettings();
@@ -121,6 +124,8 @@ public partial class App : Application
         }
         _ = OpenHistoryAsync(window);
         _ = TrimHourlyAsync();
+        // Image files left from the last run, if it did not quit normally.
+        _ = Task.Run(_pastedImages.Clear);
     }
 
     /// <summary>Whether Windows started this copy at sign-in through the package's startup task, which cannot pass an argument.</summary>
@@ -151,6 +156,7 @@ public partial class App : Application
         _popup?.Quit();
         _settingsWindow?.Quit();
         _window?.Quit();
+        _pastedImages.Clear();
         Exit();
     }
 
@@ -261,16 +267,28 @@ public partial class App : Application
     /// <summary>
     /// Puts <paramref name="content"/> on the clipboard, an image with a
     /// bitmap copy for apps that cannot paste PNG, and tells the watcher not
-    /// to record it as a new copy.
+    /// to record it as a new copy. An image picked over a folder, such as
+    /// Explorer or the desktop, also goes on as a file: a folder pastes
+    /// nothing else.
     /// </summary>
     private async Task<bool> WriteToClipboardAsync(ItemContent content)
     {
-        var bitmap = content is ItemContent.Image image ? await _images.ToBitmapAsync(image.ImageValue.Data) : null;
+        byte[]? bitmap = null;
+        string? file = null;
+        if (content is ItemContent.Image image)
+        {
+            bitmap = await _images.ToBitmapAsync(image.ImageValue.Data);
+            if (_popup is { } popup && Desktop.ShowsFolder(popup.PasteTarget))
+            {
+                var name = PastedImages.FileName(new ResourceLoader().GetString("PastedImageName"), image.ImageValue.Format, DateTime.Now);
+                file = await Task.Run(() => _pastedImages.Save(image.ImageValue.Data, name));
+            }
+        }
         if (_shell is not { } shell)
         {
             return false;
         }
-        var written = ClipboardWriter.Write(shell.ClipboardOwner, content, bitmap);
+        var written = ClipboardWriter.Write(shell.ClipboardOwner, content, bitmap, file);
         // Even a failed write may have emptied the clipboard; either way it was Clipo.
         shell.Watcher.SkipCurrent();
         return written;

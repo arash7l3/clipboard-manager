@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Clipo.Core;
 using Clipo.Services;
@@ -11,21 +12,23 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Graphics;
-using Windows.System;
 
 namespace Clipo;
 
 /// <summary>
-/// The history popup. It opens at the mouse pointer and takes the keyboard;
-/// the search field keeps it the whole time. Typing searches; Up, Down,
-/// Page Up, Page Down, Home and End move the selection; Tab and Shift+Tab
-/// switch tabs; Enter picks the selected item; Esc closes. Ctrl+1 to Ctrl+9
-/// pick the first nine rows. Holding Shift while picking, with Enter or a
-/// click, pastes without formatting. Ctrl+P, or Pin in a row's right-click
-/// menu, pins or unpins an item. The button beside the tabs clears the tab
-/// after a second click. A click on a row picks it, and clicking anywhere
-/// else closes the popup.
+/// The history popup. It opens at the mouse pointer without taking the focus
+/// from the app the user is typing in: the window is never activated, and
+/// its keys are caught on their way to that app (<see cref="PopupInput"/>).
+/// Typing searches; Up, Down, Page Up, Page Down, Home and End move the
+/// selection; Tab and Shift+Tab switch tabs; Enter picks the selected item;
+/// Esc closes. Ctrl+1 to Ctrl+9 pick the first nine rows. Holding Shift while
+/// picking, with Enter or a click, pastes without formatting. Ctrl+P, or Pin
+/// in a row's right-click menu, pins or unpins an item. The button beside the
+/// tabs clears the tab after a second click. A click on a row picks it;
+/// clicking anywhere else, or another window coming to the front, closes the
+/// popup.
 /// </summary>
+[SuppressMessage("Design", "CA1001", Justification = "Lives as long as the app; the input thread is disposed in Quit.")]
 public sealed partial class PopupWindow : Window
 {
     /// <summary>The popup's size, in effective pixels.</summary>
@@ -41,9 +44,13 @@ public sealed partial class PopupWindow : Window
     private readonly bool _rightToLeft = CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
     private readonly ClearConfirmation _clear = new();
     private readonly DispatcherTimer _clearTimer = new();
+    private readonly PopupInput _input = new();
 
-    /// <summary>The window that was in front before the popup opened; it gets the focus back.</summary>
+    /// <summary>The window the user was working in when the popup opened; it keeps the focus, and the paste goes there.</summary>
     private nint _previous;
+
+    /// <summary>The window in front when the popup opened, such as the taskbar after a click on the tray icon.</summary>
+    private nint _openedOver;
 
     /// <summary>
     /// Asked for the window to give the focus back to when the popup opens.
@@ -51,6 +58,10 @@ public sealed partial class PopupWindow : Window
     /// click on the tray icon.
     /// </summary>
     public Func<nint> WindowInFront { get; set; } = Desktop.ForegroundWindow;
+
+    /// <summary>The shortcut that opens the popup; pressed while it is open, it closes it.</summary>
+    public Func<HotkeyChord?> Hotkey { get; set; } = () => null;
+
     private bool _allowClose;
 
     public PopupWindow(PopupModel model)
@@ -67,13 +78,13 @@ public sealed partial class PopupWindow : Window
 
         Root.FlowDirection = _rightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
         // The first time, the content loads after the window is shown.
-        Root.Loaded += (_, _) =>
-        {
-            // The button's state is set again once the content is laid out: a popup that
-            // was created at sign-in and never shown came up without it.
-            ShowClearButton();
-            SearchBox.Focus(FocusState.Programmatic);
-        };
+        // The button's state is set again once the content is laid out: a popup that
+        // was created at sign-in and never shown came up without it.
+        Root.Loaded += (_, _) => ShowClearButton();
+
+        // Raised on the input thread.
+        _input.KeyPressed += (_, command) => DispatcherQueue.TryEnqueue(() => OnKey(command));
+        _input.ClickedOutside += (_, _) => DispatcherQueue.TryEnqueue(() => Dismiss(restoreFocus: false));
 
         AppWindow.IsShownInSwitchers = false;
         if (AppWindow.Presenter is OverlappedPresenter presenter)
@@ -85,7 +96,7 @@ public sealed partial class PopupWindow : Window
             presenter.IsAlwaysOnTop = true;
         }
         AppWindow.Closing += OnClosing;
-        Activated += OnActivated;
+        Desktop.MakeNonActivating(Handle);
     }
 
     /// <summary>Raised with the row the user picked, after the popup closed and gave the focus back.</summary>
@@ -98,6 +109,11 @@ public sealed partial class PopupWindow : Window
     public event EventHandler<Category>? ClearRequested;
 
     public bool IsShown { get; private set; }
+
+    /// <summary>The window a pick is pasted into: the one the user was working in when the popup opened.</summary>
+    public nint PasteTarget => _previous;
+
+    private nint Handle => Win32Interop.GetWindowFromWindowId(AppWindow.Id);
 
     /// <summary>
     /// The tab to open on, given the tab the popup was on when it was last
@@ -124,29 +140,40 @@ public sealed partial class PopupWindow : Window
         }
     }
 
-    /// <summary>Opens the popup at the mouse pointer on the chosen start tab with an empty search.</summary>
+    /// <summary>
+    /// Opens the popup at the mouse pointer on the chosen start tab with an
+    /// empty search. The window the user was working in keeps the focus.
+    /// </summary>
     public void Show()
     {
         if (IsShown)
         {
             return;
         }
+        _openedOver = Desktop.ForegroundWindow();
         _previous = WindowInFront();
+        // After a click on the tray icon the taskbar is in front: the app gets the
+        // front back while Windows still lets Clipo hand it over.
+        if (_previous != 0 && _previous != _openedOver)
+        {
+            Desktop.Activate(_previous);
+        }
         _ = _model.ResetAsync(StartCategory(_model.Category));
-        SearchBox.Text = "";
+        SetSearch("");
         ShowTab();
         Place();
         IsShown = true;
-        AppWindow.Show();
-        Activate();
-        // Windows lets the app that got the shortcut or the click take the front.
-        Desktop.Activate(Win32Interop.GetWindowFromWindowId(AppWindow.Id));
-        SearchBox.Focus(FocusState.Programmatic);
+        var window = Handle;
+        Desktop.MakeNonActivating(window);
+        AppWindow.Show(activateWindow: false);
+        Desktop.BringToTop(window);
+        _input.Start(Hotkey());
     }
 
     /// <summary>
-    /// Hides the popup. With <paramref name="restoreFocus"/>, the window
-    /// that was in front before gets the focus back, as after Esc or a pick;
+    /// Hides the popup. The popup never takes the front, but if Windows
+    /// gave it the front anyway, <paramref name="restoreFocus"/> hands it
+    /// back to the window the user was working in, as after Esc or a pick;
     /// not after a click elsewhere, which already chose a window.
     /// </summary>
     public void Dismiss(bool restoreFocus)
@@ -156,13 +183,40 @@ public sealed partial class PopupWindow : Window
             return;
         }
         IsShown = false;
+        _input.Stop();
         DisarmClear();
-        // While the popup is still in front, Windows allows handing the front over.
-        if (restoreFocus)
+        if (restoreFocus && Desktop.IsOwnWindow(Desktop.ForegroundWindow()))
         {
             Desktop.Activate(_previous);
         }
         AppWindow.Hide();
+    }
+
+    /// <summary>
+    /// Told about each window that comes to the front. One other than the
+    /// window the user was working in closes the popup, as Alt+Tab or the
+    /// Start menu do; the taskbar the popup was opened from does not. Should
+    /// Windows bring the popup itself to the front, it hands the front
+    /// straight back.
+    /// </summary>
+    public void ForegroundChanged(nint window)
+    {
+        if (!IsShown)
+        {
+            return;
+        }
+        if (window == Handle)
+        {
+            // WinUI giving its content the popup's own focus is reported too; only a real change is undone.
+            if (Desktop.ForegroundWindow() == Handle)
+            {
+                Desktop.Activate(_previous);
+            }
+        }
+        else if (window != _previous && window != _openedOver && !Desktop.IsOwnWindow(window))
+        {
+            Dismiss(restoreFocus: false);
+        }
     }
 
     /// <summary>Lists new copies while the popup is open.</summary>
@@ -177,6 +231,7 @@ public sealed partial class PopupWindow : Window
     /// <summary>Closes the window for good, when the app quits.</summary>
     public void Quit()
     {
+        _input.Dispose();
         _allowClose = true;
         Close();
     }
@@ -238,62 +293,64 @@ public sealed partial class PopupWindow : Window
         }
     }
 
-    private void OnSearchChanged(object sender, TextChangedEventArgs e) => _ = _model.SetSearchTextAsync(SearchBox.Text);
-
-    private void OnSearchKeyDown(object sender, KeyRoutedEventArgs e)
+    /// <summary>Searches for <paramref name="text"/> and shows it in the search field, which never has the focus.</summary>
+    private void SetSearch(string text)
     {
-        e.Handled = true;
-        if (e.Key == VirtualKey.P && Desktop.IsControlDown())
+        SearchBox.Text = text;
+        SearchBox.SelectionStart = text.Length;
+        _ = _model.SetSearchTextAsync(text);
+    }
+
+    private void OnKey(PopupKeyCommand command)
+    {
+        if (!IsShown)
         {
-            if (_model.SelectedRow is { } selected)
-            {
-                RequestPin(selected);
-            }
             return;
         }
-        if (Desktop.IsControlDown() && QuickPasteNumber(e.Key) is { } number)
+        switch (command.Action)
         {
-            if (_model.RowForShortcut(number) is { } quick)
-            {
-                Choose(quick, plain: Desktop.IsShiftDown());
-            }
-            return;
-        }
-        switch (e.Key)
-        {
-            case VirtualKey.Down:
+            case PopupKeyAction.Down:
                 _model.MoveSelection(1);
                 break;
-            case VirtualKey.Up:
+            case PopupKeyAction.Up:
                 _model.MoveSelection(-1);
                 break;
-            case VirtualKey.PageDown:
+            case PopupKeyAction.PageDown:
                 _model.MoveSelection(PageRows);
                 break;
-            case VirtualKey.PageUp:
+            case PopupKeyAction.PageUp:
                 _model.MoveSelection(-PageRows);
                 break;
-            case VirtualKey.Home:
+            case PopupKeyAction.Home:
                 _model.Select(0);
                 break;
-            case VirtualKey.End:
+            case PopupKeyAction.End:
                 _model.Select(_model.Rows.Count - 1);
                 break;
-            case VirtualKey.Tab:
-                _ = _model.MoveCategoryAsync(Desktop.IsShiftDown() ? -1 : 1);
+            case PopupKeyAction.NextTab or PopupKeyAction.PreviousTab:
+                _ = _model.MoveCategoryAsync(command.Action == PopupKeyAction.NextTab ? 1 : -1);
                 ShowTab();
                 break;
-            case VirtualKey.Enter:
-                if (_model.SelectedRow is { } row)
-                {
-                    Choose(row, plain: Desktop.IsShiftDown());
-                }
+            case PopupKeyAction.Pick when _model.SelectedRow is { } row:
+                Choose(row, command.Plain);
                 break;
-            case VirtualKey.Escape:
+            case PopupKeyAction.QuickPaste when _model.RowForShortcut(command.Number) is { } quick:
+                Choose(quick, command.Plain);
+                break;
+            case PopupKeyAction.Pin when _model.SelectedRow is { } selected:
+                RequestPin(selected);
+                break;
+            case PopupKeyAction.Close:
                 Dismiss(restoreFocus: true);
                 break;
-            default:
-                e.Handled = false;
+            case PopupKeyAction.Type:
+                SetSearch(SearchBox.Text + command.Text);
+                break;
+            case PopupKeyAction.Backspace:
+                SetSearch(PopupKeys.Backspace(SearchBox.Text));
+                break;
+            case PopupKeyAction.DeleteWord:
+                SetSearch(PopupKeys.DeleteWord(SearchBox.Text));
                 break;
         }
     }
@@ -318,11 +375,10 @@ public sealed partial class PopupWindow : Window
             KeyboardAcceleratorTextOverride = "Ctrl+P",
         };
         item.Click += (_, _) => RequestPin(row.Preview);
-        var flyout = new MenuFlyout();
+        // Drawn inside the popup and without taking the focus, so the app underneath keeps it.
+        var flyout = new MenuFlyout { ShouldConstrainToRootBounds = true };
         flyout.Items.Add(item);
-        // The menu takes the focus; the search field gets it back.
-        flyout.Closed += (_, _) => SearchBox.Focus(FocusState.Programmatic);
-        flyout.ShowAt(HistoryList, new FlyoutShowOptions { Position = e.GetPosition(HistoryList) });
+        flyout.ShowAt(HistoryList, new FlyoutShowOptions { Position = e.GetPosition(HistoryList), ShowMode = FlyoutShowMode.Transient });
     }
 
     private void OnClearClick(object sender, RoutedEventArgs e)
@@ -337,7 +393,6 @@ public sealed partial class PopupWindow : Window
             _clearTimer.Start();
             ShowClearButton();
         }
-        SearchBox.Focus(FocusState.Programmatic);
     }
 
     /// <summary>Back to the plain Clear button, for the tab now shown.</summary>
@@ -362,14 +417,6 @@ public sealed partial class PopupWindow : Window
         AutomationProperties.SetName(ClearButton, name);
     }
 
-    /// <summary>1 to 9 for the digit keys, in the top row or on the number pad.</summary>
-    private static int? QuickPasteNumber(VirtualKey key) => key switch
-    {
-        >= VirtualKey.Number1 and <= VirtualKey.Number9 => key - VirtualKey.Number0,
-        >= VirtualKey.NumberPad1 and <= VirtualKey.NumberPad9 => key - VirtualKey.NumberPad0,
-        _ => null,
-    };
-
     private void OnTabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         var index = sender.SelectedItem is { } item ? sender.Items.IndexOf(item) : -1;
@@ -378,7 +425,6 @@ public sealed partial class PopupWindow : Window
             _ = _model.SetCategoryAsync(PopupModel.Categories[index]);
         }
         DisarmClear();
-        SearchBox.Focus(FocusState.Programmatic);
     }
 
     private void OnItemClick(object sender, ItemClickEventArgs e)
@@ -389,18 +435,9 @@ public sealed partial class PopupWindow : Window
         }
     }
 
-    private void OnActivated(object sender, WindowActivatedEventArgs args)
-    {
-        // A click elsewhere, or another app taking the front, closes the popup.
-        if (args.WindowActivationState == WindowActivationState.Deactivated)
-        {
-            Dismiss(restoreFocus: false);
-        }
-    }
-
     private void OnClosing(AppWindow sender, AppWindowClosingEventArgs args)
     {
-        // Alt+F4 hides the popup like Esc; only quitting closes it.
+        // Alt+F4, should the popup ever have the front, hides it like Esc; only quitting closes it.
         if (!_allowClose)
         {
             args.Cancel = true;

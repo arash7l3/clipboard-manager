@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Clipo.Services.Native;
 
@@ -29,9 +32,78 @@ public static unsafe class Desktop
     private const int VkShift = 0x10;
     private const ushort VkControl = 0x11;
     private const ushort VkV = 0x56;
+    private const int ExtendedStyle = -20;
+    private const long NoActivate = 0x08000000;
+    private const nint Topmost = -1;
+    private const uint NoSize = 0x1;
+    private const uint NoMove = 0x2;
+    private const uint NoActivateWindow = 0x10;
+    private const int ClassNameLength = 256;
+    private const int WindowProcedure = -4;
+    private const uint WmMouseActivate = 0x0021;
+    private const nint MouseNoActivate = 3;
+
+    /// <summary>The window made non-activating, and the window procedure it had; there is one, the popup.</summary>
+    private static nint s_nonActivating;
+    private static nint s_previousProcedure;
 
     /// <summary>The window the user is working in.</summary>
     public static nint ForegroundWindow() => NativeMethods.GetForegroundWindow();
+
+    /// <summary>Whether <paramref name="window"/> is one of Clipo's own.</summary>
+    public static bool IsOwnWindow(nint window)
+    {
+        NativeMethods.GetWindowThreadProcessId(window, out var processId);
+        return window != 0 && processId == (uint)Environment.ProcessId;
+    }
+
+    /// <summary>
+    /// Keeps clicks on <paramref name="window"/> from activating it, so the
+    /// app the user works in keeps the focus: the window gets the
+    /// no-activate style, and it answers every click's activation request
+    /// with "no", whatever its content would answer. For one window only.
+    /// </summary>
+    public static void MakeNonActivating(nint window)
+    {
+        var style = (long)NativeMethods.GetWindowLongPtr(window, ExtendedStyle);
+        if ((style & NoActivate) == 0)
+        {
+            NativeMethods.SetWindowLongPtr(window, ExtendedStyle, (nint)(style | NoActivate));
+        }
+        if (s_nonActivating == 0)
+        {
+            s_nonActivating = window;
+            s_previousProcedure = NativeMethods.SetWindowLongPtr(
+                window, WindowProcedure, (nint)(delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nint>)&NonActivatingProcedure);
+        }
+    }
+
+    /// <summary>Puts <paramref name="window"/> above every other always-on-top window, without activating it.</summary>
+    public static void BringToTop(nint window) =>
+        NativeMethods.SetWindowPos(window, Topmost, 0, 0, 0, 0, NoMove | NoSize | NoActivateWindow);
+
+    /// <summary>
+    /// Whether <paramref name="window"/> shows a folder, such as Explorer or
+    /// the desktop: a paste there takes files, not pictures.
+    /// </summary>
+    public static bool ShowsFolder(nint window)
+    {
+        if (window == 0 || !NativeMethods.IsWindow(window))
+        {
+            return false;
+        }
+        var found = false;
+        NativeMethods.EnumChildWindows(window, (nint)(delegate* unmanaged[Stdcall]<nint, nint, int>)&FindFolderView, (nint)(&found));
+        return ShellSurfaces.ShowsFolder(ClassName(window), found);
+    }
+
+    /// <summary>The window class of <paramref name="window"/>, or <c>null</c>.</summary>
+    internal static string? ClassName(nint window)
+    {
+        var name = stackalloc char[ClassNameLength];
+        var length = NativeMethods.GetClassName(window, name, ClassNameLength);
+        return length > 0 ? new string(name, 0, length) : null;
+    }
 
     /// <summary>
     /// Brings <paramref name="window"/> back to the front, if it still exists.
@@ -46,11 +118,11 @@ public static unsafe class Desktop
         }
     }
 
-    /// <summary>Whether a Shift key is held down, for Shift+Tab.</summary>
-    public static bool IsShiftDown() => NativeMethods.GetKeyState(VkShift) < 0;
-
-    /// <summary>Whether a Ctrl key is held down, for the quick-paste shortcuts.</summary>
-    public static bool IsControlDown() => NativeMethods.GetKeyState(VkControl) < 0;
+    /// <summary>
+    /// Whether a Shift key is held down now, for a Shift+click. The popup
+    /// never has the keyboard, so its thread's own key state is out of date.
+    /// </summary>
+    public static bool IsShiftDown() => NativeMethods.GetAsyncKeyState(VkShift) < 0;
 
     /// <summary>The default "something went wrong" sound.</summary>
     public static void Beep() => NativeMethods.MessageBeep(0xFFFFFFFF);
@@ -81,6 +153,31 @@ public static unsafe class Desktop
             : new ScreenRect(cursor.X - 400, cursor.Y - 300, cursor.X + 400, cursor.Y + 300);
         var dpi = NativeMethods.GetDpiForMonitor(monitor, EffectiveDpi, out var dpiX, out _) == 0 && dpiX != 0 ? dpiX : 96;
         return new PointerScreen(new ScreenPoint(cursor.X, cursor.Y), work, dpi);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static nint NonActivatingProcedure(nint window, uint message, nint wParam, nint lParam) =>
+        message == WmMouseActivate
+            ? MouseNoActivate
+            : NativeMethods.CallWindowProc(s_previousProcedure, window, message, wParam, lParam);
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static int FindFolderView(nint child, nint found)
+    {
+        // An exception must not escape into Windows.
+        try
+        {
+            if (ClassName(child) == ShellSurfaces.FolderViewClass)
+            {
+                *(bool*)found = true;
+                return 0;
+            }
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError($"looking for a folder view failed: {e.GetType().Name}");
+        }
+        return 1;
     }
 
     private static NativeMethods.Input Key(ushort virtualKey, bool up) => new()
