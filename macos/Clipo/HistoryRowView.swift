@@ -137,9 +137,9 @@ final class HistoryRowView: NSTableCellView {
         detail.stringValue = PopupText.detail(item, now: now)
         icon.image = Self.icon(for: item.content)
         pin.isHidden = !item.pinned
-        // One spoken sentence per row; its icon and lines are not read again,
-        // but its buttons, and the editor while renaming, are reachable.
-        setAccessibilityChildren(renaming ? [editor, renameButton, deleteButton] : [renameButton, deleteButton])
+        // One spoken sentence per row; its icon and lines are not read again.
+        // While renaming, the field that has the keyboard is reachable.
+        setAccessibilityChildren(renaming ? [editor] : [])
         setAccessibilityLabel(PopupText.accessibilityLabel(item, now: now))
     }
 
