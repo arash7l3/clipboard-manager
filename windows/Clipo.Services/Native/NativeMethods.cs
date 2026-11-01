@@ -239,6 +239,17 @@ internal static unsafe partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetForegroundWindow(nint window);
 
+    [LibraryImport("user32.dll", EntryPoint = "GetClassNameW")]
+    public static partial int GetClassName(nint window, char* name, int maxChars);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint SetWinEventHook(
+        uint eventMin, uint eventMax, nint module, nint callback, uint processId, uint threadId, uint flags);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnhookWinEvent(nint hook);
+
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForWindow(nint window);
 

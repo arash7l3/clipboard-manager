@@ -14,3 +14,5 @@ Status: accepted
 **Consequences.** "Last used tab" is not saved to disk; saving it would need a settings key written on every tab change, and it is easy to add if wanted. The macOS icon colour uses `NSStatusBarButton.contentTintColor`; if a macOS version ignores it, the changed symbol still shows (see `macos-verification.md`).
 
 **Update.** The macOS icon is now drawn in its final colour (a non-template orange symbol) instead of a template image with `contentTintColor`, and it is never `nil`, after a report that the icon disappeared from the menu bar in private mode. Private mode only changes the icon; the hotkey and the menu keep working.
+
+**Update (0.1.3).** The macOS icon is now the clipboard with a crossed-out eye badge, so it still shows which app it is (decision 0028).

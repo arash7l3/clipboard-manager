@@ -97,6 +97,16 @@ struct StatusMenuTests {
         #expect(NSImage(systemSymbolName: StatusMenu.symbolName, accessibilityDescription: nil) != nil)
     }
 
+    @Test func privateIconIsTheClipboardWithABadge() {
+        let plain = StatusMenu.icon(isPrivate: false, label: "Clipo")
+        let badged = StatusMenu.icon(isPrivate: true, label: "Clipo, private")
+        #expect(NSImage(systemSymbolName: StatusMenu.privateSymbolName, accessibilityDescription: nil) != nil)
+        #expect(plain.isTemplate)
+        #expect(badged.isTemplate)
+        #expect(badged.size == plain.size)
+        #expect(badged.accessibilityDescription == "Clipo, private")
+    }
+
     @Test func privateModeKeepsTheIconInTheMenuBar() {
         let menu = StatusMenu()
         let item = menu.install()

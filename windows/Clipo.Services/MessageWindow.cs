@@ -17,26 +17,35 @@ public sealed class WindowMessageEventArgs(uint message, nint wParam, nint lPara
 }
 
 /// <summary>
-/// An invisible, message-only window that receives what Windows sends the
-/// app: clipboard changes, shortcut presses and tray icon events. Create it
-/// on the UI thread, which must run a message loop (WinUI does), and dispose
-/// it there.
+/// An invisible window, message-only unless asked otherwise, that receives
+/// what Windows sends the app: clipboard changes, shortcut presses and tray
+/// icon events. Create it on the UI thread, which must run a message loop
+/// (WinUI does), and dispose it there.
 /// </summary>
 [SupportedOSPlatform("windows")]
 public sealed unsafe class MessageWindow : IDisposable
 {
     private const string ClassName = "io.github.arash7l3.Clipo.MessageWindow";
+    private const uint PopupStyle = 0x80000000;
+    private const uint ToolWindowStyle = 0x80;
 
     /// <summary>Windows are found by handle, because the window procedure is a plain function.</summary>
     private static readonly Dictionary<nint, MessageWindow> s_windows = [];
 
     private static bool s_classRegistered;
 
-    public MessageWindow()
+    /// <param name="topLevel">
+    /// A hidden top-level window instead of a message-only one. Only a
+    /// top-level window can come to the front, which a tray menu's owner must.
+    /// It has no taskbar button and is never shown.
+    /// </param>
+    public MessageWindow(bool topLevel = false)
     {
         var instance = NativeMethods.GetModuleHandle(null);
         RegisterClass(instance);
-        Handle = NativeMethods.CreateWindow(0, ClassName, "Clipo", 0, 0, 0, 0, 0, NativeMethods.HwndMessage, 0, instance, 0);
+        Handle = topLevel
+            ? NativeMethods.CreateWindow(ToolWindowStyle, ClassName, "Clipo", PopupStyle, 0, 0, 0, 0, 0, 0, instance, 0)
+            : NativeMethods.CreateWindow(0, ClassName, "Clipo", 0, 0, 0, 0, 0, NativeMethods.HwndMessage, 0, instance, 0);
         if (Handle == 0)
         {
             throw new InvalidOperationException($"Could not create the message window (Win32 error {Marshal.GetLastPInvokeError()})");

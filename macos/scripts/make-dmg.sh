@@ -64,6 +64,9 @@ version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/C
 if [[ -n ${CLIPO_EXPECT_VERSION:-} && $version != "$CLIPO_EXPECT_VERSION" ]]; then
     fail "the app's version is $version, expected $CLIPO_EXPECT_VERSION (MARKETING_VERSION)"
 fi
+icon=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist" 2>/dev/null || true)
+[[ -n $icon && -f $app/Contents/Resources/${icon%.icns}.icns ]] ||
+    fail "the app has no icon file (CFBundleIconFile: ${icon:-unset})"
 archs=$(lipo -archs "$app/Contents/MacOS/Clipo")
 [[ $archs == *arm64* && $archs == *x86_64* ]] || fail "the app is not universal: $archs"
 
