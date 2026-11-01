@@ -23,7 +23,7 @@ final class ScreenshotWatcher {
     /// The screenshots that were kept, oldest first. Finishes when the watcher stops.
     let changes: AsyncStream<PasteboardChange>
 
-    private nonisolated static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
+    nonisolated private static let logger = Logger(subsystem: "io.github.arash7l3.Clipo", category: "capture")
 
     private let folder: URL
     private let startedAt = Date()

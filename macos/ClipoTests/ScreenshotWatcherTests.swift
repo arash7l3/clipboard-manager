@@ -45,7 +45,7 @@ struct ScreenshotWatcherTests {
                 try? await Task.sleep(for: .seconds(seconds))
                 return nil
             }
-            let first = await group.next() ?? nil
+            let first = await group.next().flatMap { $0 }
             group.cancelAll()
             return first
         }
