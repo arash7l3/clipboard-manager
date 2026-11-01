@@ -1,6 +1,6 @@
 # 0016 — Windows popup, restore and auto-paste: a WinUI window that takes the keyboard, SendInput for Ctrl+V
 
-Status: accepted
+Status: accepted. The focus part is superseded by decision 0032: the popup is no longer activated, and its keys reach it through a keyboard hook while it is open.
 
 **Decision.**
 
