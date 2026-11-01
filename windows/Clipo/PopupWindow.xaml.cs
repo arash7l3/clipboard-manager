@@ -207,7 +207,11 @@ public sealed partial class PopupWindow : Window
         }
         if (window == Handle)
         {
-            Desktop.Activate(_previous);
+            // WinUI giving its content the popup's own focus is reported too; only a real change is undone.
+            if (Desktop.ForegroundWindow() == Handle)
+            {
+                Desktop.Activate(_previous);
+            }
         }
         else if (window != _previous && window != _openedOver && !Desktop.IsOwnWindow(window))
         {
