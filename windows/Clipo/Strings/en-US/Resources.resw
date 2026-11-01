@@ -556,4 +556,8 @@
     <value>Cancel</value>
     <comment>Dialog button that changes nothing</comment>
   </data>
+  <data name="PastedImageName" xml:space="preserve">
+    <value>Image</value>
+    <comment>Start of the file name of an image pasted into a folder, followed by the date and time</comment>
+  </data>
 </root>

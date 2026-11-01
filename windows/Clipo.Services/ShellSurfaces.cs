@@ -16,7 +16,20 @@ public static class ShellSurfaces
         "XamlExplorerHostIslandWindow",
     };
 
+    private static readonly HashSet<string> s_folderWindows = new(StringComparer.Ordinal)
+    {
+        // File Explorer, and its class before Windows 7.
+        "CabinetWClass",
+        "ExploreWClass",
+        // The desktop, before and after the wallpaper changed.
+        "Progman",
+        "WorkerW",
+    };
+
     private const long ToolWindow = 0x80;
+
+    /// <summary>The class of the view that lists a folder's files, in Explorer, on the desktop and in Open and Save dialogs.</summary>
+    public const string FolderViewClass = "SHELLDLL_DefView";
 
     /// <summary>Whether a window of class <paramref name="className"/> belongs to the shell rather than to an app.</summary>
     public static bool Contains(string? className) => className is not null && s_classNames.Contains(className);
@@ -32,4 +45,12 @@ public static class ShellSurfaces
         && visible
         && (extendedStyle & ToolWindow) == 0
         && !Contains(className);
+
+    /// <summary>
+    /// Whether a window shows a folder, where a paste takes files and not
+    /// pictures: Explorer, the desktop, or a window that holds a folder view
+    /// (<paramref name="holdsFolderView"/>), such as an Open dialog.
+    /// </summary>
+    public static bool ShowsFolder(string? className, bool holdsFolderView) =>
+        holdsFolderView || (className is not null && s_folderWindows.Contains(className));
 }

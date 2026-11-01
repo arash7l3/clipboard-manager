@@ -40,4 +40,20 @@ public sealed class ShellSurfacesTests
     [InlineData(0u, "Notepad", true, 0)]
     public void ShellClipoAndHiddenWindowsDoNotCount(uint processId, string className, bool visible, long extendedStyle) =>
         Assert.False(ShellSurfaces.CountsAsApp(processId, Own, className, visible, extendedStyle));
+
+    [Theory]
+    [InlineData("CabinetWClass", false)]
+    [InlineData("Progman", false)]
+    [InlineData("WorkerW", false)]
+    // An Open or Save dialog, which holds a folder view.
+    [InlineData("#32770", true)]
+    public void ExplorerTheDesktopAndFolderViewsShowFolders(string className, bool holdsFolderView) =>
+        Assert.True(ShellSurfaces.ShowsFolder(className, holdsFolderView));
+
+    [Theory]
+    [InlineData("Notepad")]
+    [InlineData("Chrome_WidgetWin_1")]
+    [InlineData("#32770")]
+    [InlineData(null)]
+    public void OtherWindowsDoNot(string? className) => Assert.False(ShellSurfaces.ShowsFolder(className, holdsFolderView: false));
 }

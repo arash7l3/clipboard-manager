@@ -21,10 +21,11 @@ public static unsafe class ClipboardWriter
     /// Returns whether the clipboard took it. Rich text keeps its plain form
     /// beside it, so apps that cannot paste markup still get the text. An
     /// image goes on as PNG, plus <paramref name="bitmap"/> (a <c>CF_DIB</c>)
-    /// for apps that only paste bitmaps.
+    /// for apps that only paste bitmaps, plus <paramref name="imageFile"/> as
+    /// a file for a folder, which pastes nothing else.
     /// </summary>
     /// <param name="owner">A window of this app; the clipboard refuses data without an owner.</param>
-    public static bool Write(nint owner, ItemContent content, byte[]? bitmap)
+    public static bool Write(nint owner, ItemContent content, byte[]? bitmap, string? imageFile = null)
     {
         ArgumentNullException.ThrowIfNull(content);
         if (!Open(owner))
@@ -41,7 +42,7 @@ public static unsafe class ClipboardWriter
             return content switch
             {
                 ItemContent.Text text => WriteText(text.TextValue),
-                ItemContent.Image image => WriteImage(image.ImageValue, bitmap),
+                ItemContent.Image image => WriteImage(image.ImageValue, bitmap, imageFile),
                 ItemContent.Files files => WriteFiles(files.FilesValue),
                 _ => false,
             };
@@ -81,21 +82,27 @@ public static unsafe class ClipboardWriter
         return written;
     }
 
-    private static bool WriteImage(ImageContent image, byte[]? bitmap)
+    private static bool WriteImage(ImageContent image, byte[]? bitmap, string? file)
     {
         var written = image.Format == ImageFormat.Png && Set(ClipboardFormats.Png, image.Data);
         if (bitmap is not null)
         {
             written = Set(NativeMethods.CfDib, bitmap) || written;
         }
+        if (file is not null)
+        {
+            written = WritePaths([file]) || written;
+        }
         return written;
     }
 
-    private static bool WriteFiles(FileRef[] files)
+    // Paths, not file contents: if a file moved since, the app being
+    // pasted into says so, as it would for a copy made in Explorer.
+    private static bool WriteFiles(FileRef[] files) => files.Length > 0 && WritePaths([.. files.Select(file => file.Path)]);
+
+    private static bool WritePaths(string[] paths)
     {
-        // Paths, not file contents: if a file moved since, the app being
-        // pasted into says so, as it would for a copy made in Explorer.
-        if (files.Length == 0 || !Set(NativeMethods.CfHdrop, DropFiles.Build([.. files.Select(file => file.Path)])))
+        if (!Set(NativeMethods.CfHdrop, DropFiles.Build(paths)))
         {
             return false;
         }
