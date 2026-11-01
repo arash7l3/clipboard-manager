@@ -89,12 +89,11 @@ public partial class App : Application
         popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
-            content => WriteToClipboardAsync(content),
+            WriteToClipboardAsync,
             id => _store?.Touch(id, DateTime.UtcNow),
             () => _settings.AutoPaste,
             () => Desktop.SendPaste(),
-            id => _store?.PlainText(id),
-            content => WriteToClipboardAsync(content, record: true));
+            id => _store?.PlainText(id));
 
         var chord = HotkeyChoices.Chord(_settings.Hotkey);
         var shell = new Shell(chord, () => _rules) { AutoPaste = _settings.AutoPaste, PrivateMode = _settings.PrivateMode };
@@ -260,10 +259,10 @@ public partial class App : Application
 
     /// <summary>
     /// Puts <paramref name="content"/> on the clipboard, an image with a
-    /// bitmap copy for apps that cannot paste PNG. Unless <paramref name="record"/>
-    /// is set (for a snippet), it tells the watcher not to record it as a new copy.
+    /// bitmap copy for apps that cannot paste PNG, and tells the watcher not
+    /// to record it as a new copy.
     /// </summary>
-    private async Task<bool> WriteToClipboardAsync(ItemContent content, bool record = false)
+    private async Task<bool> WriteToClipboardAsync(ItemContent content)
     {
         var bitmap = content is ItemContent.Image image ? await _images.ToBitmapAsync(image.ImageValue.Data) : null;
         if (_shell is not { } shell)
@@ -271,11 +270,8 @@ public partial class App : Application
             return false;
         }
         var written = ClipboardWriter.Write(shell.ClipboardOwner, content, bitmap);
-        if (!record)
-        {
-            // Even a failed write may have emptied the clipboard; either way it was Clipo.
-            shell.Watcher.SkipCurrent();
-        }
+        // Even a failed write may have emptied the clipboard; either way it was Clipo.
+        shell.Watcher.SkipCurrent();
         return written;
     }
 

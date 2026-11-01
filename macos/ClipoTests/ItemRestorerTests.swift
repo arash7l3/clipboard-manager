@@ -102,15 +102,14 @@ struct ItemRestorerTests {
         #expect(board.pasteboard.string(forType: .string) == "untouched")
     }
 
-    @Test func snippetTextIsPastedAndLeftForTheHistoryToRecord() async {
+    @Test func snippetTextIsPastedWithoutTouchingTheHistory() async {
         let restorer = restorer(items: [], autoPaste: true)
 
         let outcome = await restorer.restore(text: "Kind regards")
 
         #expect(outcome == .pasted)
         #expect(board.pasteboard.string(forType: .string) == "Kind regards")
-        // The watcher is not told to skip it, so it is recorded as a copy.
-        #expect(effects.writes == 0)
+        #expect(effects.writes == 1)
         #expect(effects.pastes == 1)
         #expect(bumps.all.isEmpty)
     }
