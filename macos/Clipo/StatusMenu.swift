@@ -13,7 +13,7 @@ final class StatusMenu: NSObject {
 
     /// SF Symbol for the menu-bar icon.
     static let symbolName = "list.clipboard"
-    /// SF Symbol for the menu-bar icon while private mode is on.
+    /// SF Symbol of the badge on the menu-bar icon while private mode is on.
     static let privateSymbolName = "eye.slash"
 
     let menu = NSMenu()
@@ -117,7 +117,7 @@ final class StatusMenu: NSObject {
     }
 
     /// Shows whether private mode is on: a checked menu item and, at a
-    /// glance, a different orange icon.
+    /// glance, a crossed-out eye on the icon.
     func showPrivateMode(_ enabled: Bool) {
         isPrivate = enabled
         privateModeItem.state = enabled ? .on : .off
@@ -133,28 +133,46 @@ final class StatusMenu: NSObject {
             )
             : String(localized: "Clipo clipboard history", comment: "Screen-reader label of the menu-bar icon")
         button.image = Self.icon(isPrivate: isPrivate, label: label)
-        // The icon is drawn in its final colour, so it never depends on how the
-        // menu bar tints a template image.
         button.contentTintColor = nil
         button.toolTip = isPrivate ? label : nil
         // Private mode only changes how the icon looks; it never takes it away.
         statusItem?.isVisible = true
     }
 
-    /// The menu-bar icon: the clipboard, or an orange crossed-out eye while
-    /// private mode is on. Never `nil`, or the item would be empty and vanish
+    /// The menu-bar icon: the clipboard, with a crossed-out eye in its
+    /// bottom-right corner while private mode is on, so it still reads as
+    /// Clipo. A template image either way, tinted by the menu bar like the
+    /// icons around it. Never `nil`, or the item would be empty and vanish
     /// from the menu bar.
     static func icon(isPrivate: Bool, label: String) -> NSImage {
-        if isPrivate,
-           let eye = NSImage(systemSymbolName: privateSymbolName, accessibilityDescription: label),
-           let orange = eye.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [.systemOrange])) {
-            orange.isTemplate = false
-            return orange
-        }
         let clipboard = NSImage(systemSymbolName: symbolName, accessibilityDescription: label)
             ?? NSImage(size: NSSize(width: 18, height: 18))
         clipboard.isTemplate = true
-        return clipboard
+        guard isPrivate, NSImage(systemSymbolName: privateSymbolName, accessibilityDescription: nil) != nil else {
+            return clipboard
+        }
+        // Names, not images, go into the drawing handler, which may run off the main actor.
+        let clipboardName = symbolName
+        let badgeName = privateSymbolName
+        let badged = NSImage(size: clipboard.size, flipped: false) { @Sendable bounds in
+            guard let base = NSImage(systemSymbolName: clipboardName, accessibilityDescription: nil),
+                  let badge = NSImage(systemSymbolName: badgeName, accessibilityDescription: nil) else {
+                return false
+            }
+            let width = bounds.width * 0.66
+            let height = width * badge.size.height / max(badge.size.width, 1)
+            let badgeRect = NSRect(x: bounds.maxX - width, y: bounds.minY, width: width, height: height)
+            base.draw(in: bounds)
+            // A gap around the eye keeps it apart from the clipboard's outline.
+            NSGraphicsContext.current?.compositingOperation = .destinationOut
+            NSBezierPath(roundedRect: badgeRect.insetBy(dx: -1.5, dy: -1.5), xRadius: 3, yRadius: 3).fill()
+            NSGraphicsContext.current?.compositingOperation = .sourceOver
+            badge.draw(in: badgeRect)
+            return true
+        }
+        badged.accessibilityDescription = label
+        badged.isTemplate = true
+        return badged
     }
 
     func show(_ status: Status) {
@@ -247,7 +265,7 @@ final class StatusMenu: NSObject {
         // A menu-bar app is not active by default; bring the panel to the front.
         NSApp.activate()
         // The panel's own lookup of the icon came up empty for this menu-bar
-        // app, so it is handed the image from the asset catalog.
+        // app, so it is handed the bundle's icon file (AppIcon.icns).
         let icon = NSImage(named: "AppIcon") ?? NSApp.applicationIconImage
         NSApp.orderFrontStandardAboutPanel(options: [.applicationIcon: icon as Any])
     }

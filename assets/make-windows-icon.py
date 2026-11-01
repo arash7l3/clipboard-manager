@@ -10,9 +10,10 @@ PNG images inside the .ico, which Windows Vista and later read.
 
 The second form writes the MSIX package's logos (Package.appxmanifest) into a folder.
 
-    python3 assets/make-windows-icon.py --appiconset macos/Clipo/Assets.xcassets/AppIcon.appiconset
+    python3 assets/make-windows-icon.py --icns macos/Clipo/AppIcon.icns
 
-writes the macOS app icon: the same shapes with the margin macOS app icons have.
+writes the macOS app icon: the same shapes with the margin macOS app icons
+have, as an .icns file that Info.plist names in CFBundleIconFile.
 
 The "private" variant is the tray icon while private mode is on: a grey
 tile with an orange badge, so it differs at a glance, also in grey tones.
@@ -105,25 +106,22 @@ def write_logos(folder):
             f.write(render(size, SHAPES))
 
 
-# The macOS app icon set: point size, scale.
-APPICONSET = [(16, 1), (16, 2), (32, 1), (32, 2), (128, 1), (128, 2), (256, 1), (256, 2), (512, 1), (512, 2)]
+# The macOS app icon: .icns type of each PNG, by its size in pixels.
+ICNS_TYPES = [
+    (b"icp4", 16), (b"ic11", 32), (b"icp5", 32), (b"ic12", 64), (b"ic07", 128), (b"ic13", 256),
+    (b"ic08", 256), (b"ic14", 512), (b"ic09", 512), (b"ic10", 1024),
+]
 
 
-def write_appiconset(folder):
-    import json
-
-    os.makedirs(folder, exist_ok=True)
-    images = []
-    for points, factor in APPICONSET:
-        pixels = points * factor
-        name = f"icon_{points}x{points}@{factor}x.png"
-        # Large sizes need fewer samples per pixel to look smooth, and render much faster.
-        with open(os.path.join(folder, name), "wb") as f:
-            f.write(render(pixels, SHAPES, margin=100, ss=SS if pixels <= 128 else 2))
-        images.append({"filename": name, "idiom": "mac", "scale": f"{factor}x", "size": f"{points}x{points}"})
-    with open(os.path.join(folder, "Contents.json"), "w") as f:
-        json.dump({"images": images, "info": {"author": "xcode", "version": 1}}, f, indent=2)
-        f.write("\n")
+def write_icns(path):
+    images = {}
+    for _, pixels in ICNS_TYPES:
+        if pixels not in images:
+            # Large sizes need fewer samples per pixel to look smooth, and render much faster.
+            images[pixels] = render(pixels, SHAPES, margin=100, ss=SS if pixels <= 128 else 2)
+    body = b"".join(kind + struct.pack(">I", 8 + len(images[pixels])) + images[pixels] for kind, pixels in ICNS_TYPES)
+    with open(path, "wb") as f:
+        f.write(b"icns" + struct.pack(">I", 8 + len(body)) + body)
 
 
 def main(path, variant):
@@ -144,7 +142,7 @@ if __name__ == "__main__":
     if sys.argv[1] == "--logos":
         write_logos(sys.argv[2])
         sys.exit()
-    if sys.argv[1] == "--appiconset":
-        write_appiconset(sys.argv[2])
+    if sys.argv[1] == "--icns":
+        write_icns(sys.argv[2])
         sys.exit()
     main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "")

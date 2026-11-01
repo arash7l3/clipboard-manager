@@ -57,7 +57,7 @@ Record anything that fails as a new step in `PLAN.md`.
 ## Start tab and private mode (step 4.5), still to try on a Mac
 
 - [ ] Settings > General > Open history on: each choice opens the popup on that tab; "Last used tab" reopens the tab you left.
-- [ ] Menu-bar menu > Private Mode toggles the check mark, matches the Settings > Privacy check box, and turns the icon orange with a crossed-out eye (and back).
+- [ ] Menu-bar menu > Private Mode toggles the check mark, matches the Settings > Privacy check box, and adds a crossed-out eye to the bottom-right of the clipboard icon (and takes it away).
 - [ ] While private mode is on the popup shows the orange note, the list sits below it, and copies are not recorded.
 - [ ] Farsi: the new labels are translated and the note is not cut off.
 
@@ -67,3 +67,8 @@ Record anything that fails as a new step in `PLAN.md`.
 - [ ] Clearing Images (or Text, Files) leaves the other kinds and every pinned item; the Pinned tab has no button.
 - [ ] Menu-bar menu > Clear History… asks first; Cancel changes nothing; Clear History leaves only pinned items and the snippets, and the item count in the menu updates.
 - [ ] Farsi: the tooltips, "Clear?" and the alert are translated, and the button sits at the left end of the tab row.
+
+## App icon and private badge (0.1.3), still to try on a Mac
+
+- [ ] After installing the new dmg, Clipo shows its blue clipboard icon in Finder, Spotlight, the About panel and System Settings > Privacy & Security > Accessibility.
+- [ ] Private mode keeps the clipboard in the menu bar with a small crossed-out eye at its bottom-right, in light and dark menu bars.

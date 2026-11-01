@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Only what Xcode cannot generate from build settings; the other keys
+	     come from INFOPLIST_KEY_* in the project. Clipo/AppIcon.icns is made
+	     by assets/make-windows-icon.py (decision 0028). -->
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+</dict>
+</plist>

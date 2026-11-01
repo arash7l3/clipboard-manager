@@ -31,3 +31,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0025](0025-windows-msix.md) | Windows MSIX: built by the app's own project, signed afterwards, test-signed until there is a certificate |
 | [0026](0026-security-review.md) | Security review: history out of backups, forks off the Mac, clean signed builds, export stays unencrypted |
 | [0027](0027-github-releases.md) | Releases: a `v*` tag attaches the dmg and the MSIX to a GitHub release |
+| [0028](0028-app-icon-file-private-badge-tray-focus.md) | macOS icon as an .icns file, a badge for private mode, and the tray menu's focus on Windows |

@@ -27,6 +27,9 @@ internal sealed class Shell : IDisposable
     private static readonly ResourceLoader s_strings = new();
 
     private readonly MessageWindow _messages = new();
+    /// <summary>Owns the tray menu: a menu's owner must come to the front, which a message-only window cannot.</summary>
+    private readonly MessageWindow _menuOwner = new(topLevel: true);
+    private readonly ForegroundTracker _foreground = new();
     private readonly TrayIcon _tray;
     private readonly GlobalHotkey _hotkey;
     private bool _privateMode;
@@ -129,6 +132,8 @@ internal sealed class Shell : IDisposable
         Watcher.Dispose();
         _hotkey.Dispose();
         _tray.Dispose();
+        _foreground.Dispose();
+        _menuOwner.Dispose();
         _messages.Dispose();
     }
 
@@ -157,7 +162,7 @@ internal sealed class Shell : IDisposable
             new MenuEntry(QuitId, s_strings.GetString("MenuQuit")),
         };
 
-        var picked = PopupMenu.Show(_messages, entries, e.X, e.Y, CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft);
+        var picked = PopupMenu.Show(_menuOwner, entries, e.X, e.Y, CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft);
         switch (picked)
         {
             case OpenId:
@@ -179,6 +184,10 @@ internal sealed class Shell : IDisposable
                 QuitRequested?.Invoke(this, EventArgs.Empty);
                 break;
             case >= SnippetBaseId when picked - SnippetBaseId < snippets.Count:
+                // The menu left the taskbar or Clipo in front; the paste goes
+                // to the app the user was working in. Clipo is still in front,
+                // which Windows requires for this.
+                Desktop.Activate(_foreground.LastAppWindow);
                 SnippetChosen?.Invoke(this, snippets[picked - SnippetBaseId]);
                 break;
         }
