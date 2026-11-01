@@ -71,12 +71,14 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <FontIcon Glyph="{x:Bind Glyph}" FontSize="18" Visibility="{x:Bind GlyphVisibility}"
                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <Image Source="{x:Bind Thumbnail}" Width="32" Height="32" Stretch="Uniform"
                                Visibility="{x:Bind ThumbnailVisibility}" />
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1"
+                                    Visibility="{x:Bind LinesVisibility, Mode=OneWay}">
                             <TextBlock Text="{x:Bind Title}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{x:Bind Detail}" Style="{StaticResource CaptionTextBlockStyle}"
                                        TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
@@ -86,6 +88,31 @@
                                    VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <FontIcon Grid.Column="3" Glyph="&#xE718;" FontSize="12" Visibility="{x:Bind PinVisibility}"
                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <!-- The new name while the row is renamed; typed through the popup's keys, so it never has the focus. -->
+                        <TextBox Grid.Column="1" VerticalAlignment="Center" IsSpellCheckEnabled="False"
+                                 IsReadOnly="True" IsTabStop="False" AllowFocusOnInteraction="False" IsHitTestVisible="False"
+                                 Text="{x:Bind RenameShown, Mode=OneWay}" PlaceholderText="{x:Bind RenameHint}"
+                                 Visibility="{x:Bind RenameVisibility, Mode=OneWay}"
+                                 SelectionHighlightColorWhenNotFocused="{ThemeResource TextControlSelectionHighlightColor}" />
+                        <!-- Rename and delete this item. Drawn, not font glyphs, like the Clear button. -->
+                        <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                            <Button Padding="6" MinWidth="0" MinHeight="0" Background="Transparent" BorderThickness="0"
+                                    IsTabStop="False" AllowFocusOnInteraction="False" Click="OnRenameClick"
+                                    ToolTipService.ToolTip="{x:Bind RenameLabel}" AutomationProperties.Name="{x:Bind RenameLabel}">
+                                <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.2"
+                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Stroke="{ThemeResource TextFillColorSecondaryBrush}"
+                                      Data="M10.5 2.5L13.5 5.5L5.5 13.5H2.5V10.5Z M9 4L12 7" />
+                            </Button>
+                            <Button Padding="6" MinWidth="0" MinHeight="0" Background="Transparent" BorderThickness="0"
+                                    IsTabStop="False" AllowFocusOnInteraction="False" Click="OnDeleteClick"
+                                    ToolTipService.ToolTip="{x:Bind DeleteLabel}" AutomationProperties.Name="{x:Bind DeleteLabel}">
+                                <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.2"
+                                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                      Stroke="{ThemeResource TextFillColorSecondaryBrush}"
+                                      Data="M5.5 2.5H10.5 M2 4H14 M3.5 4L4.2 13.2A1 1 0 0 0 5.2 14H10.8A1 1 0 0 0 11.8 13.2L12.5 4 M6.5 6.5V11.5 M9.5 6.5V11.5" />
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

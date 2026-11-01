@@ -436,6 +436,35 @@ fn pin_persists() {
 }
 
 #[test]
+fn title_is_trimmed_listed_searched_and_persists() {
+    let fx = Fixture::new();
+    let mut store = fx.open();
+    let item = store.insert(text("hello world"), None, at(1)).unwrap();
+    let title = |store: &Store| store.previews(&Query::default()).unwrap()[0].title.clone();
+    assert_eq!(title(&store), None);
+
+    store.set_title(item.id, Some("  My note ")).unwrap();
+    assert_eq!(title(&store).as_deref(), Some("My note"));
+    let found = store.previews(&Query::text("note")).unwrap();
+    assert_eq!(found.len(), 1, "the name is searchable");
+    // A copy of the same content again keeps the name; the content is unchanged.
+    store.touch(item.id, at(2)).unwrap();
+    assert_eq!(
+        store.plain_text(item.id).unwrap().as_deref(),
+        Some("hello world")
+    );
+    drop(store);
+
+    let mut store = fx.open();
+    assert_eq!(title(&store).as_deref(), Some("My note"));
+    store.set_title(item.id, Some("   ")).unwrap();
+    assert_eq!(title(&store), None);
+    store.set_title(item.id, Some("x")).unwrap();
+    store.set_title(item.id, None).unwrap();
+    assert_eq!(title(&store), None);
+}
+
+#[test]
 fn delete_removes_item_and_its_files() {
     let fx = Fixture::new();
     let mut store = fx.open();
@@ -513,6 +542,10 @@ fn missing_item_operations_report_not_found() {
     );
     assert_eq!(
         store.delete(missing).err(),
+        Some(CoreError::ItemNotFound(missing))
+    );
+    assert_eq!(
+        store.set_title(missing, Some("x")).err(),
         Some(CoreError::ItemNotFound(missing))
     );
 }

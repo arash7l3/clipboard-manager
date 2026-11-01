@@ -6,7 +6,7 @@ use crate::error::CoreError;
 
 /// Migration `i` upgrades the schema from version `i` to `i + 1`.
 /// Append new migrations; never edit a shipped one.
-const MIGRATIONS: &[&str] = &[V1, V2, V3];
+const MIGRATIONS: &[&str] = &[V1, V2, V3, V4];
 
 /// Version 1: history items, with per-kind columns and their files.
 ///
@@ -81,6 +81,12 @@ CREATE TABLE snippets (
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 ) STRICT;
+";
+
+/// Version 4: a name the user gave an item, shown in place of its content's
+/// first line. `NULL` for items never renamed.
+const V4: &str = "
+ALTER TABLE items ADD COLUMN title TEXT;
 ";
 
 /// Newest schema version this build understands.

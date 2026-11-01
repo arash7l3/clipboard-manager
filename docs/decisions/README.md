@@ -36,3 +36,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0030](0030-macos-file-references-on-restore.md) | macOS keeps copied files as plain paths and never empties the clipboard on restore |
 | [0031](0031-paste-target-and-screenshots.md) | Pasting into the app that was in front, and screenshots in the history |
 | [0032](0032-windows-popup-keeps-the-focus.md) | Windows: the popup leaves the focus where the user types, and picked images paste into folders |
+| [0033](0033-rename-and-delete-items.md) | Renaming and deleting single items with buttons at the end of each popup row |

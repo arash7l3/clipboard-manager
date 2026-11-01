@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
 using Windows.Graphics;
 
@@ -24,7 +25,9 @@ namespace Clipo;
 /// Esc closes. Ctrl+1 to Ctrl+9 pick the first nine rows. Holding Shift while
 /// picking, with Enter or a click, pastes without formatting. Ctrl+P, or Pin
 /// in a row's right-click menu, pins or unpins an item. The button beside the
-/// tabs clears the tab after a second click. A click on a row picks it;
+/// tabs clears the tab after a second click. The buttons at the end of a row
+/// rename and delete its item; while a row is renamed, typing edits its name,
+/// Enter saves it and Esc keeps the old one. A click on a row picks it;
 /// clicking anywhere else, or another window coming to the front, closes the
 /// popup.
 /// </summary>
@@ -63,6 +66,9 @@ public sealed partial class PopupWindow : Window
     public Func<HotkeyChord?> Hotkey { get; set; } = () => null;
 
     private bool _allowClose;
+
+    /// <summary>The row being renamed and its name so far, if any.</summary>
+    private (PopupRow Row, PopupRename Rename)? _renaming;
 
     public PopupWindow(PopupModel model)
     {
@@ -107,6 +113,12 @@ public sealed partial class PopupWindow : Window
 
     /// <summary>Raised with the tab to clear, after the user clicked Clear twice; the popup stays open.</summary>
     public event EventHandler<Category>? ClearRequested;
+
+    /// <summary>Raised when the user renamed a row; the popup stays open.</summary>
+    public event EventHandler<PopupRenameRequest>? RenameRequested;
+
+    /// <summary>Raised with the row whose delete button the user clicked; the popup stays open.</summary>
+    public event EventHandler<ItemPreview>? DeleteRequested;
 
     public bool IsShown { get; private set; }
 
@@ -185,6 +197,7 @@ public sealed partial class PopupWindow : Window
         IsShown = false;
         _input.Stop();
         DisarmClear();
+        _renaming = null;
         if (restoreFocus && Desktop.IsOwnWindow(Desktop.ForegroundWindow()))
         {
             Desktop.Activate(_previous);
@@ -256,6 +269,8 @@ public sealed partial class PopupWindow : Window
 
     private void ShowRows()
     {
+        // The rows are made anew, so a rename under way ends without saving.
+        _renaming = null;
         var now = DateTime.UtcNow;
         var rows = _model.Rows.Select((row, position) => PopupRow.Create(row, _text, now, position + 1)).ToList();
         HistoryList.ItemsSource = rows;
@@ -307,6 +322,11 @@ public sealed partial class PopupWindow : Window
         {
             return;
         }
+        if (_renaming is { } renaming)
+        {
+            OnRenameKey(renaming.Row, renaming.Rename, command);
+            return;
+        }
         switch (command.Action)
         {
             case PopupKeyAction.Down:
@@ -353,6 +373,104 @@ public sealed partial class PopupWindow : Window
                 SetSearch(PopupKeys.DeleteWord(SearchBox.Text));
                 break;
         }
+    }
+
+    private void OnRenameClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is PopupRow row)
+        {
+            BeginRename(row);
+        }
+    }
+
+    private void OnDeleteClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is PopupRow row)
+        {
+            EndRename(save: false);
+            DeleteRequested?.Invoke(this, row.Preview);
+        }
+    }
+
+    /// <summary>Selects <paramref name="row"/> and shows its name, ready to be typed over.</summary>
+    private void BeginRename(PopupRow row)
+    {
+        EndRename(save: false);
+        var index = _model.Rows.ToList().FindIndex(preview => preview.Id == row.Preview.Id);
+        if (index < 0)
+        {
+            return;
+        }
+        _model.Select(index);
+        var rename = new PopupRename(row.Preview.Id, row.Title);
+        _renaming = (row, rename);
+        row.ShowRename(rename);
+        ShowRenameSelection(row);
+    }
+
+    private void OnRenameKey(PopupRow row, PopupRename rename, PopupKeyCommand command)
+    {
+        switch (rename.Handle(command))
+        {
+            case PopupRenameStep.Save:
+                EndRename(save: true);
+                break;
+            case PopupRenameStep.Cancel:
+                EndRename(save: false);
+                break;
+            default:
+                row.ShowRename(rename);
+                ShowRenameSelection(row);
+                break;
+        }
+    }
+
+    /// <summary>Shows the row's lines again; <paramref name="save"/> asks for the new name, if it changed.</summary>
+    private void EndRename(bool save)
+    {
+        if (_renaming is not { } renaming)
+        {
+            return;
+        }
+        _renaming = null;
+        var (row, rename) = renaming;
+        row.ShowRename(null);
+        var name = rename.Text.Trim();
+        if (save && name != row.Title)
+        {
+            RenameRequested?.Invoke(this, new PopupRenameRequest(row.Preview, name));
+        }
+    }
+
+    /// <summary>The rename field never has the focus; it shows the old name selected until the first key replaces it.</summary>
+    private void ShowRenameSelection(PopupRow row)
+    {
+        if (HistoryList.ContainerFromItem(row) is not DependencyObject container || FindTextBox(container) is not { } box)
+        {
+            return;
+        }
+        if (row.RenameFresh)
+        {
+            box.SelectAll();
+        }
+        else
+        {
+            box.Select(box.Text.Length, 0);
+        }
+    }
+
+    private static TextBox? FindTextBox(DependencyObject parent)
+    {
+        var count = VisualTreeHelper.GetChildrenCount(parent);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if ((child as TextBox ?? FindTextBox(child)) is { } box)
+            {
+                return box;
+            }
+        }
+        return null;
     }
 
     private void RequestPin(ItemPreview row) => PinRequested?.Invoke(this, new PopupPin(row, !row.Pinned));
@@ -450,6 +568,11 @@ public sealed partial class PopupWindow : Window
 /// <param name="Row">The item.</param>
 /// <param name="Plain">Paste it as plain text, without formatting.</param>
 public sealed record PopupChoice(ItemPreview Row, bool Plain);
+
+/// <summary>A request to rename a row.</summary>
+/// <param name="Row">The item.</param>
+/// <param name="Title">Its new name, trimmed; empty to show its content's first line again.</param>
+public sealed record PopupRenameRequest(ItemPreview Row, string Title);
 
 /// <summary>A request to pin or unpin a row.</summary>
 /// <param name="Row">The item.</param>

@@ -2,18 +2,29 @@ import AppKit
 import ClipoCore
 
 /// One history item in the popup list: an icon or thumbnail, a title line, a
-/// details line and a pin mark. Built in code, laid out with leading and
-/// trailing edges so it mirrors in right-to-left languages.
+/// details line, a pin mark, and buttons that rename and delete the item.
+/// While the item is renamed, a text field takes the title's place. Built in
+/// code, laid out with leading and trailing edges so it mirrors in
+/// right-to-left languages.
 final class HistoryRowView: NSTableCellView {
     static let reuseIdentifier = NSUserInterfaceItemIdentifier("HistoryRow")
     static let height: CGFloat = 44
     static let iconSize: CGFloat = 32
+    static let editorWidth: CGFloat = 180
 
     let icon = NSImageView()
     let title = NSTextField(labelWithString: "")
     let detail = NSTextField(labelWithString: "")
     private let pin = NSImageView()
     let shortcut = NSTextField(labelWithString: "")
+    /// Edits the item's name while it is renamed; hidden otherwise.
+    let editor = NSTextField(string: "")
+    private let renameButton = NSButton(title: "", target: nil, action: nil)
+    private let deleteButton = NSButton(title: "", target: nil, action: nil)
+    /// Called when the rename button is clicked.
+    var onRename: (@MainActor () -> Void)?
+    /// Called when the delete button is clicked.
+    var onDelete: (@MainActor () -> Void)?
 
     init() {
         super.init(frame: NSRect(x: 0, y: 0, width: 300, height: Self.height))
@@ -45,12 +56,19 @@ final class HistoryRowView: NSTableCellView {
         shortcut.setContentHuggingPriority(.required, for: .horizontal)
         shortcut.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        let lines = NSStackView(views: [title, detail])
+        configureEditor()
+        configure(renameButton, symbol: "pencil", label: PopupText.renameItem, action: #selector(renameClicked(_:)))
+        configure(deleteButton, symbol: "trash", label: PopupText.deleteItem, action: #selector(deleteClicked(_:)))
+
+        let lines = NSStackView(views: [title, editor, detail])
         lines.orientation = .vertical
         lines.alignment = .leading
         lines.spacing = 1
 
-        let row = NSStackView(views: [icon, lines, shortcut, pin])
+        let row = NSStackView()
+        // The buttons sit at the row's trailing end; the rest keeps its place.
+        row.setViews([icon, lines, shortcut, pin], in: .leading)
+        row.setViews([renameButton, deleteButton], in: .trailing)
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 8
@@ -66,21 +84,62 @@ final class HistoryRowView: NSTableCellView {
         ])
     }
 
+    private func configureEditor() {
+        editor.placeholderString = PopupText.itemNamePlaceholder
+        editor.font = .systemFont(ofSize: NSFont.systemFontSize)
+        editor.lineBreakMode = .byTruncatingTail
+        editor.usesSingleLineMode = true
+        editor.cell?.isScrollable = true
+        editor.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        editor.setAccessibilityLabel(PopupText.itemNamePlaceholder)
+        editor.widthAnchor.constraint(greaterThanOrEqualToConstant: Self.editorWidth).isActive = true
+        editor.isHidden = true
+    }
+
+    private func configure(_ button: NSButton, symbol: String, label: String, action: Selector) {
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+        button.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 12, weight: .regular)
+        button.imagePosition = .imageOnly
+        button.isBordered = false
+        button.contentTintColor = .secondaryLabelColor
+        button.toolTip = label
+        button.setAccessibilityLabel(label)
+        button.target = self
+        button.action = action
+        // Keys stay in the search field.
+        button.refusesFirstResponder = true
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+    }
+
+    @objc private func renameClicked(_ sender: NSButton) {
+        onRename?()
+    }
+
+    @objc private func deleteClicked(_ sender: NSButton) {
+        onDelete?()
+    }
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("HistoryRowView is built in code")
     }
 
     /// Fills the row with `item`; `now` dates its copy time. `quickPaste` is
-    /// the digit of its Cmd+digit shortcut, if it has one.
-    func show(_ item: ItemPreview, now: Date, quickPaste: Int? = nil) {
+    /// the digit of its Cmd+digit shortcut, if it has one. `renaming` shows
+    /// the editor, holding the item's name, in place of the title.
+    func show(_ item: ItemPreview, now: Date, quickPaste: Int? = nil, renaming: Bool = false) {
         shortcut.stringValue = quickPaste.map { "⌘\($0)" } ?? ""
-        title.stringValue = PopupText.title(item.content)
+        title.stringValue = PopupText.title(item)
+        title.isHidden = renaming
+        editor.isHidden = !renaming
+        editor.stringValue = renaming ? (item.title ?? PopupText.title(item.content)) : ""
         detail.stringValue = PopupText.detail(item, now: now)
         icon.image = Self.icon(for: item.content)
         pin.isHidden = !item.pinned
-        // One spoken sentence per row; its icon and lines are not read again.
-        setAccessibilityChildren([])
+        // One spoken sentence per row; its icon and lines are not read again,
+        // but its buttons, and the editor while renaming, are reachable.
+        setAccessibilityChildren(renaming ? [editor, renameButton, deleteButton] : [renameButton, deleteButton])
         setAccessibilityLabel(PopupText.accessibilityLabel(item, now: now))
     }
 

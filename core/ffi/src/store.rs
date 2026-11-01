@@ -162,6 +162,17 @@ impl ClipStore {
         Ok(self.lock().set_pinned(ItemId::from_raw(id), pinned)?)
     }
 
+    /// Gives the item a name to show in place of its content's first line.
+    /// The name is trimmed; a blank one takes the name away. The content is
+    /// never changed.
+    ///
+    /// # Errors
+    ///
+    /// [`ClipoError::ItemNotFound`] if no item has this id.
+    pub fn set_title(&self, id: i64, title: &str) -> Result<(), ClipoError> {
+        Ok(self.lock().set_title(ItemId::from_raw(id), Some(title))?)
+    }
+
     /// Clears a tab: deletes the unpinned items listed under `category` and
     /// returns how many. Pinned items and snippets are kept, so clearing
     /// [`Category::Pinned`] deletes nothing.

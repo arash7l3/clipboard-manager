@@ -228,7 +228,7 @@ pub(super) fn preview_columns() -> String {
         "id, kind, pinned, source_app_id, source_app_name, last_copied_at, \
          substr(text_plain, 1, {PREVIEW_TEXT_CHARS}), length(text_plain) > {PREVIEW_TEXT_CHARS}, \
          image_format, image_width, image_height, thumbnail, \
-         (SELECT count(*) FROM item_files WHERE item_id = items.id)"
+         (SELECT count(*) FROM item_files WHERE item_id = items.id), title"
     )
 }
 
@@ -247,6 +247,7 @@ pub(super) struct RawPreview {
     image_height: Option<i64>,
     thumbnail: Option<Vec<u8>>,
     file_count: i64,
+    title: Option<String>,
 }
 
 impl RawPreview {
@@ -265,6 +266,7 @@ impl RawPreview {
             image_height: row.get(10)?,
             thumbnail: row.get(11)?,
             file_count: row.get(12)?,
+            title: row.get(13)?,
         })
     }
 
@@ -315,6 +317,7 @@ impl RawPreview {
                 name: self.source_app_name,
             }),
             last_copied_at: Timestamp::from_millis(self.last_copied_at),
+            title: self.title,
         })
     }
 }

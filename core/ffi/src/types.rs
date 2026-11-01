@@ -206,6 +206,9 @@ pub struct ItemPreview {
     pub source_app: Option<SourceApp>,
     /// When the content was last copied.
     pub last_copied_at: SystemTime,
+    /// The name the user gave the item, shown in place of its content's
+    /// first line; `None` if it was never renamed. Never blank.
+    pub title: Option<String>,
 }
 
 /// A saved text template, kept apart from the history: never evicted, never
@@ -457,6 +460,7 @@ impl From<clipo_core::ItemPreview> for ItemPreview {
             pinned: preview.pinned,
             source_app: preview.source_app.map(SourceApp::from),
             last_copied_at: preview.last_copied_at.to_system_time(),
+            title: preview.title,
         }
     }
 }
