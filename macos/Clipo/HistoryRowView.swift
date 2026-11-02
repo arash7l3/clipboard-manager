@@ -2,7 +2,8 @@ import AppKit
 import ClipoCore
 
 /// One history item in the popup list: an icon or thumbnail, a title line, a
-/// details line, a pin mark, and buttons that rename and delete the item.
+/// details line, a shortcut hint, a pin mark, and buttons that rename and delete
+/// the item, the last four together at the row's trailing end.
 /// While the item is renamed, a text field takes the title's place. Built in
 /// code, laid out with leading and trailing edges so it mirrors in
 /// right-to-left languages.
@@ -66,9 +67,9 @@ final class HistoryRowView: NSTableCellView {
         lines.spacing = 1
 
         let row = NSStackView()
-        // The buttons sit at the row's trailing end; the rest keeps its place.
-        row.setViews([icon, lines, shortcut, pin], in: .leading)
-        row.setViews([renameButton, deleteButton], in: .trailing)
+        // The shortcut, pin and buttons all sit at the row's trailing end.
+        row.setViews([icon, lines], in: .leading)
+        row.setViews([shortcut, pin, renameButton, deleteButton], in: .trailing)
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 8
