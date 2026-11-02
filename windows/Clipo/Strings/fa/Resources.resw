@@ -100,6 +100,58 @@
     <value>فایل‌ها</value>
     <comment>Popup tab listing copied files</comment>
   </data>
+  <data name="TabEmoji.Text" xml:space="preserve">
+    <value>ایموجی</value>
+    <comment>Popup tab with the emoji picker</comment>
+  </data>
+  <data name="EmojiGrid" xml:space="preserve">
+    <value>ایموجی</value>
+    <comment>Screen-reader name of the emoji picker's grid</comment>
+  </data>
+  <data name="EmojiBar" xml:space="preserve">
+    <value>دسته‌های ایموجی</value>
+    <comment>Screen-reader name of the emoji picker's section buttons</comment>
+  </data>
+  <data name="EmojiRecent" xml:space="preserve">
+    <value>اخیر</value>
+    <comment>Emoji picker section of the emoji used last</comment>
+  </data>
+  <data name="EmojiResults" xml:space="preserve">
+    <value>نتایج جستجو</value>
+    <comment>Emoji picker heading of the search results</comment>
+  </data>
+  <data name="EmojiSmileys" xml:space="preserve">
+    <value>شکلک‌ها و افراد</value>
+    <comment>Emoji picker section of faces and people</comment>
+  </data>
+  <data name="EmojiAnimals" xml:space="preserve">
+    <value>حیوانات و طبیعت</value>
+    <comment>Emoji picker section of animals and plants</comment>
+  </data>
+  <data name="EmojiFood" xml:space="preserve">
+    <value>خوراک و نوشیدنی</value>
+    <comment>Emoji picker section of food and drink</comment>
+  </data>
+  <data name="EmojiActivities" xml:space="preserve">
+    <value>فعالیت‌ها</value>
+    <comment>Emoji picker section of sports and events</comment>
+  </data>
+  <data name="EmojiTravel" xml:space="preserve">
+    <value>سفر و مکان‌ها</value>
+    <comment>Emoji picker section of places and vehicles</comment>
+  </data>
+  <data name="EmojiObjects" xml:space="preserve">
+    <value>اشیا</value>
+    <comment>Emoji picker section of things</comment>
+  </data>
+  <data name="EmojiSymbols" xml:space="preserve">
+    <value>نمادها</value>
+    <comment>Emoji picker section of signs and symbols</comment>
+  </data>
+  <data name="EmojiFlags" xml:space="preserve">
+    <value>پرچم‌ها</value>
+    <comment>Emoji picker section of flags</comment>
+  </data>
   <data name="TabPinned.Text" xml:space="preserve">
     <value>سنجاق‌شده</value>
     <comment>Popup tab listing pinned items</comment>

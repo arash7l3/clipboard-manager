@@ -35,6 +35,29 @@ public sealed class ExtrasTests : IDisposable
     }
 
     [Fact]
+    public async Task RecentEmojiAreRecordedMostRecentFirst()
+    {
+        var store = Open("a");
+        var extras = new Extras(() => store);
+
+        Assert.True(await extras.RecordEmojiAsync("😀"));
+        Assert.True(await extras.RecordEmojiAsync("🐾"));
+        Assert.True(await extras.RecordEmojiAsync("😀"));
+        Assert.False(await extras.RecordEmojiAsync("not an emoji"));
+
+        Assert.Equal(["😀", "🐾"], (await extras.RecentEmojiAsync()).Select(emoji => emoji.Text));
+    }
+
+    [Fact]
+    public async Task RecentEmojiOfAClosedHistoryAreEmpty()
+    {
+        var extras = new Extras(() => null);
+
+        Assert.Empty(await extras.RecentEmojiAsync());
+        Assert.False(await extras.RecordEmojiAsync("😀"));
+    }
+
+    [Fact]
     public async Task BlankSnippetIsRefused()
     {
         var store = Open("a");

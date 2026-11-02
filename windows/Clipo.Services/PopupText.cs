@@ -79,6 +79,37 @@ public sealed class PopupText(Func<string, string> strings, CultureInfo culture)
         _ => "ClearAll",
     });
 
+    /// <summary>The Emoji tab's grid, for screen readers.</summary>
+    public string EmojiGridName => strings("EmojiGrid");
+
+    /// <summary>The bar of section buttons under the grid, for screen readers.</summary>
+    public string EmojiBarName => strings("EmojiBar");
+
+    /// <summary>The heading of a block in the emoji grid.</summary>
+    public string EmojiSectionTitle(EmojiGridSection section)
+    {
+        ArgumentNullException.ThrowIfNull(section);
+        return section.Kind switch
+        {
+            EmojiSectionKind.Recent => strings("EmojiRecent"),
+            EmojiSectionKind.Results => strings("EmojiResults"),
+            _ => EmojiGroupTitle(section.Group),
+        };
+    }
+
+    /// <summary>The name of a group of emoji, for its heading and its button in the bar.</summary>
+    public string EmojiGroupTitle(EmojiGroup group) => strings(group switch
+    {
+        EmojiGroup.SmileysAndPeople => "EmojiSmileys",
+        EmojiGroup.AnimalsAndNature => "EmojiAnimals",
+        EmojiGroup.FoodAndDrink => "EmojiFood",
+        EmojiGroup.Activities => "EmojiActivities",
+        EmojiGroup.TravelAndPlaces => "EmojiTravel",
+        EmojiGroup.Objects => "EmojiObjects",
+        EmojiGroup.Symbols => "EmojiSymbols",
+        _ => "EmojiFlags",
+    });
+
     /// <summary>What the list says when it has no rows.</summary>
     public string EmptyList(bool failed, bool searching) =>
         strings(failed ? "StatusUnavailable" : searching ? "NoMatches" : "NoItems");

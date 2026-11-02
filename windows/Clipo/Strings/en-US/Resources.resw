@@ -100,6 +100,58 @@
     <value>Files</value>
     <comment>Popup tab listing copied files</comment>
   </data>
+  <data name="TabEmoji.Text" xml:space="preserve">
+    <value>Emoji</value>
+    <comment>Popup tab with the emoji picker</comment>
+  </data>
+  <data name="EmojiGrid" xml:space="preserve">
+    <value>Emoji</value>
+    <comment>Screen-reader name of the emoji picker's grid</comment>
+  </data>
+  <data name="EmojiBar" xml:space="preserve">
+    <value>Emoji categories</value>
+    <comment>Screen-reader name of the emoji picker's section buttons</comment>
+  </data>
+  <data name="EmojiRecent" xml:space="preserve">
+    <value>Recent</value>
+    <comment>Emoji picker section of the emoji used last</comment>
+  </data>
+  <data name="EmojiResults" xml:space="preserve">
+    <value>Search Results</value>
+    <comment>Emoji picker heading of the search results</comment>
+  </data>
+  <data name="EmojiSmileys" xml:space="preserve">
+    <value>Smileys &amp; People</value>
+    <comment>Emoji picker section of faces and people</comment>
+  </data>
+  <data name="EmojiAnimals" xml:space="preserve">
+    <value>Animals &amp; Nature</value>
+    <comment>Emoji picker section of animals and plants</comment>
+  </data>
+  <data name="EmojiFood" xml:space="preserve">
+    <value>Food &amp; Drink</value>
+    <comment>Emoji picker section of food and drink</comment>
+  </data>
+  <data name="EmojiActivities" xml:space="preserve">
+    <value>Activities</value>
+    <comment>Emoji picker section of sports and events</comment>
+  </data>
+  <data name="EmojiTravel" xml:space="preserve">
+    <value>Travel &amp; Places</value>
+    <comment>Emoji picker section of places and vehicles</comment>
+  </data>
+  <data name="EmojiObjects" xml:space="preserve">
+    <value>Objects</value>
+    <comment>Emoji picker section of things</comment>
+  </data>
+  <data name="EmojiSymbols" xml:space="preserve">
+    <value>Symbols</value>
+    <comment>Emoji picker section of signs and symbols</comment>
+  </data>
+  <data name="EmojiFlags" xml:space="preserve">
+    <value>Flags</value>
+    <comment>Emoji picker section of flags</comment>
+  </data>
   <data name="TabPinned.Text" xml:space="preserve">
     <value>Pinned</value>
     <comment>Popup tab listing pinned items</comment>

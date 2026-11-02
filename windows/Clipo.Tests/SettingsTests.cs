@@ -257,6 +257,14 @@ public sealed class SettingsTests : IDisposable
         Assert.Equal(expected, new AppSettings { StartTab = choice }.StartCategory(lastUsed));
 
     [Fact]
+    public void OnlyLastUsedReopensOnEmoji()
+    {
+        Assert.Equal(PopupTab.Emoji, new AppSettings { StartTab = StartTab.LastUsed }.StartPopupTab(PopupTab.Emoji));
+        Assert.Equal(PopupTab.FromCategory(Category.Text), new AppSettings { StartTab = StartTab.Text }.StartPopupTab(PopupTab.Emoji));
+        Assert.Equal(PopupTab.FromCategory(Category.All), new AppSettings().StartPopupTab(PopupTab.Emoji));
+    }
+
+    [Fact]
     public void StartTabDoesNotChangeTheRetention()
     {
         Assert.True(new AppSettings().HasSameRetentionAs(new AppSettings { StartTab = StartTab.Pinned }));
