@@ -1,18 +1,33 @@
 import ClipoCore
 import Foundation
 
+/// A tab of the popup.
+enum PopupTab: Equatable {
+    /// A list of history items.
+    case history(ClipoCore.Category)
+    /// The emoji picker, which lists no history items.
+    case emoji
+}
+
 /// What the popup shows: the tab, the search text, the rows and which row is
 /// selected. Loads rows from the core off the main thread and keeps only the
-/// answer to the latest question.
+/// answer to the latest question. On the Emoji tab it keeps the rows of the
+/// history tab shown before and leaves the emoji to ``EmojiModel``.
 @MainActor
 final class PopupModel {
     /// Fetches previews for a query; `nil` if the store failed. Called off the
     /// main thread.
     typealias Loader = @Sendable (Query) -> [ItemPreview]?
 
-    /// The tabs, in display order.
-    let categories = tabCategories()
+    /// The tabs, in display order: the history's, with Emoji before Pinned.
+    let tabs: [PopupTab] = {
+        var tabs = tabCategories().map(PopupTab.history)
+        tabs.insert(.emoji, at: tabs.firstIndex(of: .history(.pinned)) ?? tabs.endIndex)
+        return tabs
+    }()
 
+    private(set) var tab: PopupTab = .history(.all)
+    /// The history tab shown last; the one ``rows`` and loads belong to.
     private(set) var category: ClipoCore.Category = .all
     private(set) var searchText = ""
     private(set) var rows: [ItemPreview] = []
@@ -27,6 +42,8 @@ final class PopupModel {
     var onRowsChange: (@MainActor () -> Void)?
     /// Called after the selection moved within the same rows.
     var onSelectionChange: (@MainActor () -> Void)?
+    /// Called after ``tab`` was set, whether or not it changed.
+    var onTabChange: (@MainActor () -> Void)?
 
     private let load: Loader
     private let searchDelay: Duration
@@ -41,10 +58,14 @@ final class PopupModel {
         self.load = load
     }
 
-    /// The current tab has a Clear button: every tab but Pinned, whose items
-    /// clearing never touches.
+    var isEmojiTab: Bool {
+        tab == .emoji
+    }
+
+    /// The current tab has a Clear button: every history tab but Pinned,
+    /// whose items clearing never touches.
     var canClear: Bool {
-        category != .pinned
+        tab != .history(.pinned) && tab != .emoji
     }
 
     var selectedRow: ItemPreview? {
@@ -54,43 +75,61 @@ final class PopupModel {
     /// Back to the `start` tab with no search and no rows until they load, for
     /// a freshly opened popup: Enter must not pick a row left from last time.
     @discardableResult
-    func reset(to start: ClipoCore.Category = .all) -> Task<Void, Never> {
-        category = start
+    func reset(to start: PopupTab = .history(.all)) -> Task<Void, Never> {
+        show(start)
         searchText = ""
         let task = reload(keepingSelection: false)
         rows = []
         selection = nil
         failed = false
         onRowsChange?()
+        onTabChange?()
         return task
+    }
+
+    /// Shows `tab`. A history tab loads its rows; the Emoji tab loads nothing.
+    @discardableResult
+    func setTab(_ tab: PopupTab) -> Task<Void, Never> {
+        show(tab)
+        onTabChange?()
+        if isEmojiTab {
+            return loading ?? Task {}
+        }
+        return reload(keepingSelection: false)
     }
 
     @discardableResult
     func setCategory(_ category: ClipoCore.Category) -> Task<Void, Never> {
-        self.category = category
-        return reload(keepingSelection: false)
+        setTab(.history(category))
     }
 
     /// Shows the tab `offset` places after the current one, wrapping around.
     @discardableResult
-    func moveCategory(by offset: Int) -> Task<Void, Never> {
-        let index = categories.firstIndex(of: category) ?? 0
-        let count = categories.count
-        return setCategory(categories[((index + offset) % count + count) % count])
+    func moveTab(by offset: Int) -> Task<Void, Never> {
+        let index = tabs.firstIndex(of: tab) ?? 0
+        let count = tabs.count
+        return setTab(tabs[((index + offset) % count + count) % count])
     }
 
+    /// Sets the search text. On the Emoji tab only the text changes; the
+    /// emoji are searched by ``EmojiModel``.
     @discardableResult
     func setSearchText(_ text: String) -> Task<Void, Never> {
         guard text != searchText else { return loading ?? Task {} }
         searchText = text
+        guard !isEmojiTab else { return loading ?? Task {} }
         return reload(keepingSelection: false, after: searchDelay)
     }
 
     /// Loads the rows again, for example after a new copy. The selected item
-    /// stays selected if it is still listed.
+    /// stays selected if it is still listed. The Emoji tab has nothing to
+    /// refresh; the next history tab loads its own rows.
     @discardableResult
     func refresh() -> Task<Void, Never> {
-        reload(keepingSelection: true)
+        if isEmojiTab {
+            return loading ?? Task {}
+        }
+        return reload(keepingSelection: true)
     }
 
     /// Moves the selection `offset` rows down (up if negative), stopping at
@@ -108,6 +147,13 @@ final class PopupModel {
         selection = index
         onSelectionChange?()
         return true
+    }
+
+    private func show(_ tab: PopupTab) {
+        self.tab = tab
+        if case let .history(category) = tab {
+            self.category = category
+        }
     }
 
     private func reload(keepingSelection: Bool, after delay: Duration = .zero) -> Task<Void, Never> {

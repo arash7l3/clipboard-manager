@@ -86,6 +86,17 @@
         }
       }
     },
+    "Activities" : {
+      "comment" : "Emoji picker section of sports and events",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فعالیت‌ها"
+          }
+        }
+      }
+    },
     "Add" : {
       "comment" : "Settings button that adds an app to the ignore list",
       "localizations" : {
@@ -181,6 +192,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "خروجی رمزگذاری نمی‌شود. هر کسی که فایل را به دست آورد می‌تواند آنچه کپی کرده‌اید را بخواند."
+          }
+        }
+      }
+    },
+    "Animals & Nature" : {
+      "comment" : "Emoji picker section of animals and plants",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حیوانات و طبیعت"
           }
         }
       }
@@ -504,6 +526,28 @@
         }
       }
     },
+    "Emoji" : {
+      "comment" : "Popup tab with the emoji picker",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ایموجی"
+          }
+        }
+      }
+    },
+    "Emoji categories" : {
+      "comment" : "Screen-reader label of the emoji picker's section buttons",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دسته‌های ایموجی"
+          }
+        }
+      }
+    },
     "Every item that isn't pinned is deleted. Pinned items and snippets are kept. This can't be undone." : {
       "comment" : "Alert text before clearing the history",
       "localizations" : {
@@ -566,6 +610,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "فایل‌ها"
+          }
+        }
+      }
+    },
+    "Flags" : {
+      "comment" : "Emoji picker section of flags",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "پرچم‌ها"
+          }
+        }
+      }
+    },
+    "Food & Drink" : {
+      "comment" : "Emoji picker section of food and drink",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خوراک و نوشیدنی"
           }
         }
       }
@@ -834,6 +900,17 @@
         }
       }
     },
+    "Objects" : {
+      "comment" : "Emoji picker section of things",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اشیا"
+          }
+        }
+      }
+    },
     "Open Login Items Settings" : {
       "comment" : "Settings button that opens System Settings at Login Items",
       "localizations" : {
@@ -988,6 +1065,17 @@
         }
       }
     },
+    "Recent" : {
+      "comment" : "Emoji picker section of the emoji used last",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اخیر"
+          }
+        }
+      }
+    },
     "Remove" : {
       "comment" : "Settings button that removes an app from the ignore list",
       "localizations" : {
@@ -1065,6 +1153,17 @@
         }
       }
     },
+    "Search Results" : {
+      "comment" : "Emoji picker heading of the search results",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نتایج جستجو"
+          }
+        }
+      }
+    },
     "Search clipboard history" : {
       "comment" : "Screen-reader label of the popup's search field",
       "localizations" : {
@@ -1094,6 +1193,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "نمایش تاریخچه کلیپ‌بورد"
+          }
+        }
+      }
+    },
+    "Smileys & People" : {
+      "comment" : "Emoji picker section of faces and people",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شکلک‌ها و افراد"
           }
         }
       }
@@ -1138,6 +1248,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "شروع تاریخچه تازه"
+          }
+        }
+      }
+    },
+    "Symbols" : {
+      "comment" : "Emoji picker section of signs and symbols",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نمادها"
           }
         }
       }
@@ -1259,6 +1380,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "عنوان"
+          }
+        }
+      }
+    },
+    "Travel & Places" : {
+      "comment" : "Emoji picker section of places and vehicles",
+      "localizations" : {
+        "fa" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سفر و مکان‌ها"
           }
         }
       }

@@ -145,7 +145,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makePopup(for store: ClipStore) -> PopupController {
         popup?.dismiss()
         let model = PopupModel { query in History.previews(query, in: store) }
-        let popup = PopupController(model: model)
+        let recentEmoji = EmojiModel(loadRecent: { History.recentEmoji(in: store) })
+        let popup = PopupController(model: model, emoji: recentEmoji)
         let restorer = ItemRestorer()
         restorer.load = { id in History.item(id, in: store) }
         restorer.loadPlainText = { id in History.plainText(id, in: store) }
@@ -169,6 +170,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         popup.onDelete = { [weak self] row in await self?.delete(row, in: store) }
+        popup.onChooseEmoji = { [weak self] picked in
+            Task { await self?.restore(picked, with: restorer, in: store) }
+        }
         snippetRestorer = restorer
         return popup
     }
@@ -189,33 +193,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         historyChanged(itemCount: itemCount)
-    }
-
-    /// "Clear History…" in the menu: asks first, then clears every unpinned item.
-    private func confirmClearHistory() {
-        guard let store else {
-            NSSound.beep()
-            return
-        }
-        NSApp.activate()
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = String(
-            localized: "Clear the clipboard history?",
-            comment: "Alert title before clearing the history from the menu"
-        )
-        alert.informativeText = String(
-            localized: """
-            Every item that isn't pinned is deleted. Pinned items and snippets are kept. \
-            This can't be undone.
-            """,
-            comment: "Alert text before clearing the history"
-        )
-        alert.addButton(withTitle: String(localized: "Clear History", comment: "Alert button that clears the history"))
-        alert.addButton(withTitle: String(localized: "Cancel", comment: "Alert button that cancels"))
-        alert.buttons.first?.hasDestructiveAction = true
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        Task { await clear(.all, in: store) }
     }
 
     /// Pastes a snippet picked from the menu. The menu does not take focus
@@ -307,6 +284,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 private extension AppDelegate {
+    /// "Clear History…" in the menu: asks first, then clears every unpinned item.
+    func confirmClearHistory() {
+        guard let store else {
+            NSSound.beep()
+            return
+        }
+        NSApp.activate()
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(
+            localized: "Clear the clipboard history?",
+            comment: "Alert title before clearing the history from the menu"
+        )
+        alert.informativeText = String(
+            localized: """
+            Every item that isn't pinned is deleted. Pinned items and snippets are kept. \
+            This can't be undone.
+            """,
+            comment: "Alert text before clearing the history"
+        )
+        alert.addButton(withTitle: String(localized: "Clear History", comment: "Alert button that clears the history"))
+        alert.addButton(withTitle: String(localized: "Cancel", comment: "Alert button that cancels"))
+        alert.buttons.first?.hasDestructiveAction = true
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await clear(.all, in: store) }
+    }
+
+    /// Puts the picked emoji on the clipboard, like a snippet, and remembers
+    /// it as a recent emoji.
+    func restore(_ picked: Emoji, with restorer: ItemRestorer, in store: ClipStore) async {
+        let text = picked.text
+        Task.detached(priority: .utility) { History.recordEmoji(text, in: store) }
+        handle(await restorer.restore(text: text))
+    }
+
     /// Stores each change from `changes` until it finishes.
     func record(_ changes: AsyncStream<PasteboardChange>, into store: ClipStore) -> Task<Void, Never> {
         Task { [weak self] in

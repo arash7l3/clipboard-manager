@@ -117,6 +117,27 @@ enum History {
         }
     }
 
+    /// The recently used emoji, most recent first; empty if the store failed.
+    /// Does disk I/O: call it off the main thread.
+    static func recentEmoji(in store: ClipStore) -> [Emoji] {
+        do {
+            return try store.recentEmoji()
+        } catch {
+            logger.error("loading recent emoji failed: \(String(describing: error), privacy: .public)")
+            return []
+        }
+    }
+
+    /// Puts `text` first among the recently used emoji. Does disk I/O: call it
+    /// off the main thread.
+    static func recordEmoji(_ text: String, in store: ClipStore) {
+        do {
+            _ = try store.recordEmoji(text: text)
+        } catch {
+            logger.error("recording an emoji failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
     /// Moves the item with `id` to the top, as if it was copied again. Does
     /// disk I/O: call it off the main thread.
     static func bump(_ id: Int64, in store: ClipStore) {

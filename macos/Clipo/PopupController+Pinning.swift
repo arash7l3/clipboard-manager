@@ -26,7 +26,7 @@ extension PopupController: NSMenuDelegate {
 extension PopupController {
     /// Pins the selected item, or unpins it if it is pinned.
     func togglePinOfSelected() {
-        guard let row = model.selectedRow else {
+        guard !model.isEmojiTab, let row = model.selectedRow else {
             NSSound.beep()
             return
         }

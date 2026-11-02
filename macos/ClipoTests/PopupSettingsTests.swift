@@ -26,12 +26,13 @@ struct PopupSettingsTests {
     }
 
     @Test func eachChoiceOpensItsTab() {
-        #expect(StartTab.all.category(lastUsed: .files) == .all)
-        #expect(StartTab.text.category(lastUsed: .files) == .text)
-        #expect(StartTab.images.category(lastUsed: .all) == .images)
-        #expect(StartTab.files.category(lastUsed: .all) == .files)
-        #expect(StartTab.pinned.category(lastUsed: .all) == .pinned)
-        #expect(StartTab.lastUsed.category(lastUsed: .images) == .images)
+        #expect(StartTab.all.tab(lastUsed: .history(.files)) == .history(.all))
+        #expect(StartTab.text.tab(lastUsed: .history(.files)) == .history(.text))
+        #expect(StartTab.images.tab(lastUsed: .emoji) == .history(.images))
+        #expect(StartTab.files.tab(lastUsed: .emoji) == .history(.files))
+        #expect(StartTab.pinned.tab(lastUsed: .emoji) == .history(.pinned))
+        #expect(StartTab.lastUsed.tab(lastUsed: .history(.images)) == .history(.images))
+        #expect(StartTab.lastUsed.tab(lastUsed: .emoji) == .emoji)
     }
 
     @Test func everyChoiceHasATitle() {

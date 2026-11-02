@@ -22,7 +22,7 @@ struct PopupControllerTests {
         #expect(controller.table.numberOfRows == 3)
         #expect(controller.table.selectedRow == 0)
         #expect(controller.emptyLabel.isHidden)
-        #expect(controller.tabs.segmentCount == 5)
+        #expect(controller.tabs.segmentCount == 6)
         #expect(controller.tabs.selectedSegment == 0)
 
         let cell = try #require(
@@ -243,4 +243,115 @@ struct PopupAccessibilityTests {
 private func click(_ button: NSButton) throws {
     let action = try #require(button.action)
     _ = NSApp.sendAction(action, to: button.target, from: button)
+}
+
+/// The Emoji tab inside the popup.
+@MainActor
+struct PopupEmojiTests {
+    private let rows = [Rows.text(3, "third"), Rows.text(2, "second")]
+
+    private func loaded() async -> PopupController {
+        let emoji = EmojiModel(catalog: Emojis.catalog, search: Emojis.search)
+        let controller = PopupController(model: FakeLoader(rows: rows).model(), emoji: emoji)
+        controller.loadViewIfNeeded()
+        await controller.model.reset().value
+        return controller
+    }
+
+    @Test func emojiTabShowsTheGridInsteadOfTheList() async {
+        let controller = await loaded()
+        #expect(controller.emojiPicker.isHidden)
+        #expect(!controller.scrollView.isHidden)
+
+        controller.model.setTab(.emoji)
+
+        #expect(!controller.emojiPicker.isHidden)
+        #expect(controller.scrollView.isHidden)
+        #expect(controller.clearButton.isHidden)
+        #expect(controller.tabs.selectedSegment == 4)
+        #expect(controller.emptyLabel.isHidden)
+
+        controller.model.setTab(.history(.all))
+        #expect(controller.emojiPicker.isHidden)
+        #expect(!controller.scrollView.isHidden)
+    }
+
+    @Test func tabKeyReachesTheEmojiTabBeforePinned() async {
+        let controller = await loaded()
+
+        for _ in 0..<4 {
+            controller.handle(#selector(NSResponder.insertTab(_:)))
+        }
+        #expect(controller.model.isEmojiTab)
+        controller.handle(#selector(NSResponder.insertTab(_:)))
+        #expect(controller.model.tab == .history(.pinned))
+    }
+
+    @Test func arrowsMoveThroughTheGridAndEnterPicks() async {
+        let controller = await loaded()
+        controller.model.setTab(.emoji)
+        var picked: [String] = []
+        var rowsPicked: [Int64] = []
+        controller.onChooseEmoji = { picked.append($0.text) }
+        controller.onChoose = { rowsPicked.append($0.id) }
+
+        #expect(controller.handle(#selector(NSResponder.moveRight(_:))))
+        #expect(controller.handle(#selector(NSResponder.insertNewline(_:))))
+
+        #expect(picked == ["😃"])
+        #expect(rowsPicked.isEmpty)
+    }
+
+    @Test func clickingAnEmojiPicksIt() async {
+        let controller = await loaded()
+        controller.model.setTab(.emoji)
+        var picked: [String] = []
+        controller.onChooseEmoji = { picked.append($0.text) }
+
+        controller.emojiPicker.onChoose?(Emojis.catalog[1].emoji[0])
+
+        #expect(picked == ["🐶"])
+    }
+
+    @Test func searchFiltersTheEmojiNotTheList() async {
+        let controller = await loaded()
+        controller.model.setTab(.emoji)
+
+        controller.searchTextChanged("cat")
+
+        #expect(controller.emoji.sections.map(\.kind) == [.results])
+        #expect(controller.model.searchText == "cat")
+        #expect(controller.model.rows.count == 2)
+        #expect(controller.emojiPicker.bar.isHidden)
+
+        controller.searchTextChanged("zzz")
+        #expect(!controller.emojiPicker.emptyLabel.isHidden)
+    }
+
+    @Test func listShortcutsDoNothingOnTheEmojiTab() async {
+        let controller = await loaded()
+        controller.model.setTab(.emoji)
+        var rowsPicked: [Int64] = []
+        controller.onChoose = { rowsPicked.append($0.id) }
+
+        controller.choose(rowAt: 0)
+        controller.togglePinOfSelected()
+
+        #expect(rowsPicked.isEmpty)
+    }
+
+    @Test func barJumpsToASection() async throws {
+        let controller = await loaded()
+        controller.model.setTab(.emoji)
+
+        let entry = try #require(
+            controller.emojiPicker.barEntries.first { $0.kind == .group(.animalsAndNature) }
+        )
+        #expect(!entry.button.isHidden)
+        controller.emojiPicker.jump(to: entry.kind)
+
+        #expect(controller.emoji.selection == EmojiPosition(section: 1, item: 0))
+        let recent = try #require(controller.emojiPicker.barEntries.first { $0.kind == .recent })
+        #expect(recent.button.isHidden)
+    }
 }

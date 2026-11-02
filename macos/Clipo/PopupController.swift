@@ -1,10 +1,12 @@
 import AppKit
 import ClipoCore
 
-/// The history popup: a search field, category tabs and the list of items.
+/// The history popup: a search field, category tabs and the list of items,
+/// or, on the Emoji tab, a grid of emoji.
 ///
 /// The search field keeps the keyboard the whole time. Typing searches;
-/// Up, Down, Page Up, Page Down, Home and End move the selection; Tab and
+/// Up, Down, Page Up, Page Down, Home and End move the selection (on the
+/// Emoji tab Left and Right too); Tab and
 /// Shift+Tab switch tabs; Enter picks the selected item; Esc closes. Cmd+P,
 /// or Pin in a row's context menu, pins or unpins an item. The button beside
 /// the tabs clears the tab after a second click. The buttons at the end of a
@@ -13,6 +15,8 @@ import ClipoCore
 @MainActor
 final class PopupController: NSViewController {
     let model: PopupModel
+    let emoji: EmojiModel
+    let emojiPicker: EmojiPickerView
 
     /// Called with the item the user picked, after the popup has closed.
     var onChoose: (@MainActor (ItemPreview) -> Void)?
@@ -31,6 +35,8 @@ final class PopupController: NSViewController {
     /// Called with the item to delete. The popup stays open and lists the
     /// rows again once this returns.
     var onDelete: (@MainActor (ItemPreview) async -> Void)?
+    /// Called with the emoji the user picked, after the popup has closed.
+    var onChooseEmoji: (@MainActor (Emoji) -> Void)?
     /// The current time, for "copied 5 min. ago".
     var now: () -> Date = Date.init
 
@@ -43,7 +49,7 @@ final class PopupController: NSViewController {
     var renamingID: Int64?
     let table = NSTableView()
     let emptyLabel = NSTextField(labelWithString: "")
-    private let scrollView = NSScrollView()
+    let scrollView = NSScrollView()
     let privateNote = NSTextField(labelWithString: "")
     private var scrollTopPlain: NSLayoutConstraint?
     private var scrollTopBelowNote: NSLayoutConstraint?
@@ -56,11 +62,14 @@ final class PopupController: NSViewController {
         return panel
     }()
 
-    init(model: PopupModel) {
+    init(model: PopupModel, emoji: EmojiModel = EmojiModel()) {
         self.model = model
+        self.emoji = emoji
+        emojiPicker = EmojiPickerView(model: emoji)
         super.init(nibName: nil, bundle: nil)
         model.onRowsChange = { [weak self] in self?.rowsChanged() }
         model.onSelectionChange = { [weak self] in self?.selectionMoved() }
+        connectEmoji()
     }
 
     @available(*, unavailable)
@@ -88,7 +97,7 @@ final class PopupController: NSViewController {
         loadViewIfNeeded()
         searchField.stringValue = ""
         disarmClear()
-        model.reset(to: PopupSettings.startTab().category(lastUsed: model.category))
+        model.reset(to: PopupSettings.startTab().tab(lastUsed: model.tab))
         showPrivateNote(UserDefaults.standard.bool(forKey: CaptureSettings.privateModeKey))
         if let visible = PopupPlacement.visibleFrame(around: cursor) {
             let frame = PopupPlacement.frame(
@@ -136,47 +145,6 @@ final class PopupController: NSViewController {
         view = layOut()
     }
 
-    private func configureSearchField() {
-        searchField.placeholderString = String(localized: "Search", comment: "Placeholder of the popup's search field")
-        searchField.setAccessibilityLabel(String(
-            localized: "Search clipboard history",
-            comment: "Screen-reader label of the popup's search field"
-        ))
-        searchField.sendsSearchStringImmediately = true
-        searchField.target = self
-        searchField.action = #selector(searchChanged(_:))
-        searchField.delegate = self
-    }
-
-    private func configureTabs() {
-        tabs.segmentCount = model.categories.count
-        for (index, category) in model.categories.enumerated() {
-            tabs.setLabel(PopupText.tabTitle(category), forSegment: index)
-        }
-        tabs.trackingMode = .selectOne
-        tabs.segmentDistribution = .fillEqually
-        tabs.selectedSegment = 0
-        tabs.target = self
-        tabs.action = #selector(tabChosen(_:))
-        // Keys stay in the search field; Tab switches tabs from there.
-        tabs.refusesFirstResponder = true
-        tabs.setAccessibilityLabel(String(
-            localized: "Categories",
-            comment: "Screen-reader label of the popup's tabs"
-        ))
-    }
-
-    private func configurePrivateNote() {
-        privateNote.stringValue = String(
-            localized: "Private mode is on. Nothing you copy is saved.",
-            comment: "Note at the top of the popup while private mode is on"
-        )
-        privateNote.font = .systemFont(ofSize: 11)
-        privateNote.textColor = .systemOrange
-        privateNote.lineBreakMode = .byTruncatingTail
-        privateNote.isHidden = true
-    }
-
     /// Shows or hides the note about private mode and moves the list under it.
     func showPrivateNote(_ visible: Bool) {
         privateNote.isHidden = !visible
@@ -218,7 +186,7 @@ final class PopupController: NSViewController {
     /// trailing edges so the layout mirrors in right-to-left languages.
     private func layOut() -> NSView {
         let root = NSView(frame: NSRect(origin: .zero, size: PopupPanel.defaultSize))
-        for subview in [searchField, tabs, clearButton, privateNote, scrollView, emptyLabel] {
+        for subview in [searchField, tabs, clearButton, privateNote, scrollView, emojiPicker, emptyLabel] {
             subview.translatesAutoresizingMaskIntoConstraints = false
             root.addSubview(subview)
         }
@@ -238,6 +206,10 @@ final class PopupController: NSViewController {
             scrollView.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -6),
+            emojiPicker.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            emojiPicker.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            emojiPicker.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            emojiPicker.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             emptyLabel.centerXAnchor.constraint(equalTo: scrollView.centerXAnchor),
             emptyLabel.centerYAnchor.constraint(equalTo: scrollView.centerYAnchor),
             emptyLabel.leadingAnchor.constraint(greaterThanOrEqualTo: root.leadingAnchor, constant: margin),
@@ -257,12 +229,9 @@ final class PopupController: NSViewController {
         guard isViewLoaded else { return }
         cancelRenameForReload()
         table.reloadData()
-        if let index = model.categories.firstIndex(of: model.category) {
-            tabs.selectedSegment = index
-        }
         showClearButton()
         emptyLabel.stringValue = PopupText.emptyList(failed: model.failed, searching: !model.searchText.isEmpty)
-        emptyLabel.isHidden = !model.rows.isEmpty || model.isLoading
+        emptyLabel.isHidden = !model.rows.isEmpty || model.isLoading || model.isEmojiTab
         showSelection()
     }
 
@@ -299,15 +268,15 @@ final class PopupController: NSViewController {
         max(1, Int(scrollView.contentView.bounds.height / table.rowHeight) - 1)
     }
 
-    @objc private func searchChanged(_ sender: NSSearchField) {
-        model.setSearchText(sender.stringValue)
+    @objc func searchChanged(_ sender: NSSearchField) {
+        searchTextChanged(sender.stringValue)
     }
 
-    @objc private func tabChosen(_ sender: NSSegmentedControl) {
+    @objc func tabChosen(_ sender: NSSegmentedControl) {
         let index = sender.selectedSegment
-        guard model.categories.indices.contains(index) else { return }
+        guard model.tabs.indices.contains(index) else { return }
         disarmClear()
-        model.setCategory(model.categories[index])
+        model.setTab(model.tabs[index])
         _ = view.window?.makeFirstResponder(searchField)
     }
 
@@ -321,6 +290,10 @@ final class PopupController: NSViewController {
 
 extension PopupController {
     func chooseSelected(plain: Bool = false) {
+        guard !model.isEmojiTab else {
+            chooseSelectedEmoji()
+            return
+        }
         guard let row = model.selectedRow else {
             NSSound.beep()
             return
@@ -335,7 +308,7 @@ extension PopupController {
 
     /// Picks the row at `index`, for the Cmd+digit shortcuts.
     func choose(rowAt index: Int) {
-        guard model.rows.indices.contains(index) else {
+        guard !model.isEmojiTab, model.rows.indices.contains(index) else {
             NSSound.beep()
             return
         }

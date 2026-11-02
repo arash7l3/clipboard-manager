@@ -64,8 +64,8 @@ struct PopupTextTests {
     }
 
     @Test func everyTabHasItsOwnTitle() {
-        let titles = Set(tabCategories().map(PopupText.tabTitle))
-        #expect(titles.count == 5)
+        let tabs = tabCategories().map(PopupTab.history) + [PopupTab.emoji]
+        #expect(Set(tabs.map(PopupText.title(for:))).count == 6)
     }
 
     @Test func emptyListExplainsWhy() {
