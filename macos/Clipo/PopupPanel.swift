@@ -63,7 +63,7 @@ final class PopupPanel: NSPanel {
         fatalError("PopupPanel is built in code")
     }
 
-    static let defaultSize = NSSize(width: 380, height: 460)
+    static let defaultSize = NSSize(width: 400, height: 460)
     static let cornerRadius: CGFloat = 12
 
     // Borderless windows refuse key status by default; the popup needs the

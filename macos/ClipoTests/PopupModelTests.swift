@@ -84,18 +84,18 @@ struct PopupModelTests {
         let loader = FakeLoader(rows: three)
         let model = loader.model()
 
-        await model.reset(to: .pinned).value
+        await model.reset(to: .history(.pinned)).value
 
         #expect(model.category == .pinned)
         #expect(loader.queries == [Query(category: .pinned, text: "")])
     }
 
-    @Test func everyTabButPinnedCanBeCleared() async {
+    @Test func everyHistoryTabButPinnedCanBeCleared() async {
         let model = FakeLoader(rows: three).model()
 
-        for category in model.categories {
-            await model.setCategory(category).value
-            #expect(model.canClear == (category != .pinned))
+        for tab in model.tabs {
+            await model.setTab(tab).value
+            #expect(model.canClear == (tab != .history(.pinned) && tab != .emoji))
         }
     }
 
@@ -206,14 +206,37 @@ struct PopupModelTests {
 
     @Test func tabsWrapAround() async {
         let model = FakeLoader(rows: []).model()
-        #expect(model.categories == [.all, .text, .images, .files, .pinned])
+        #expect(model.tabs == [
+            .history(.all), .history(.text), .history(.images), .history(.files), .emoji, .history(.pinned)
+        ])
 
-        await model.moveCategory(by: -1).value
-        #expect(model.category == .pinned)
-        await model.moveCategory(by: 1).value
-        #expect(model.category == .all)
-        await model.moveCategory(by: 2).value
-        #expect(model.category == .images)
+        await model.moveTab(by: -1).value
+        #expect(model.tab == .history(.pinned))
+        await model.moveTab(by: 1).value
+        #expect(model.tab == .history(.all))
+        await model.moveTab(by: 2).value
+        #expect(model.tab == .history(.images))
+    }
+
+    @Test func emojiTabLoadsNothingAndKeepsTheRows() async {
+        let loader = FakeLoader(rows: three)
+        let model = loader.model()
+        await model.setCategory(.text).value
+        var tabChanges = 0
+        model.onTabChange = { tabChanges += 1 }
+
+        await model.setTab(.emoji).value
+        await model.setSearchText("smile").value
+        await model.refresh().value
+
+        #expect(model.isEmojiTab)
+        #expect(model.category == .text)
+        #expect(model.rows.count == 3)
+        #expect(loader.queries == [Query(category: .text, text: "")])
+        #expect(tabChanges == 1)
+
+        await model.setCategory(.files).value
+        #expect(loader.queries.last == Query(category: .files, text: "smile"))
     }
 
     @Test func changingTabsSelectsTheFirstRow() async {

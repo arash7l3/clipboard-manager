@@ -24,3 +24,9 @@ Status: accepted
 - An emoji pasted from the picker is restored to the clipboard like any item. Like a picked snippet (decision 0029, update), the apps should tell the watcher to skip that write, so it does not land in the history.
 - The list adds about 40 KB to the library, and under 0.1 MB of memory once the picker is first opened.
 - The Unicode data is under the Unicode License v3; `emoji.txt` keeps its copyright line and a link to the license.
+
+**Update (step 4.8, macOS).**
+- **The tab.** Emoji sits between Files and Pinned, so the tabs are All, Text, Images, Files, Emoji, Pinned. It is not a start-tab choice, but "Last used tab" reopens it. The popup is 20 pt wider (400 pt) so six tab names fit.
+- **The grid.** An `NSCollectionView` with one section per group (headings in the language of the app), 38 pt cells, nine to a row. The grid always reads left to right, also in Farsi, so Left and Right mean what they show; the headings follow the language. A bar of section buttons under the grid jumps to a section; it hides while searching. A "Recent" section (the core's recent emoji) comes first when there are any.
+- **Keys.** The search field keeps the keyboard. On this tab Left and Right move through the grid (not the caret), Up, Down, Page Up, Page Down, Home and End move by row, page and to the ends, Enter and Option+Enter pick, and typing searches the emoji by name. Cmd+1 to Cmd+9, Cmd+P and the Clear button do nothing here.
+- **Picking.** Like a snippet: the emoji goes on the clipboard (and is pasted with auto-paste), the watcher skips Clipo's own write, and the core's `record_emoji` puts it first among the recent emoji. It does not enter the history.

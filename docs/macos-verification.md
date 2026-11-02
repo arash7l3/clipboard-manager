@@ -78,3 +78,15 @@ Record anything that fails as a new step in `PLAN.md`.
 - [ ] After removing the old Clipo from Privacy & Security > Accessibility and adding 0.1.4, auto-paste works; after installing a later build over it, auto-paste still works without granting again.
 - [ ] Clipo's alerts (Clear History…, the Accessibility explanation) show the blue clipboard icon.
 - [ ] Picking a snippet from the menu-bar Snippets submenu puts it on the clipboard, pastes it with auto-paste on, and it shows at the top of the history.
+
+## Emoji tab (step 4.8), still to try on a Mac
+
+- [ ] The tabs read All, Text, Images, Files, Emoji, Pinned, all names fully visible; Tab and Shift+Tab pass through Emoji; the trash button is gone on Emoji.
+- [ ] The grid shows headings (Smileys & People first, Flags last), nine emoji to a row, and the bar under it has one button per section; clicking a button scrolls that heading to the top and tints the button.
+- [ ] Arrow keys move a highlight through the grid with text in the search field or not; Up and Down keep their column across sections; Page Up, Page Down, Home and End work; the highlight scrolls into view; VoiceOver says the emoji's name.
+- [ ] Typing "smil" shows one block of results without the bar; "zzz" shows "No matches"; clearing the text brings the sections back at the top.
+- [ ] Enter or a click on an emoji closes the popup and puts it on the clipboard (and pastes it with auto-paste on); it does not appear in the history; reopening the popup shows it first under Recent.
+- [ ] Cmd+1 and Cmd+P on the Emoji tab only beep. "Last used tab" reopens on Emoji.
+- [ ] Farsi: the tab, the headings and the bar tooltips are translated; the grid is still left to right.
+- [ ] Emoji draw in colour on the highlighted cell, in light and dark.
+

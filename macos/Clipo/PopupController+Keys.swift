@@ -4,7 +4,7 @@ import ClipoCore
 extension PopupController: NSSearchFieldDelegate {
     func controlTextDidChange(_ obj: Notification) {
         guard (obj.object as? NSSearchField) === searchField else { return }
-        model.setSearchText(searchField.stringValue)
+        searchTextChanged(searchField.stringValue)
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
@@ -26,6 +26,9 @@ extension PopupController: NSSearchFieldDelegate {
     /// was one; other selectors are left to the text field.
     @discardableResult
     func handle(_ command: Selector) -> Bool {
+        if model.isEmojiTab, handleEmoji(command) {
+            return true
+        }
         if let move = selectionMove(for: command) {
             apply(move)
             return true
@@ -33,10 +36,10 @@ extension PopupController: NSSearchFieldDelegate {
         switch command {
         case #selector(NSResponder.insertTab(_:)):
             disarmClear()
-            model.moveCategory(by: 1)
+            model.moveTab(by: 1)
         case #selector(NSResponder.insertBacktab(_:)):
             disarmClear()
-            model.moveCategory(by: -1)
+            model.moveTab(by: -1)
         case #selector(NSResponder.insertNewline(_:)):
             chooseSelected()
         case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):

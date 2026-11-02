@@ -14,14 +14,14 @@ enum StartTab: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 
     /// The tab to open on. `lastUsed` is the tab the popup was on when it was
-    /// last open, for ``lastUsed``.
-    func category(lastUsed: ClipoCore.Category) -> ClipoCore.Category {
+    /// last open, for ``lastUsed``; the Emoji tab can only be reached that way.
+    func tab(lastUsed: PopupTab) -> PopupTab {
         switch self {
-        case .all: .all
-        case .text: .text
-        case .images: .images
-        case .files: .files
-        case .pinned: .pinned
+        case .all: .history(.all)
+        case .text: .history(.text)
+        case .images: .history(.images)
+        case .files: .history(.files)
+        case .pinned: .history(.pinned)
         case .lastUsed: lastUsed
         }
     }
