@@ -145,7 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func makePopup(for store: ClipStore) -> PopupController {
         popup?.dismiss()
         let model = PopupModel { query in History.previews(query, in: store) }
-        let recentEmoji = EmojiModel { History.recentEmoji(in: store) }
+        let recentEmoji = EmojiModel(loadRecent: { History.recentEmoji(in: store) })
         let popup = PopupController(model: model, emoji: recentEmoji)
         let restorer = ItemRestorer()
         restorer.load = { id in History.item(id, in: store) }

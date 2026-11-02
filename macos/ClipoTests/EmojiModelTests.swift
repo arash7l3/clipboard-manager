@@ -53,7 +53,7 @@ final class FakeRecent: @unchecked Sendable {
 @MainActor
 struct EmojiModelTests {
     private func makeModel(recent: FakeRecent = FakeRecent()) -> EmojiModel {
-        let model = EmojiModel(catalog: Emojis.catalog, search: Emojis.search) { recent.load() }
+        let model = EmojiModel(catalog: Emojis.catalog, search: Emojis.search, loadRecent: { recent.load() })
         model.columns = 2
         model.pageRows = 2
         return model
