@@ -18,9 +18,10 @@ mod types;
 pub use error::{ClipoError, InvalidContent, InvalidSnippet, KeyStoreError};
 pub use store::{ClipStore, KeyStore};
 pub use types::{
-    Capture, CaptureRules, Category, ClipItem, FileRef, HistoryLimits, ImageContent, ImageFormat,
-    ImportSummary, ImportedState, ItemContent, ItemPreview, PreviewContent, Query, Recorded,
-    RichText, RichTextFormat, Setting, SkipReason, Snippet, SourceApp, TextContent, TextHint,
+    Capture, CaptureRules, Category, ClipItem, Emoji, EmojiGroup, EmojiSection, FileRef,
+    HistoryLimits, ImageContent, ImageFormat, ImportSummary, ImportedState, ItemContent,
+    ItemPreview, PreviewContent, Query, Recorded, RichText, RichTextFormat, Setting, SkipReason,
+    Snippet, SourceApp, TextContent, TextHint,
 };
 
 uniffi::setup_scaffolding!("clipo");
@@ -38,6 +39,40 @@ pub fn default_history_limits() -> HistoryLimits {
 #[must_use]
 pub fn tab_categories() -> Vec<Category> {
     clipo_core::Category::ALL.map(Category::from).to_vec()
+}
+
+/// The emoji picker's sections in picker order, each with its emoji. The
+/// list is built into the library, so it is the same on every call; the
+/// apps can load it once.
+#[uniffi::export]
+#[must_use]
+pub fn emoji_sections() -> Vec<EmojiSection> {
+    clipo_core::EmojiGroup::ALL
+        .iter()
+        .map(|group| EmojiSection {
+            group: (*group).into(),
+            emoji: group.emoji().iter().copied().map(Emoji::from).collect(),
+        })
+        .collect()
+}
+
+/// Emoji matching every word of `text`, in picker order. A word matches if
+/// it starts a word of the emoji's English name, ignoring case, or if it is
+/// the emoji itself. Empty `text` lists every emoji.
+#[uniffi::export]
+#[must_use]
+pub fn search_emoji(text: &str) -> Vec<Emoji> {
+    clipo_core::emoji::search(text)
+        .into_iter()
+        .map(Emoji::from)
+        .collect()
+}
+
+/// How many recently used emoji [`ClipStore::recent_emoji`] keeps.
+#[uniffi::export]
+#[must_use]
+pub fn recent_emoji_limit() -> u64 {
+    u64::try_from(clipo_core::RECENT_EMOJI_LIMIT).unwrap_or(u64::MAX)
 }
 
 /// Deletes the database at `path` with its WAL, shared-memory and journal

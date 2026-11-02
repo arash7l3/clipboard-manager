@@ -9,11 +9,13 @@
 //! by hand so that formatting an item never prints its text, bytes or paths,
 //! and error messages never quote them.
 
+pub mod emoji;
 pub mod error;
 pub mod key;
 pub mod model;
 pub mod store;
 
+pub use emoji::{Emoji, EmojiGroup};
 pub use error::{CoreError, InvalidContent, InvalidSnippet};
 pub use key::{DatabaseKey, KeyStore, KeyStoreError, KEY_LEN};
 pub use model::{
@@ -23,5 +25,5 @@ pub use model::{
 };
 pub use store::{
     CaptureRules, HistoryLimits, ImportSummary, ImportedState, Query, Recorded, Setting,
-    SkipReason, Store,
+    SkipReason, Store, RECENT_EMOJI_LIMIT,
 };

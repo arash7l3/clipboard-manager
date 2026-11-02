@@ -8,8 +8,8 @@ use clipo_core::{ItemId, SnippetId, Store, Timestamp};
 
 use crate::error::{ClipoError, KeyStoreError};
 use crate::types::{
-    CaptureRules, Category, ClipItem, HistoryLimits, ImportSummary, ImportedState, ItemPreview,
-    Query, Recorded, Setting, Snippet,
+    CaptureRules, Category, ClipItem, Emoji, HistoryLimits, ImportSummary, ImportedState,
+    ItemPreview, Query, Recorded, Setting, Snippet,
 };
 use crate::Capture;
 
@@ -258,6 +258,39 @@ impl ClipStore {
     /// [`ClipoError::SnippetNotFound`] if no snippet has this id.
     pub fn delete_snippet(&self, id: i64) -> Result<(), ClipoError> {
         Ok(self.lock().delete_snippet(SnippetId::from_raw(id))?)
+    }
+
+    /// Puts `text` first among the recently used emoji, dropping the oldest
+    /// past [`recent_emoji_limit`](crate::recent_emoji_limit). Only emoji the
+    /// picker offers are recorded; for any other text it does nothing and
+    /// returns `false`. Recent emoji are not history: clearing history,
+    /// limits, auto-clear and private mode leave them alone.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn record_emoji(&self, text: &str) -> Result<bool, ClipoError> {
+        Ok(self.lock().record_emoji(text)?)
+    }
+
+    /// The recently used emoji, most recent first.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn recent_emoji(&self) -> Result<Vec<Emoji>, ClipoError> {
+        let recent = self.lock().recent_emoji()?;
+        Ok(recent.into_iter().map(Emoji::from).collect())
+    }
+
+    /// Forgets every recently used emoji and returns how many there were.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn clear_recent_emoji(&self) -> Result<u64, ClipoError> {
+        let cleared = self.lock().clear_recent_emoji()?;
+        Ok(u64::try_from(cleared).unwrap_or(u64::MAX))
     }
 
     /// The whole history and all snippets as one blob for the app to write to
