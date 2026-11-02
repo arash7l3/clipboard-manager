@@ -45,6 +45,9 @@ Models: Opus 5.5 for design, security and tricky integration; Sonnet 5.5 for reg
 | 4.4 | 4 Extras | Pin and unpin from the popup (both apps) | Sonnet 5.5 | medium | S21 | Done |
 | 4.5 | 4 Extras | Start-tab setting, private mode in the menus and a visible indicator | Sonnet 5.5 | medium | S22 | Done |
 | 4.6 | 4 Extras | Clear a tab from the popup with inline confirmation; Clear History in the menus (core and both apps) | Opus 5.5 | medium | S23 | Done |
+| 4.7 | 4 Extras | Core: emoji list with groups and English names, search, recent emoji, bindings, tests, decision record | Opus 5.5 | high | S24 | Done |
+| 4.8 | 4 Extras | macOS: Emoji tab before Pinned, grid with sections, category bar, search, recent emoji, pick and restore | Sonnet 5.5 | high | S25 |  |
+| 4.9 | 4 Extras | Windows: the same Emoji tab and grid, without the Flags section; then bump the version | Sonnet 5.5 | medium | S26 |  |
 | 5.1 | 5 Packaging | CI: Mac and Windows builds, caching, lint gates | Sonnet 5.5 | medium | S17 | Done |
 | 5.2 | 5 Packaging | macOS signing, notarization, dmg | Opus 5.5 | high | S18 | Done |
 | 5.3 | 5 Packaging | Windows MSIX installer and signing | Sonnet 5.5 | high | S19 | Done |

@@ -83,7 +83,7 @@ impl fmt::Debug for Query {
 /// Folds text so that visually or semantically equal strings compare equal:
 /// lowercase, Arabic yeh and kaf to their Persian forms, Persian and Arabic-Indic
 /// digits to ASCII, and diacritics, tatweel and zero-width non-joiners removed.
-pub(super) fn fold(text: &str) -> String {
+pub(crate) fn fold(text: &str) -> String {
     text.chars()
         .filter_map(|c| match c {
             '\u{200C}' | '\u{0640}' | '\u{064B}'..='\u{0652}' => None,

@@ -683,3 +683,56 @@ fn export_and_import_state_carry_names_and_settings() {
         Some("Named")
     );
 }
+
+#[test]
+fn emoji_sections_follow_the_picker_order() {
+    let sections = emoji_sections();
+    let groups: Vec<EmojiGroup> = sections.iter().map(|s| s.group).collect();
+    assert_eq!(
+        groups,
+        [
+            EmojiGroup::SmileysAndPeople,
+            EmojiGroup::AnimalsAndNature,
+            EmojiGroup::FoodAndDrink,
+            EmojiGroup::Activities,
+            EmojiGroup::TravelAndPlaces,
+            EmojiGroup::Objects,
+            EmojiGroup::Symbols,
+            EmojiGroup::Flags,
+        ]
+    );
+    let first = &sections[0].emoji[0];
+    assert_eq!(
+        (first.text.as_str(), first.name.as_str()),
+        ("\u{1F600}", "grinning face")
+    );
+    assert!(sections
+        .iter()
+        .all(|s| !s.emoji.is_empty() && s.emoji.iter().all(|e| e.group == s.group)));
+}
+
+#[test]
+fn search_emoji_matches_name_words() {
+    let found = search_emoji("red hea");
+    assert!(found.iter().any(|e| e.text == "\u{2764}\u{FE0F}"));
+    assert_eq!(search_emoji("zzzz"), []);
+}
+
+#[test]
+fn recent_emoji_round_trip() {
+    let fx = Fixture::new();
+    assert!(fx.store.record_emoji("\u{1F600}").unwrap());
+    assert!(fx.store.record_emoji("\u{2764}\u{FE0F}").unwrap());
+    assert!(!fx.store.record_emoji("not an emoji").unwrap());
+    let recent: Vec<String> = fx
+        .store
+        .recent_emoji()
+        .unwrap()
+        .into_iter()
+        .map(|e| e.text)
+        .collect();
+    assert_eq!(recent, ["\u{2764}\u{FE0F}", "\u{1F600}"]);
+    assert_eq!(recent_emoji_limit(), 30);
+    assert_eq!(fx.store.clear_recent_emoji().unwrap(), 2);
+    assert_eq!(fx.store.recent_emoji().unwrap(), []);
+}

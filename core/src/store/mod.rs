@@ -6,6 +6,7 @@
 //! `docs/decisions/0007-storage-encryption.md`.
 
 mod codec;
+mod emoji;
 mod history;
 mod rules;
 mod schema;
@@ -25,8 +26,10 @@ use crate::error::CoreError;
 use crate::key::{load_key, DatabaseKey, KeyStore};
 use crate::model::{ClipItem, ContentHash, FileRef, ItemContent, ItemId, SourceApp, Timestamp};
 use codec::{item_columns, ItemColumns, RawItem};
+pub use emoji::RECENT_EMOJI_LIMIT;
 pub use history::{HistoryLimits, Recorded, SkipReason, DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEM_BYTES};
 pub use rules::CaptureRules;
+pub(crate) use search::fold;
 pub use search::Query;
 pub use transfer::{ImportSummary, ImportedState, Setting};
 
@@ -475,6 +478,8 @@ fn expect_one(changed: usize, id: ItemId) -> Result<(), CoreError> {
     }
 }
 
+#[cfg(test)]
+mod emoji_tests;
 #[cfg(test)]
 mod extras_tests;
 #[cfg(test)]

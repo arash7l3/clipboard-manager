@@ -6,13 +6,14 @@
 
 mod bindings;
 mod build;
+mod emoji;
 mod package;
 mod smoke;
 
 use std::process::ExitCode;
 
 use anyhow::{bail, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 
 const USAGE: &str = "\
 Usage: cargo xtask <task>   (run from core/)
@@ -25,6 +26,8 @@ Tasks:
                            bindings (core/dist/windows). Needs Windows with MSVC.
   smoke swift              Package for macOS, then run a Swift program against it
   smoke csharp             Run a C# program against the bindings. Needs dotnet.
+  emoji <emoji-test.txt>   Regenerate core/src/emoji/emoji.txt from Unicode's
+                           emoji-test.txt
 
 Options for package:
   --target <triple>        Build only this target; repeat for several
@@ -52,6 +55,7 @@ fn run() -> Result<()> {
         ["package", "windows", rest @ ..] => package::windows(&targets(rest)?),
         ["smoke", "swift"] => smoke::swift(),
         ["smoke", "csharp"] => smoke::csharp(),
+        ["emoji", input] => emoji::generate(Utf8Path::new(input)),
         [] | ["help" | "--help" | "-h"] => {
             print!("{USAGE}");
             Ok(())

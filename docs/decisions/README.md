@@ -38,3 +38,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0032](0032-windows-popup-keeps-the-focus.md) | Windows: the popup leaves the focus where the user types, and picked images paste into folders |
 | [0033](0033-rename-and-delete-items.md) | Renaming and deleting single items with buttons at the end of each popup row |
 | [0034](0034-pinned-first-and-full-export.md) | Pinned items stay on top; the export carries item names and settings |
+| [0035](0035-emoji-picker-core.md) | Emoji picker in the core: a built-in list, name search and recent emoji |

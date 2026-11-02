@@ -6,7 +6,7 @@ use crate::error::CoreError;
 
 /// Migration `i` upgrades the schema from version `i` to `i + 1`.
 /// Append new migrations; never edit a shipped one.
-const MIGRATIONS: &[&str] = &[V1, V2, V3, V4];
+const MIGRATIONS: &[&str] = &[V1, V2, V3, V4, V5];
 
 /// Version 1: history items, with per-kind columns and their files.
 ///
@@ -87,6 +87,15 @@ CREATE TABLE snippets (
 /// first line. `NULL` for items never renamed.
 const V4: &str = "
 ALTER TABLE items ADD COLUMN title TEXT;
+";
+
+/// Version 5: the emoji picker's recently used emoji, kept apart from the
+/// history like snippets. Higher `use_order` means used more recently.
+const V5: &str = "
+CREATE TABLE recent_emoji (
+    emoji     TEXT    PRIMARY KEY CHECK (emoji <> ''),
+    use_order INTEGER NOT NULL UNIQUE
+) STRICT, WITHOUT ROWID;
 ";
 
 /// Newest schema version this build understands.

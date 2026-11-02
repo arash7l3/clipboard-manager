@@ -277,6 +277,49 @@ pub enum Category {
     Pinned,
 }
 
+/// A section of the emoji picker, in picker order (see
+/// [`emoji_sections`](crate::emoji_sections)).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum EmojiGroup {
+    /// Faces, gestures, people and hearts.
+    SmileysAndPeople,
+    /// Animals, plants and weather.
+    AnimalsAndNature,
+    /// Food and drink.
+    FoodAndDrink,
+    /// Sports, games, events and arts.
+    Activities,
+    /// Places, vehicles, time and the sky.
+    TravelAndPlaces,
+    /// Clothing, tools, devices and other things.
+    Objects,
+    /// Signs, arrows, shapes and keycaps.
+    Symbols,
+    /// Flags of countries, regions and others.
+    Flags,
+}
+
+/// One emoji the picker offers. Not clipboard content, so it has `Debug`.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Emoji {
+    /// The text to paste.
+    pub text: String,
+    /// The Unicode name in English, such as "grinning face", for search
+    /// results and screen readers.
+    pub name: String,
+    /// The section it is listed in.
+    pub group: EmojiGroup,
+}
+
+/// A picker section and its emoji, in picker order.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct EmojiSection {
+    /// Which section.
+    pub group: EmojiGroup,
+    /// Its emoji.
+    pub emoji: Vec<Emoji>,
+}
+
 /// A tab and search text, as typed in the popup. No `Debug`: the search text
 /// is usually part of something copied.
 #[derive(Clone, PartialEq, Eq, uniffi::Record)]
@@ -544,6 +587,31 @@ impl From<clipo_core::Category> for Category {
             clipo_core::Category::Images => Self::Images,
             clipo_core::Category::Files => Self::Files,
             clipo_core::Category::Pinned => Self::Pinned,
+        }
+    }
+}
+
+impl From<clipo_core::EmojiGroup> for EmojiGroup {
+    fn from(group: clipo_core::EmojiGroup) -> Self {
+        match group {
+            clipo_core::EmojiGroup::SmileysAndPeople => Self::SmileysAndPeople,
+            clipo_core::EmojiGroup::AnimalsAndNature => Self::AnimalsAndNature,
+            clipo_core::EmojiGroup::FoodAndDrink => Self::FoodAndDrink,
+            clipo_core::EmojiGroup::Activities => Self::Activities,
+            clipo_core::EmojiGroup::TravelAndPlaces => Self::TravelAndPlaces,
+            clipo_core::EmojiGroup::Objects => Self::Objects,
+            clipo_core::EmojiGroup::Symbols => Self::Symbols,
+            clipo_core::EmojiGroup::Flags => Self::Flags,
+        }
+    }
+}
+
+impl From<clipo_core::Emoji> for Emoji {
+    fn from(emoji: clipo_core::Emoji) -> Self {
+        Self {
+            text: emoji.text.to_owned(),
+            name: emoji.name.to_owned(),
+            group: emoji.group.into(),
         }
     }
 }
