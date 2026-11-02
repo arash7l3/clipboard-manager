@@ -16,6 +16,12 @@ public enum PopupKeyAction
     NextTab,
     PreviousTab,
 
+    /// <summary>Moves left in the emoji grid; does nothing elsewhere.</summary>
+    Left,
+
+    /// <summary>Moves right in the emoji grid; does nothing elsewhere.</summary>
+    Right,
+
     /// <summary>Picks the selected row.</summary>
     Pick,
 
@@ -200,8 +206,10 @@ public static class PopupKeys
         Enter => new(PopupKeyAction.Pick, Plain: shift),
         Escape => new(PopupKeyAction.Close),
         Back => new(PopupKeyAction.Backspace),
+        Left => new(PopupKeyAction.Left),
+        Right => new(PopupKeyAction.Right),
         // The search has no caret to move; these would edit the field underneath.
-        Left or Right or Delete or Insert => new(PopupKeyAction.None),
+        Delete or Insert => new(PopupKeyAction.None),
         _ => null,
     };
 

@@ -38,6 +38,7 @@
                 <SelectorBarItem x:Uid="TabText" AllowFocusOnInteraction="False" />
                 <SelectorBarItem x:Uid="TabImages" AllowFocusOnInteraction="False" />
                 <SelectorBarItem x:Uid="TabFiles" AllowFocusOnInteraction="False" />
+                <SelectorBarItem x:Uid="TabEmoji" AllowFocusOnInteraction="False" />
                 <SelectorBarItem x:Uid="TabPinned" AllowFocusOnInteraction="False" />
             </SelectorBar>
 
@@ -117,6 +118,54 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <!-- The Emoji tab: a grid in sections and a bar of section buttons. Nothing in it takes the focus. -->
+        <Grid x:Name="EmojiPanel" Grid.Row="3" RowSpacing="6" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <!-- The grid always reads left to right, also in Farsi, so Left and Right mean what they show. -->
+            <ScrollViewer x:Name="EmojiScroller" VerticalScrollBarVisibility="Auto" IsTabStop="False"
+                          FlowDirection="LeftToRight" SizeChanged="OnEmojiSizeChanged">
+                <ItemsRepeater x:Name="EmojiSections">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" Spacing="4" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="local:EmojiSectionView">
+                            <StackPanel>
+                                <TextBlock Text="{x:Bind Title}" Style="{StaticResource CaptionTextBlockStyle}" Margin="4,6,0,2"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           AutomationProperties.HeadingLevel="Level2" />
+                                <ItemsRepeater ItemsSource="{x:Bind Cells}">
+                                    <ItemsRepeater.Layout>
+                                        <UniformGridLayout MinItemWidth="40" MinItemHeight="40" MaximumRowsOrColumns="9"
+                                                           ItemsStretch="None" ItemsJustification="Center" />
+                                    </ItemsRepeater.Layout>
+                                    <ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="local:EmojiCell">
+                                            <Grid Width="40" Height="40" Background="Transparent" Tapped="OnEmojiTapped"
+                                                  AutomationProperties.Name="{x:Bind Name}">
+                                                <Border CornerRadius="6" Visibility="{x:Bind HighlightVisibility, Mode=OneWay}"
+                                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="2" />
+                                                <TextBlock Text="{x:Bind Text}" FontFamily="Segoe UI Emoji" FontSize="24"
+                                                           IsTextScaleFactorEnabled="False"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsRepeater.ItemTemplate>
+                                </ItemsRepeater>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+            <!-- One button per section; it hides while searching. -->
+            <StackPanel x:Name="EmojiBar" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="2"
+                        FlowDirection="LeftToRight" />
+        </Grid>
 
         <TextBlock x:Name="EmptyText" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed"

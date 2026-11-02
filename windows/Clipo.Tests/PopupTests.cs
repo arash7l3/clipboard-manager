@@ -218,12 +218,52 @@ public sealed class PopupModelTests
     {
         var model = new PopupModel(new FakeLoader().Load, TimeSpan.Zero);
 
-        await model.MoveCategoryAsync(-1);
+        await model.MoveTabAsync(-1);
         Assert.Equal(Category.Pinned, model.Category);
-        await model.MoveCategoryAsync(1);
+        await model.MoveTabAsync(1);
         Assert.Equal(Category.All, model.Category);
-        await model.MoveCategoryAsync(2);
+        await model.MoveTabAsync(2);
         Assert.Equal(Category.Images, model.Category);
+    }
+
+    [Fact]
+    public async Task EmojiSitsBeforePinnedAndLoadsNoRows()
+    {
+        var loader = new FakeLoader();
+        var model = new PopupModel(loader.Load, TimeSpan.Zero);
+        Assert.Equal(
+            [Category.All, Category.Text, Category.Images, Category.Files, PopupTab.Emoji, Category.Pinned],
+            PopupModel.Tabs);
+
+        await model.SetCategoryAsync(Category.Files);
+        var loads = loader.Queries.Count;
+        await model.SetTabAsync(PopupTab.Emoji);
+        await model.SetSearchTextAsync("smil");
+        await model.RefreshAsync();
+
+        Assert.True(model.IsEmojiTab);
+        Assert.False(model.CanClear);
+        Assert.Equal(Category.Files, model.Category);
+        Assert.Equal("smil", model.SearchText);
+        Assert.Equal(loads, loader.Queries.Count);
+
+        await model.MoveTabAsync(1);
+        Assert.Equal(Category.Pinned, model.Category);
+        await model.MoveTabAsync(-1);
+        Assert.True(model.IsEmojiTab);
+        await model.MoveTabAsync(-1);
+        Assert.Equal(new Query(Category.Files, "smil"), loader.Queries[^1]);
+    }
+
+    [Fact]
+    public async Task ResetCanReopenOnEmoji()
+    {
+        var model = new PopupModel(new FakeLoader().Load, TimeSpan.Zero);
+
+        await model.ResetAsync(PopupTab.Emoji);
+        Assert.True(model.IsEmojiTab);
+        await model.ResetAsync();
+        Assert.Equal(PopupTab.FromCategory(Category.All), model.Tab);
     }
 
     private static ItemPreview[] Rows(params long[] ids) =>

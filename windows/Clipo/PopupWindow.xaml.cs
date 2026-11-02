@@ -20,7 +20,7 @@ namespace Clipo;
 /// The history popup. It opens at the mouse pointer without taking the focus
 /// from the app the user is typing in: the window is never activated, and
 /// its keys are caught on their way to that app (<see cref="PopupInput"/>).
-/// Typing searches; Up, Down, Page Up, Page Down, Home and End move the
+/// Typing searches; on the Emoji tab, which shows a grid, Left and Right also move and Up and Down go by row. Up, Down, Page Up, Page Down, Home and End move the
 /// selection; Tab and Shift+Tab switch tabs; Enter picks the selected item;
 /// Esc closes. Ctrl+1 to Ctrl+9 pick the first nine rows. Holding Shift while
 /// picking, with Enter or a click, pastes without formatting. Ctrl+P, or Pin
@@ -35,7 +35,7 @@ namespace Clipo;
 public sealed partial class PopupWindow : Window
 {
     /// <summary>The popup's size, in effective pixels.</summary>
-    private static readonly SizeInt32 s_size = new(420, 520);
+    private static readonly SizeInt32 s_size = new(460, 520);
 
     /// <summary>Rows that Page Up and Page Down move by.</summary>
     private const int PageRows = 8;
@@ -131,7 +131,7 @@ public sealed partial class PopupWindow : Window
     /// The tab to open on, given the tab the popup was on when it was last
     /// open. All, until the app says otherwise.
     /// </summary>
-    public Func<Category, Category> StartCategory { get; set; } = _ => Category.All;
+    public Func<PopupTab, PopupTab> StartTab { get; set; } = _ => Category.All;
 
     /// <summary>Shows a note at the top of the popup while private mode is on.</summary>
     public void ShowPrivateMode(bool on) => PrivateNote.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
@@ -170,9 +170,10 @@ public sealed partial class PopupWindow : Window
         {
             Desktop.Activate(_previous);
         }
-        _ = _model.ResetAsync(StartCategory(_model.Category));
+        _ = _model.ResetAsync(StartTab(_model.Tab));
         SetSearch("");
         ShowTab();
+        ShowEmojiPanel();
         Place();
         IsShown = true;
         var window = Handle;
@@ -271,17 +272,34 @@ public sealed partial class PopupWindow : Window
     {
         // The rows are made anew, so a rename under way ends without saving.
         _renaming = null;
+        if (_model.IsEmojiTab)
+        {
+            return;
+        }
         var now = DateTime.UtcNow;
         var rows = _model.Rows.Select((row, position) => PopupRow.Create(row, _text, now, position + 1)).ToList();
         HistoryList.ItemsSource = rows;
-        var empty = rows.Count == 0 && !_model.IsLoading;
-        EmptyText.Text = empty ? _text.EmptyList(_model.Failed, _model.SearchText.Length > 0) : "";
-        EmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        ShowEmptyText();
         ShowSelection(announce: false);
+    }
+
+    /// <summary>Says why the list or the grid is empty, if it is.</summary>
+    private void ShowEmptyText()
+    {
+        var searching = _model.SearchText.Trim().Length > 0;
+        var empty = _model.IsEmojiTab
+            ? searching && EmojiState.Sections.Count == 0
+            : _model.Rows.Count == 0 && !_model.IsLoading;
+        EmptyText.Text = empty ? _text.EmptyList(!_model.IsEmojiTab && _model.Failed, _model.SearchText.Length > 0) : "";
+        EmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ShowSelection(bool announce)
     {
+        if (_model.IsEmojiTab)
+        {
+            return;
+        }
         HistoryList.SelectedIndex = _model.Selection ?? -1;
         if (HistoryList.SelectedItem is not PopupRow row)
         {
@@ -301,7 +319,7 @@ public sealed partial class PopupWindow : Window
     private void ShowTab()
     {
         DisarmClear();
-        var index = PopupModel.Categories.ToList().IndexOf(_model.Category);
+        var index = PopupModel.Tabs.ToList().IndexOf(_model.Tab);
         if (index >= 0 && index < Tabs.Items.Count)
         {
             Tabs.SelectedItem = Tabs.Items[index];
@@ -314,6 +332,10 @@ public sealed partial class PopupWindow : Window
         SearchBox.Text = text;
         SearchBox.SelectionStart = text.Length;
         _ = _model.SetSearchTextAsync(text);
+        if (_emoji is not null || _model.IsEmojiTab)
+        {
+            SearchEmoji(text);
+        }
     }
 
     private void OnKey(PopupKeyCommand command)
@@ -325,6 +347,12 @@ public sealed partial class PopupWindow : Window
         if (_renaming is { } renaming)
         {
             OnRenameKey(renaming.Row, renaming.Rename, command);
+            return;
+        }
+        if (_model.IsEmojiTab && command.Action is not (PopupKeyAction.NextTab or PopupKeyAction.PreviousTab or PopupKeyAction.Close
+            or PopupKeyAction.Type or PopupKeyAction.Backspace or PopupKeyAction.DeleteWord))
+        {
+            OnEmojiKey(command);
             return;
         }
         switch (command.Action)
@@ -348,8 +376,9 @@ public sealed partial class PopupWindow : Window
                 _model.Select(_model.Rows.Count - 1);
                 break;
             case PopupKeyAction.NextTab or PopupKeyAction.PreviousTab:
-                _ = _model.MoveCategoryAsync(command.Action == PopupKeyAction.NextTab ? 1 : -1);
+                _ = _model.MoveTabAsync(command.Action == PopupKeyAction.NextTab ? 1 : -1);
                 ShowTab();
+                ShowEmojiPanel();
                 break;
             case PopupKeyAction.Pick when _model.SelectedRow is { } row:
                 Choose(row, command.Plain);
@@ -538,9 +567,10 @@ public sealed partial class PopupWindow : Window
     private void OnTabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         var index = sender.SelectedItem is { } item ? sender.Items.IndexOf(item) : -1;
-        if (index >= 0 && index < PopupModel.Categories.Count && PopupModel.Categories[index] != _model.Category)
+        if (index >= 0 && index < PopupModel.Tabs.Count && PopupModel.Tabs[index] != _model.Tab)
         {
-            _ = _model.SetCategoryAsync(PopupModel.Categories[index]);
+            _ = _model.SetTabAsync(PopupModel.Tabs[index]);
+            ShowEmojiPanel();
         }
         DisarmClear();
     }

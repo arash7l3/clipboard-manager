@@ -21,6 +21,8 @@ public sealed class PopupKeysTests
     [InlineData(0x22u, PopupKeyAction.PageDown)]
     [InlineData(0x24u, PopupKeyAction.Home)]
     [InlineData(0x23u, PopupKeyAction.End)]
+    [InlineData(0x25u, PopupKeyAction.Left)]
+    [InlineData(0x27u, PopupKeyAction.Right)]
     [InlineData(0x09u, PopupKeyAction.NextTab)]
     [InlineData(0x0Du, PopupKeyAction.Pick)]
     [InlineData(0x1Bu, PopupKeyAction.Close)]
@@ -73,8 +75,7 @@ public sealed class PopupKeysTests
         Assert.Equal(new PopupKeyCommand(PopupKeyAction.None), Press(key, Control));
 
     [Theory]
-    [InlineData(0x25u)]
-    [InlineData(0x27u)]
+    [InlineData(0x2Du)]
     [InlineData(0x2Eu)]
     public void CaretKeysDoNothingInTheFieldUnderneath(uint key) =>
         Assert.Equal(new PopupKeyCommand(PopupKeyAction.None), Press(key));

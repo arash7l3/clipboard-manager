@@ -110,6 +110,13 @@ public sealed record AppSettings
         _ => Category.All,
     };
 
+    /// <summary>
+    /// Like <see cref="StartCategory"/>, but "Last used tab" can reopen the
+    /// Emoji tab, which no other choice reaches.
+    /// </summary>
+    public PopupTab StartPopupTab(PopupTab lastUsed) =>
+        StartTab == StartTab.LastUsed ? lastUsed : StartCategory(Category.All);
+
     /// <summary>These settings with values a hand-edited file could hold brought back into range.</summary>
     public AppSettings Normalized() => this with
     {

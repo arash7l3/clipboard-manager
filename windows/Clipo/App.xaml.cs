@@ -88,7 +88,9 @@ public partial class App : Application
         popup.ClearRequested += (_, category) => _ = ClearAsync(category);
         popup.RenameRequested += (_, rename) => _ = RenameAsync(rename);
         popup.DeleteRequested += (_, row) => _ = DeleteAsync(row);
-        popup.StartCategory = last => _settings.StartCategory(last);
+        popup.StartTab = last => _settings.StartPopupTab(last);
+        popup.RecentEmoji = () => _store?.RecentEmoji() ?? [];
+        popup.EmojiChosen += (_, emoji) => _ = PasteEmojiAsync(emoji);
         popup.ShowPrivateMode(_settings.PrivateMode);
         _restorer = new ItemRestorer(
             id => _store?.Get(id),
@@ -276,6 +278,19 @@ public partial class App : Application
         {
             Desktop.Beep();
         }
+    }
+
+    /// <summary>
+    /// Puts a picked emoji on the clipboard like a snippet, so it stays out
+    /// of the history, and remembers it among the recent emoji.
+    /// </summary>
+    private async Task PasteEmojiAsync(Emoji emoji)
+    {
+        if (_restorer is null || await _restorer.RestoreTextAsync(emoji.Text) == RestoreOutcome.Unavailable)
+        {
+            Desktop.Beep();
+        }
+        _ = _extras.RecordEmojiAsync(emoji.Text);
     }
 
     /// <summary>Loads the snippets again for the tray menu.</summary>

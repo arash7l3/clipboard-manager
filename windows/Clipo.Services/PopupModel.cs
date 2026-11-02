@@ -31,10 +31,22 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     /// <summary>Raised after the selection moved within the same rows.</summary>
     public event EventHandler? SelectionChanged;
 
-    /// <summary>The tabs, in display order.</summary>
+    /// <summary>The history tabs, in display order.</summary>
     public static IReadOnlyList<Category> Categories { get; } = [Category.All, Category.Text, Category.Images, Category.Files, Category.Pinned];
 
+    /// <summary>The tabs, in display order: the history's, with Emoji before Pinned.</summary>
+    public static IReadOnlyList<PopupTab> Tabs { get; } =
+    [
+        Category.All, Category.Text, Category.Images, Category.Files, PopupTab.Emoji, Category.Pinned,
+    ];
+
+    /// <summary>The tab shown.</summary>
+    public PopupTab Tab { get; private set; } = Category.All;
+
+    /// <summary>The history tab shown last: the one <see cref="Rows"/> and loads belong to.</summary>
     public Category Category { get; private set; } = Category.All;
+
+    public bool IsEmojiTab => Tab.IsEmoji;
 
     public string SearchText { get; private set; } = "";
 
@@ -49,8 +61,8 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     /// <summary>A load is under way; <see cref="Rows"/> answer an earlier question.</summary>
     public bool IsLoading { get; private set; }
 
-    /// <summary>The current tab has a Clear button: every tab but Pinned, whose items clearing never touches.</summary>
-    public bool CanClear => Category != Category.Pinned;
+    /// <summary>The current tab has a Clear button: every history tab but Pinned, whose items clearing never touches.</summary>
+    public bool CanClear => !IsEmojiTab && Category != Category.Pinned;
 
     public ItemPreview? SelectedRow => Selection is { } index ? Rows[index] : null;
 
@@ -63,9 +75,9 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
     /// until they load, for a freshly opened popup: Enter must not pick a row
     /// left from last time.
     /// </summary>
-    public Task ResetAsync(Category start = Category.All)
+    public Task ResetAsync(PopupTab? start = null)
     {
-        Category = start;
+        Show(start ?? Category.All);
         SearchText = "";
         // Cleared before the load starts: a quick answer must not be wiped by this.
         Rows = [];
@@ -76,18 +88,21 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
         return ReloadAsync(keepSelection: false, TimeSpan.Zero);
     }
 
-    public Task SetCategoryAsync(Category category)
+    /// <summary>Shows <paramref name="tab"/>. A history tab loads its rows; the Emoji tab loads nothing.</summary>
+    public Task SetTabAsync(PopupTab tab)
     {
-        Category = category;
-        return ReloadAsync(keepSelection: false, TimeSpan.Zero);
+        Show(tab);
+        return IsEmojiTab ? Task.CompletedTask : ReloadAsync(keepSelection: false, TimeSpan.Zero);
     }
 
+    public Task SetCategoryAsync(Category category) => SetTabAsync(category);
+
     /// <summary>Shows the tab <paramref name="offset"/> places after the current one, wrapping around.</summary>
-    public Task MoveCategoryAsync(int offset)
+    public Task MoveTabAsync(int offset)
     {
-        var count = Categories.Count;
-        var index = Math.Max(0, Categories.ToList().IndexOf(Category));
-        return SetCategoryAsync(Categories[(((index + offset) % count) + count) % count]);
+        var count = Tabs.Count;
+        var index = Math.Max(0, Tabs.ToList().IndexOf(Tab));
+        return SetTabAsync(Tabs[(((index + offset) % count) + count) % count]);
     }
 
     public Task SetSearchTextAsync(string text)
@@ -98,11 +113,16 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
             return Task.CompletedTask;
         }
         SearchText = text;
-        return ReloadAsync(keepSelection: false, searchDelay);
+        // The emoji are searched by EmojiModel.
+        return IsEmojiTab ? Task.CompletedTask : ReloadAsync(keepSelection: false, searchDelay);
     }
 
-    /// <summary>Loads the rows again, for example after a new copy. The selected item stays selected if it is still listed.</summary>
-    public Task RefreshAsync() => ReloadAsync(keepSelection: true, TimeSpan.Zero);
+    /// <summary>
+    /// Loads the rows again, for example after a new copy. The selected item
+    /// stays selected if it is still listed. The Emoji tab has nothing to
+    /// refresh.
+    /// </summary>
+    public Task RefreshAsync() => IsEmojiTab ? Task.CompletedTask : ReloadAsync(keepSelection: true, TimeSpan.Zero);
 
     /// <summary>Moves the selection <paramref name="offset"/> rows down (up if negative), stopping at the first and last row. Returns whether it moved.</summary>
     public bool MoveSelection(int offset) =>
@@ -118,6 +138,15 @@ public sealed class PopupModel(Func<Query, ItemPreview[]?> load, TimeSpan search
         Selection = index;
         SelectionChanged?.Invoke(this, EventArgs.Empty);
         return true;
+    }
+
+    private void Show(PopupTab tab)
+    {
+        Tab = tab;
+        if (tab.Category is { } category)
+        {
+            Category = category;
+        }
     }
 
     private async Task ReloadAsync(bool keepSelection, TimeSpan delay)

@@ -61,6 +61,13 @@ public sealed class Extras(Func<ClipStore?> store)
         return true;
     }, false);
 
+    /// <summary>The emoji the user picked lately, most recent first; empty if the history is closed or the store failed.</summary>
+    public Task<IReadOnlyList<Emoji>> RecentEmojiAsync() => Run<IReadOnlyList<Emoji>>(
+        "listing recent emoji", s => s.RecentEmoji(), []);
+
+    /// <summary>Puts a picked emoji first among the recent ones. Returns false if it is not in the picker or the store failed.</summary>
+    public Task<bool> RecordEmojiAsync(string text) => Run("recording an emoji", s => s.RecordEmoji(text), false);
+
     /// <summary>
     /// The history with item names, the snippets and <paramref name="settings"/>
     /// (see <see cref="SettingsTransfer.Export"/>) as one blob, not encrypted;
