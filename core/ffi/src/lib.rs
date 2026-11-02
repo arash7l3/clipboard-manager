@@ -19,8 +19,8 @@ pub use error::{ClipoError, InvalidContent, InvalidSnippet, KeyStoreError};
 pub use store::{ClipStore, KeyStore};
 pub use types::{
     Capture, CaptureRules, Category, ClipItem, FileRef, HistoryLimits, ImageContent, ImageFormat,
-    ImportSummary, ItemContent, ItemPreview, PreviewContent, Query, Recorded, RichText,
-    RichTextFormat, SkipReason, Snippet, SourceApp, TextContent, TextHint,
+    ImportSummary, ImportedState, ItemContent, ItemPreview, PreviewContent, Query, Recorded,
+    RichText, RichTextFormat, Setting, SkipReason, Snippet, SourceApp, TextContent, TextHint,
 };
 
 uniffi::setup_scaffolding!("clipo");

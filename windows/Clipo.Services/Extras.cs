@@ -20,7 +20,8 @@ public enum ImportOutcome
 
 /// <param name="Outcome">What happened.</param>
 /// <param name="Summary">What was added and skipped; set only when <paramref name="Outcome"/> is <see cref="ImportOutcome.Imported"/>.</param>
-public sealed record ImportResult(ImportOutcome Outcome, ImportSummary? Summary = null);
+/// <param name="Settings">The settings the file carried, for <see cref="SettingsTransfer.Import"/>; empty for an older export.</param>
+public sealed record ImportResult(ImportOutcome Outcome, ImportSummary? Summary = null, IReadOnlyList<Setting>? Settings = null);
 
 /// <summary>
 /// Snippets and export / import on top of the open history. Every call does
@@ -60,10 +61,18 @@ public sealed class Extras(Func<ClipStore?> store)
         return true;
     }, false);
 
-    /// <summary>The history and snippets as one blob, not encrypted; <c>null</c> on failure.</summary>
-    public Task<byte[]?> ExportAsync() => Run<byte[]?>("exporting", s => s.ExportData(), null);
+    /// <summary>
+    /// The history with item names, the snippets and <paramref name="settings"/>
+    /// (see <see cref="SettingsTransfer.Export"/>) as one blob, not encrypted;
+    /// <c>null</c> on failure.
+    /// </summary>
+    public Task<byte[]?> ExportAsync(IReadOnlyList<Setting>? settings = null) =>
+        Run<byte[]?>("exporting", s => s.ExportState([.. settings ?? []]), null);
 
-    /// <summary>Adds what <paramref name="data"/> holds. On any failure nothing was imported.</summary>
+    /// <summary>
+    /// Adds what <paramref name="data"/> holds and returns the settings it
+    /// carried for the caller to apply. On any failure nothing was imported.
+    /// </summary>
     public Task<ImportResult> ImportAsync(byte[] data)
     {
         ArgumentNullException.ThrowIfNull(data);
@@ -71,9 +80,12 @@ public sealed class Extras(Func<ClipStore?> store)
         {
             try
             {
-                return store() is { } s
-                    ? new ImportResult(ImportOutcome.Imported, s.ImportData(data))
-                    : new ImportResult(ImportOutcome.Failed);
+                if (store() is not { } s)
+                {
+                    return new ImportResult(ImportOutcome.Failed);
+                }
+                var state = s.ImportState(data);
+                return new ImportResult(ImportOutcome.Imported, state.Summary, state.Settings);
             }
             catch (ClipoException.InvalidExport)
             {

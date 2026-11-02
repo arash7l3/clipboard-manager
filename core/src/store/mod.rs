@@ -28,7 +28,7 @@ use codec::{item_columns, ItemColumns, RawItem};
 pub use history::{HistoryLimits, Recorded, SkipReason, DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEM_BYTES};
 pub use rules::CaptureRules;
 pub use search::Query;
-pub use transfer::ImportSummary;
+pub use transfer::{ImportSummary, ImportedState, Setting};
 
 /// How long a write waits for a lock held by another connection.
 const BUSY_TIMEOUT: Duration = Duration::from_secs(5);

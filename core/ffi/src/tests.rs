@@ -269,14 +269,14 @@ fn previews_list_what_the_popup_shows() {
 
     let previews = fx.store.previews(all()).unwrap();
     assert_eq!(previews.len(), 2);
-    match &previews[0].content {
+    match &previews[1].content {
         PreviewContent::Files { files, total } => {
             assert_eq!(files.len(), 10);
             assert_eq!(*total, 12);
         }
-        _ => panic!("files first"),
+        _ => panic!("files below the pinned link"),
     }
-    let row = &previews[1];
+    let row = &previews[0];
     assert_eq!(row.id, link.id);
     assert!(row.pinned);
     assert_eq!(row.last_copied_at, at(1_000));
@@ -661,4 +661,25 @@ fn export_and_import_move_history_and_snippets() {
         target.store.import_data(b"junk"),
         Err(ClipoError::InvalidExport { .. })
     ));
+}
+
+#[test]
+fn export_and_import_state_carry_names_and_settings() {
+    let source = Fixture::new();
+    let item = added(source.store.record(capture(text("one"), 1)).unwrap());
+    source.store.set_title(item.id, "Named").unwrap();
+    let settings = vec![Setting {
+        key: "interface.language".into(),
+        value: "fa".into(),
+    }];
+    let data = source.store.export_state(settings.clone()).unwrap();
+
+    let target = Fixture::new();
+    let state = target.store.import_state(&data).unwrap();
+    assert_eq!(state.summary.items_added, 1);
+    assert_eq!(state.settings, settings);
+    assert_eq!(
+        target.store.previews(all()).unwrap()[0].title.as_deref(),
+        Some("Named")
+    );
 }

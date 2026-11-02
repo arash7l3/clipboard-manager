@@ -347,16 +347,142 @@ fn a_huge_claimed_length_does_not_allocate() {
     ));
 }
 
+fn settings() -> Vec<Setting> {
+    vec![
+        Setting {
+            key: "history.maxItems".into(),
+            value: "500".into(),
+        },
+        Setting {
+            key: "interface.language".into(),
+            value: "fa".into(),
+        },
+    ]
+}
+
+fn title_of(store: &Store, plain: &str) -> Option<String> {
+    store
+        .previews(&Query::text(plain))
+        .unwrap()
+        .into_iter()
+        .next()
+        .and_then(|preview| preview.title)
+}
+
+#[test]
+fn export_carries_item_names_and_settings() {
+    let fx = populated();
+    let mut source = fx.open();
+    let note = source.list().unwrap()[0].id;
+    source.set_title(note, Some("My note")).unwrap();
+    let data = source.export_state(&settings()).unwrap();
+
+    let mut target = Fixture::new().open();
+    let state = target.import_state(&data).unwrap();
+    assert_eq!(state.summary.items_added, 4);
+    assert_eq!(state.settings, settings());
+    assert_eq!(title_of(&target, "pinned note").as_deref(), Some("My note"));
+    assert_eq!(title_of(&target, "Signature"), None);
+
+    // `import` reads the same file and leaves the settings to the caller.
+    let mut plain = Fixture::new().open();
+    assert_eq!(plain.import(&data).unwrap().items_added, 4);
+    assert_eq!(title_of(&plain, "pinned note").as_deref(), Some("My note"));
+}
+
+#[test]
+fn importing_names_onto_stored_items_keeps_the_users_own() {
+    let fx = populated();
+    let mut source = fx.open();
+    let items = source.list().unwrap();
+    source.set_title(items[0].id, Some("From export")).unwrap();
+    source
+        .set_title(items[1].id, Some("Also exported"))
+        .unwrap();
+    let data = source.export().unwrap();
+
+    // The same content, one item already renamed here.
+    let mut target = populated().open();
+    let files_item = target.list().unwrap()[1].id;
+    target.set_title(files_item, Some("Mine")).unwrap();
+    let summary = target.import(&data).unwrap();
+    assert_eq!(summary.items_duplicate, 4);
+    assert_eq!(
+        title_of(&target, "pinned note").as_deref(),
+        Some("From export")
+    );
+    let names: Vec<_> = target
+        .previews(&Query::default())
+        .unwrap()
+        .into_iter()
+        .filter_map(|preview| preview.title)
+        .collect();
+    assert_eq!(names, ["From export", "Mine"]);
+}
+
+#[test]
+fn a_version_1_export_still_imports() {
+    // Version 1: one text item and one snippet, no names or settings.
+    let mut data = b"CLIPOEXP".to_vec();
+    data.extend(1u32.to_le_bytes());
+    data.extend(1u64.to_le_bytes());
+    data.push(1); // pinned
+    data.extend(5i64.to_le_bytes());
+    data.extend(6i64.to_le_bytes());
+    data.push(0); // no source app
+    data.push(0); // text
+    data.extend(2u64.to_le_bytes());
+    data.extend(b"hi");
+    data.push(0); // no rich text
+    data.extend(1u64.to_le_bytes());
+    for part in ["Sig", "Regards"] {
+        data.extend((part.len() as u64).to_le_bytes());
+        data.extend(part.as_bytes());
+    }
+    data.extend(7i64.to_le_bytes());
+    data.extend(8i64.to_le_bytes());
+
+    let mut target = Fixture::new().open();
+    let state = target.import_state(&data).unwrap();
+    assert_eq!(state.summary.items_added, 1);
+    assert_eq!(state.summary.snippets_added, 1);
+    assert_eq!(state.settings, []);
+    let items = target.list().unwrap();
+    assert_eq!(items[0].content, text("hi"));
+    assert!(items[0].pinned);
+    assert_eq!(title_of(&target, "hi"), None);
+}
+
+#[test]
+fn a_setting_without_a_name_is_rejected() {
+    let mut data = Fixture::new()
+        .open()
+        .export_state(&[Setting {
+            key: "a".into(),
+            value: "b".into(),
+        }])
+        .unwrap();
+    // The key's length is the 8 bytes before its one byte, then the value.
+    let at = data.len() - 8 - 1 - 8 - 1;
+    data[at] = 0;
+    data.remove(at + 8);
+    let mut target = Fixture::new().open();
+    assert!(matches!(
+        target.import_state(&data),
+        Err(CoreError::InvalidExport(_))
+    ));
+}
+
 #[test]
 fn a_newer_format_is_refused() {
     let mut data = b"CLIPOEXP".to_vec();
-    data.extend(2u32.to_le_bytes());
+    data.extend(3u32.to_le_bytes());
     let mut target = Fixture::new().open();
     assert_eq!(
         target.import(&data),
         Err(CoreError::UnsupportedExport {
-            found: 2,
-            supported: 1
+            found: 3,
+            supported: 2
         })
     );
 }

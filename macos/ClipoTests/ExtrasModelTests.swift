@@ -8,6 +8,7 @@ import Testing
 @MainActor
 final class ExtrasModelTests {
     private let folder: URL
+    private let suite = "io.github.arash7l3.Clipo.tests.\(UUID().uuidString)"
 
     init() throws {
         folder = FileManager.default.temporaryDirectory
@@ -17,14 +18,21 @@ final class ExtrasModelTests {
 
     deinit {
         try? FileManager.default.removeItem(at: folder)
+        for name in ["a", "source", "target"] {
+            UserDefaults.standard.removePersistentDomain(forName: "\(suite).\(name)")
+        }
     }
 
-    private func openModel(_ name: String = "a") async throws -> (ExtrasModel, ClipStore) {
+    /// A model on its own history and its own settings, never the app's.
+    private func openModel(
+        _ name: String = "a",
+        defaults: UserDefaults? = nil
+    ) async throws -> (ExtrasModel, ClipStore) {
         let url = try History.databaseURL(in: folder.appendingPathComponent(name, isDirectory: true))
         guard case let .ready(store, _) = History.open(at: url, keyStore: MemoryKeyStore()) else {
             throw CocoaError(.fileReadUnknown)
         }
-        let model = ExtrasModel()
+        let model = ExtrasModel(defaults: try defaults ?? settings(name))
         await model.attach(store)
         return (model, store)
     }
@@ -90,6 +98,38 @@ final class ExtrasModelTests {
         #expect(try Data(contentsOf: url) == Data("new".utf8))
         let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
         #expect((attributes[.posixPermissions] as? Int) == 0o600)
+    }
+
+    /// Settings of their own for the model called `name`.
+    private func settings(_ name: String) throws -> UserDefaults {
+        let defaults = try #require(UserDefaults(suiteName: "\(suite).\(name)"))
+        defaults.removePersistentDomain(forName: "\(suite).\(name)")
+        return defaults
+    }
+
+    @Test func exportCarriesItemNamesAndSettings() async throws {
+        let sourceDefaults = try settings("source")
+        sourceDefaults.set(500, forKey: HistorySettings.maxItemsKey)
+        sourceDefaults.set(AppAppearance.dark.rawValue, forKey: InterfaceSettings.appearanceKey)
+        sourceDefaults.set(["com.example.vault"], forKey: CaptureSettings.ignoredAppsKey)
+        let (source, store) = try await openModel("source", defaults: sourceDefaults)
+        let copied = Capture(content: .text(text: TextContent(plain: "copied")), capturedAt: Date())
+        guard case let .added(item) = try store.record(capture: copied) else {
+            Issue.record("the copy is added")
+            return
+        }
+        try store.setTitle(id: item.id, title: "Named")
+        let data = try #require(await source.exportData())
+
+        let targetDefaults = try settings("target")
+        let (target, targetStore) = try await openModel("target", defaults: targetDefaults)
+        _ = await target.importData(data)
+
+        let previews = try targetStore.previews(query: Query(category: .all, text: ""))
+        #expect(previews.first?.title == "Named")
+        #expect(HistorySettings.maxItems(defaults: targetDefaults) == 500)
+        #expect(InterfaceSettings.appearance(defaults: targetDefaults) == .dark)
+        #expect(CaptureSettings.ownIgnoredApps(defaults: targetDefaults) == ["com.example.vault"])
     }
 
     @Test func garbageIsNotAnExport() async throws {

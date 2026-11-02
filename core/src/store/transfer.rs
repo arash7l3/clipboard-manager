@@ -1,4 +1,4 @@
-//! Export and import of the history and snippets.
+//! Export and import of the history, snippets and the app's settings.
 //!
 //! The export is one binary blob so the apps only move bytes to and from a
 //! file the user picks. It is **not encrypted**: it holds clipboard content in
@@ -7,21 +7,27 @@
 //! Layout, all integers little-endian:
 //!
 //! ```text
-//! "CLIPOEXP"  u32 version (1)
+//! "CLIPOEXP"  u32 version (2)
 //! u64 item count, then per item (oldest first):
 //!   u8 pinned, i64 created_at, i64 last_copied_at,
-//!   option<source app: str id, option<str> name>,
+//!   option<source app: str id, option<str> name>, option<str title>,
 //!   u8 kind (0 text, 1 image, 2 files), then
 //!     text:  str plain, option<u8 format (0 rtf, 1 html), str data>
 //!     image: u8 format (0 png, 1 tiff, 2 jpeg, 3 bmp), u32 width, u32 height,
 //!            bytes data, option<bytes> thumbnail
 //!     files: u64 count, then per file: str path, option<u64 size>
 //! u64 snippet count, then per snippet: str title, str body, i64 created_at, i64 updated_at
+//! u64 setting count, then per setting: str key, str value
 //! ```
+//!
+//! Version 1 had no item titles and no settings; it still imports. The
+//! settings are the apps' own: the core only carries the pairs.
 //!
 //! `str` and `bytes` are a `u64` length and the data; `option` is a `u8` that
 //! is 0 or 1, followed by the value when 1. Importing parses and checks the
 //! whole blob before it changes anything.
+
+use std::collections::HashMap;
 
 use rusqlite::{params, Connection};
 
@@ -34,7 +40,9 @@ use crate::model::{
 };
 
 const MAGIC: &[u8; 8] = b"CLIPOEXP";
-const VERSION: u32 = 1;
+const VERSION: u32 = 2;
+/// The first version, without item titles and settings.
+const VERSION_1: u32 = 1;
 
 /// What [`Store::import`] did.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -51,8 +59,33 @@ pub struct ImportSummary {
     pub snippets_duplicate: usize,
 }
 
+/// One of the app's settings in an export. The core does not read them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Setting {
+    /// The setting's name, never empty.
+    pub key: String,
+    /// Its value, written as the app chooses.
+    pub value: String,
+}
+
+/// What [`Store::import_state`] did and the settings the export carried.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ImportedState {
+    /// What was added and skipped.
+    pub summary: ImportSummary,
+    /// In file order; empty for an export without settings.
+    pub settings: Vec<Setting>,
+}
+
 struct ExportItem {
     item: NewItem,
+    title: Option<String>,
+}
+
+struct Parsed {
+    items: Vec<ExportItem>,
+    snippets: Vec<ExportSnippet>,
+    settings: Vec<Setting>,
 }
 
 struct ExportSnippet {
@@ -63,18 +96,30 @@ struct ExportSnippet {
 }
 
 impl Store {
-    /// Serialises the whole history and all snippets. See the module docs for
-    /// the format. The result is unencrypted.
+    /// Serialises the whole history and all snippets, without settings. See
+    /// the module docs for the format. The result is unencrypted.
     ///
     /// # Errors
     ///
     /// [`CoreError::Storage`] on a database failure or a corrupt row.
     pub fn export(&self) -> Result<Vec<u8>, CoreError> {
+        self.export_state(&[])
+    }
+
+    /// Serialises the whole history, with item names, all snippets and the
+    /// app's `settings`. See the module docs for the format. The result is
+    /// unencrypted.
+    ///
+    /// # Errors
+    ///
+    /// [`CoreError::Storage`] on a database failure or a corrupt row.
+    pub fn export_state(&self, settings: &[Setting]) -> Result<Vec<u8>, CoreError> {
         let mut out = Writer(Vec::new());
         out.0.extend_from_slice(MAGIC);
         out.u32(VERSION);
 
         let items = self.list()?;
+        let titles = self.titles()?;
         out.len(items.len());
         // Oldest first, so importing in file order keeps the history order.
         for item in items.iter().rev() {
@@ -85,6 +130,10 @@ impl Store {
                 out.str(&app.id);
                 out.option(app.name.as_deref(), Writer::str);
             });
+            out.option(
+                titles.get(&item.id.as_raw()).map(String::as_str),
+                Writer::str,
+            );
             match &item.content {
                 ItemContent::Text(text) => {
                     out.u8(0);
@@ -121,13 +170,33 @@ impl Store {
             out.i64(snippet.created_at.as_millis());
             out.i64(snippet.updated_at.as_millis());
         }
+
+        out.len(settings.len());
+        for setting in settings {
+            out.str(&setting.key);
+            out.str(&setting.value);
+        }
         Ok(out.0)
     }
 
-    /// Adds the items and snippets of an export made by [`Store::export`].
+    /// Adds the items and snippets of an export made by [`Store::export`] or
+    /// [`Store::export_state`], ignoring any settings in it. See
+    /// [`Store::import_state`].
     ///
-    /// Content already stored is skipped, and items larger than the item size
-    /// limit are skipped. Items keep their pin, source app and times, and
+    /// # Errors
+    ///
+    /// As [`Store::import_state`].
+    pub fn import(&mut self, data: &[u8]) -> Result<ImportSummary, CoreError> {
+        Ok(self.import_state(data)?.summary)
+    }
+
+    /// Adds the items and snippets of an export made by [`Store::export`] or
+    /// [`Store::export_state`], and returns the settings it carried for the
+    /// app to apply.
+    ///
+    /// Content already stored is skipped, but takes the exported name if it
+    /// has none. Items larger than the item size limit are skipped. Items
+    /// keep their pin, name, source app and times, and
     /// rank as the most recent copies in their original order, so importing
     /// an old export can push existing unpinned items out past the history
     /// limit. Capture rules (private mode, ignored apps) do not apply: the
@@ -139,19 +208,41 @@ impl Store {
     /// [`CoreError::InvalidExport`] if `data` is not an export or is damaged,
     /// [`CoreError::UnsupportedExport`] if it comes from a newer Clipo, and
     /// [`CoreError::Storage`] on a database failure.
-    pub fn import(&mut self, data: &[u8]) -> Result<ImportSummary, CoreError> {
-        let (items, snippets) = parse(data)?;
+    pub fn import_state(&mut self, data: &[u8]) -> Result<ImportedState, CoreError> {
+        let Parsed {
+            items,
+            snippets,
+            settings,
+        } = parse(data)?;
         let mut summary = ImportSummary::default();
 
         let tx = self.conn.transaction()?;
-        for ExportItem { item } in items {
+        for ExportItem { item, title } in items {
             if item.content.byte_size() > self.limits.max_item_bytes {
                 summary.items_too_large += 1;
                 continue;
             }
+            let hash = item.content.content_hash();
             match insert_row(&tx, item) {
-                Ok(_) => summary.items_added += 1,
-                Err(CoreError::DuplicateContent) => summary.items_duplicate += 1,
+                Ok(added) => {
+                    summary.items_added += 1;
+                    if title.is_some() {
+                        tx.execute(
+                            "UPDATE items SET title = ?2 WHERE id = ?1",
+                            params![added.id.as_raw(), title],
+                        )?;
+                    }
+                }
+                Err(CoreError::DuplicateContent) => {
+                    summary.items_duplicate += 1;
+                    if title.is_some() {
+                        tx.execute(
+                            "UPDATE items SET title = ?2 \
+                             WHERE content_hash = ?1 AND title IS NULL",
+                            params![hash.as_bytes().as_slice(), title],
+                        )?;
+                    }
+                }
                 Err(err) => return Err(err),
             }
         }
@@ -174,7 +265,17 @@ impl Store {
         if summary.items_added > 0 {
             self.enforce_item_limit()?;
         }
-        Ok(summary)
+        Ok(ImportedState { summary, settings })
+    }
+
+    /// The names of the items that have one, by item id.
+    fn titles(&self) -> Result<HashMap<i64, String>, CoreError> {
+        let rows = self
+            .conn
+            .prepare("SELECT id, title FROM items WHERE title IS NOT NULL")?
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
+            .collect::<Result<_, _>>()?;
+        Ok(rows)
     }
 }
 
@@ -323,7 +424,7 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn parse(data: &[u8]) -> Result<(Vec<ExportItem>, Vec<ExportSnippet>), CoreError> {
+fn parse(data: &[u8]) -> Result<Parsed, CoreError> {
     let mut input = Reader(data);
     if input.take(MAGIC.len()).ok() != Some(MAGIC.as_slice()) {
         return Err(invalid("missing the Clipo export header"));
@@ -335,15 +436,16 @@ fn parse(data: &[u8]) -> Result<(Vec<ExportItem>, Vec<ExportSnippet>), CoreError
             supported: VERSION,
         });
     }
-    if version != VERSION {
+    if version != VERSION && version != VERSION_1 {
         return Err(invalid("unknown format version"));
     }
+    let has_titles = version >= VERSION;
 
     // No `with_capacity` from a count in the data: each entry takes at least
     // one byte, so the vectors can only grow as far as the data goes.
     let mut items = Vec::new();
     for _ in 0..input.count()? {
-        items.push(read_item(&mut input)?);
+        items.push(read_item(&mut input, has_titles)?);
     }
     let mut snippets = Vec::new();
     for _ in 0..input.count()? {
@@ -356,13 +458,30 @@ fn parse(data: &[u8]) -> Result<(Vec<ExportItem>, Vec<ExportSnippet>), CoreError
         validate_snippet(&snippet.title, &snippet.body)?;
         snippets.push(snippet);
     }
+    let mut settings = Vec::new();
+    if version >= VERSION {
+        for _ in 0..input.count()? {
+            let setting = Setting {
+                key: input.str()?,
+                value: input.str()?,
+            };
+            if setting.key.is_empty() {
+                return Err(invalid("a setting has no name"));
+            }
+            settings.push(setting);
+        }
+    }
     if !input.0.is_empty() {
         return Err(invalid("unexpected data after the end"));
     }
-    Ok((items, snippets))
+    Ok(Parsed {
+        items,
+        snippets,
+        settings,
+    })
 }
 
-fn read_item(input: &mut Reader<'_>) -> Result<ExportItem, CoreError> {
+fn read_item(input: &mut Reader<'_>, has_titles: bool) -> Result<ExportItem, CoreError> {
     let pinned = input.flag()?;
     let created_at = input.timestamp()?;
     let last_copied_at = input.timestamp()?;
@@ -372,6 +491,15 @@ fn read_item(input: &mut Reader<'_>) -> Result<ExportItem, CoreError> {
             name: input.option(Reader::str)?,
         })
     })?;
+    // As `Store::set_title` stores it: trimmed, a blank name is no name.
+    let title = if has_titles {
+        input
+            .option(Reader::str)?
+            .map(|title| title.trim().to_owned())
+            .filter(|title| !title.is_empty())
+    } else {
+        None
+    };
     let content = match input.u8()? {
         0 => ItemContent::Text(TextContent {
             plain: input.str()?,
@@ -424,5 +552,6 @@ fn read_item(input: &mut Reader<'_>) -> Result<ExportItem, CoreError> {
             created_at,
             last_copied_at,
         },
+        title,
     })
 }

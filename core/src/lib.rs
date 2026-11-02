@@ -21,4 +21,7 @@ pub use model::{
     ItemId, ItemKind, ItemPreview, PreviewContent, RichText, RichTextFormat, Snippet, SnippetId,
     SourceApp, TextContent, TextHint, Timestamp,
 };
-pub use store::{CaptureRules, HistoryLimits, ImportSummary, Query, Recorded, SkipReason, Store};
+pub use store::{
+    CaptureRules, HistoryLimits, ImportSummary, ImportedState, Query, Recorded, Setting,
+    SkipReason, Store,
+};
