@@ -158,12 +158,12 @@ struct EmojiModelTests {
         #expect(model.move(.last))
         #expect(model.selection == EmojiPosition(section: 1, item: 2))
         #expect(!model.move(.last))
+        // A page is two rows here: (1, 2) goes up to (1, 0), then to (0, 4).
         #expect(model.move(.pages(-1)))
-        #expect(model.selection == EmojiPosition(section: 0, item: 0))
-        #expect(!model.move(.first))
-        model.select(EmojiPosition(section: 0, item: 3))
+        #expect(model.selection == EmojiPosition(section: 0, item: 4))
         #expect(model.move(.first))
         #expect(model.selection == EmojiPosition(section: 0, item: 0))
+        #expect(!model.move(.first))
     }
 
     @Test func selectionMovesAreReportedAndBadOnesRefused() {
