@@ -172,3 +172,70 @@ struct CatalogTests {
         }
     }
 }
+
+struct SettingsTransferTests {
+    @Test func everySettingRoundTrips() throws {
+        let source = try freshDefaults()
+        source.set(500, forKey: HistorySettings.maxItemsKey)
+        source.set(7, forKey: HistorySettings.autoClearDaysKey)
+        source.set(true, forKey: CaptureSettings.privateModeKey)
+        source.set(true, forKey: PasteSettings.autoPasteKey)
+        source.set(AppAppearance.dark.rawValue, forKey: InterfaceSettings.appearanceKey)
+        source.set(AppLanguage.farsi.rawValue, forKey: InterfaceSettings.languageKey)
+        source.set(StartTab.lastUsed.rawValue, forKey: PopupSettings.startTabKey)
+        source.set(HotkeyChoice.controlOption.rawValue, forKey: InterfaceSettings.hotkeyKey)
+        source.set(["com.example.vault"], forKey: CaptureSettings.ignoredAppsKey)
+
+        let target = try freshDefaults()
+        SettingsTransfer.apply(SettingsTransfer.export(defaults: source), defaults: target)
+
+        #expect(SettingsTransfer.export(defaults: target) == SettingsTransfer.export(defaults: source))
+        #expect(HistorySettings.maxItems(defaults: target) == 500)
+        #expect(PopupSettings.startTab(defaults: target) == .lastUsed)
+        #expect(InterfaceSettings.hotkey(defaults: target) == .controlOption)
+        #expect(target.stringArray(forKey: InterfaceSettings.appleLanguagesKey) == ["fa"])
+    }
+
+    @Test func sharedKeysUseTheWindowsValues() throws {
+        let defaults = try freshDefaults()
+        defaults.set(AppLanguage.farsi.rawValue, forKey: InterfaceSettings.languageKey)
+        let exported = Dictionary(
+            uniqueKeysWithValues: SettingsTransfer.export(defaults: defaults).map { ($0.key, $0.value) }
+        )
+
+        #expect(exported[SettingsTransfer.languageKey] == "fa")
+        #expect(exported[SettingsTransfer.appearanceKey] == "system")
+        #expect(exported[SettingsTransfer.maxItemsKey] == "200")
+        #expect(exported[SettingsTransfer.privateModeKey] == "false")
+    }
+
+    @Test func unknownKeysAndUnreadableValuesChangeNothing() throws {
+        let defaults = try freshDefaults()
+        defaults.set(AppAppearance.dark.rawValue, forKey: InterfaceSettings.appearanceKey)
+        let odd = [
+            ClipoCore.Setting(key: SettingsTransfer.maxItemsKey, value: "0"),
+            ClipoCore.Setting(key: SettingsTransfer.appearanceKey, value: "sepia"),
+            ClipoCore.Setting(key: SettingsTransfer.privateModeKey, value: "yes"),
+            ClipoCore.Setting(key: "windows.hotkey", value: "ControlAlt"),
+            ClipoCore.Setting(key: "windows.ignoredApps", value: "Vault.exe")
+        ]
+
+        SettingsTransfer.apply(odd, defaults: defaults)
+
+        #expect(defaults.object(forKey: HistorySettings.maxItemsKey) == nil)
+        #expect(InterfaceSettings.appearance(defaults: defaults) == .dark)
+        #expect(defaults.object(forKey: CaptureSettings.privateModeKey) == nil)
+        #expect(defaults.object(forKey: InterfaceSettings.hotkeyKey) == nil)
+        #expect(CaptureSettings.ownIgnoredApps(defaults: defaults).isEmpty)
+    }
+
+    @Test func importedIgnoredAppsDropBlanksRepeatsAndBuiltIns() throws {
+        let defaults = try freshDefaults()
+        let apps = "com.example.a\n\nCOM.EXAMPLE.A\ncom.bitwarden.desktop\n com.example.b "
+
+        let imported = ClipoCore.Setting(key: SettingsTransfer.ignoredAppsKey, value: apps)
+        SettingsTransfer.apply([imported], defaults: defaults)
+
+        #expect(CaptureSettings.ownIgnoredApps(defaults: defaults) == ["com.example.a", "com.example.b"])
+    }
+}

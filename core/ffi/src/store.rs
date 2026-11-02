@@ -8,8 +8,8 @@ use clipo_core::{ItemId, SnippetId, Store, Timestamp};
 
 use crate::error::{ClipoError, KeyStoreError};
 use crate::types::{
-    CaptureRules, Category, ClipItem, HistoryLimits, ImportSummary, ItemPreview, Query, Recorded,
-    Snippet,
+    CaptureRules, Category, ClipItem, HistoryLimits, ImportSummary, ImportedState, ItemPreview,
+    Query, Recorded, Setting, Snippet,
 };
 use crate::Capture;
 
@@ -281,6 +281,30 @@ impl ClipStore {
     /// and storage errors.
     pub fn import_data(&self, data: &[u8]) -> Result<ImportSummary, ClipoError> {
         Ok(self.lock().import(data)?.into())
+    }
+
+    /// The whole history with item names, all snippets and the app's
+    /// `settings` as one blob for the app to write to a file. **Not
+    /// encrypted**: it holds clipboard content in the clear.
+    ///
+    /// # Errors
+    ///
+    /// Storage errors.
+    pub fn export_state(&self, settings: Vec<Setting>) -> Result<Vec<u8>, ClipoError> {
+        let settings: Vec<clipo_core::Setting> = settings.into_iter().map(Into::into).collect();
+        Ok(self.lock().export_state(&settings)?)
+    }
+
+    /// As [`import_data`](Self::import_data), and also returns the settings
+    /// the export carried for the app to apply. Reads exports from
+    /// [`export_data`](Self::export_data) and [`export_state`](Self::export_state)
+    /// alike.
+    ///
+    /// # Errors
+    ///
+    /// As [`import_data`](Self::import_data).
+    pub fn import_state(&self, data: &[u8]) -> Result<ImportedState, ClipoError> {
+        Ok(self.lock().import_state(data)?.into())
     }
 
     /// The current history limits.

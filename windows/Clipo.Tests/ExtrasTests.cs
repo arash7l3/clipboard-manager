@@ -84,6 +84,25 @@ public sealed class ExtrasTests : IDisposable
     }
 
     [Fact]
+    public async Task ExportCarriesItemNamesAndSettings()
+    {
+        var source = Open("source");
+        var recorded = Assert.IsType<Recorded.Added>(
+            source.Record(new Capture(new ItemContent.Text(new TextContent("copied text")), DateTime.UtcNow)));
+        source.SetTitle(recorded.Item.Id, "Named");
+        var settings = SettingsTransfer.Export(new AppSettings { Language = AppLanguage.Farsi });
+        var data = await new Extras(() => source).ExportAsync(settings);
+        Assert.NotNull(data);
+
+        var target = Open("target");
+        var result = await new Extras(() => target).ImportAsync(data);
+
+        Assert.Equal(ImportOutcome.Imported, result.Outcome);
+        Assert.Equal(settings, result.Settings);
+        Assert.Equal("Named", target.Previews(new Query(Category.All, ""))[0].Title);
+    }
+
+    [Fact]
     public async Task ImportRefusesGarbage()
     {
         var store = Open("a");

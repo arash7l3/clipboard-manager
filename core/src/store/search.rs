@@ -109,7 +109,8 @@ pub(super) fn register_functions(conn: &Connection) -> Result<(), CoreError> {
 }
 
 impl Store {
-    /// Items matching `query`, most recently copied first.
+    /// Items matching `query`: pinned items first, then the rest, each most
+    /// recently copied first.
     ///
     /// # Errors
     ///
@@ -178,7 +179,8 @@ fn filter(query: &Query) -> (String, Vec<Value>) {
         args.push(Value::Text(word));
     }
 
-    sql.push_str(" ORDER BY copy_order DESC");
+    // Pinned items stay on top; a new copy goes below them.
+    sql.push_str(" ORDER BY pinned DESC, copy_order DESC");
     if let Some(limit) = query.limit {
         sql.push_str(" LIMIT ?");
         // A limit SQLite cannot hold returns everything anyway.

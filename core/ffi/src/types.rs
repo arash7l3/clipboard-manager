@@ -242,6 +242,26 @@ pub struct ImportSummary {
     pub snippets_duplicate: u64,
 }
 
+/// One of the app's settings carried in an export. The core does not read
+/// them: each app chooses its keys and how it writes the values.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct Setting {
+    /// The setting's name; not empty.
+    pub key: String,
+    /// Its value.
+    pub value: String,
+}
+
+/// What [`ClipStore::import_state`](crate::ClipStore::import_state) did, and
+/// the settings the export carried for the app to apply.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct ImportedState {
+    /// What was added and skipped.
+    pub summary: ImportSummary,
+    /// The exported settings in file order; empty for an older export.
+    pub settings: Vec<Setting>,
+}
+
 /// The popup tabs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum Category {
@@ -485,6 +505,33 @@ impl From<clipo_core::ImportSummary> for ImportSummary {
             items_too_large: to_u64(summary.items_too_large),
             snippets_added: to_u64(summary.snippets_added),
             snippets_duplicate: to_u64(summary.snippets_duplicate),
+        }
+    }
+}
+
+impl From<clipo_core::Setting> for Setting {
+    fn from(setting: clipo_core::Setting) -> Self {
+        Self {
+            key: setting.key,
+            value: setting.value,
+        }
+    }
+}
+
+impl From<Setting> for clipo_core::Setting {
+    fn from(setting: Setting) -> Self {
+        Self {
+            key: setting.key,
+            value: setting.value,
+        }
+    }
+}
+
+impl From<clipo_core::ImportedState> for ImportedState {
+    fn from(state: clipo_core::ImportedState) -> Self {
+        Self {
+            summary: state.summary.into(),
+            settings: state.settings.into_iter().map(Into::into).collect(),
         }
     }
 }

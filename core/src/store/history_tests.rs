@@ -391,6 +391,45 @@ fn each_tab_lists_its_items() {
 }
 
 #[test]
+fn pinned_items_stay_above_newer_copies() {
+    let mut store = Fixture::new().open();
+    let old = added(store.record(capture(text("old"), 1)).unwrap());
+    store.set_pinned(old.id, true).unwrap();
+    let newer = added(store.record(capture(text("newer"), 2)).unwrap());
+    let newest = added(store.record(capture(text("newest"), 3)).unwrap());
+
+    let ids = |store: &Store, query: &Query| -> Vec<ItemId> {
+        store
+            .previews(query)
+            .unwrap()
+            .iter()
+            .map(|p| p.id)
+            .collect()
+    };
+    assert_eq!(
+        ids(&store, &Query::default()),
+        [old.id, newest.id, newer.id]
+    );
+    assert_eq!(ids(&store, &Query::text("new")), [newest.id, newer.id]);
+    assert_eq!(
+        store
+            .search(&Query::default())
+            .unwrap()
+            .iter()
+            .map(|item| item.id)
+            .collect::<Vec<_>>(),
+        [old.id, newest.id, newer.id]
+    );
+
+    // Unpinned, it goes back to its place by copy time.
+    store.set_pinned(old.id, false).unwrap();
+    assert_eq!(
+        ids(&store, &Query::default()),
+        [newest.id, newer.id, old.id]
+    );
+}
+
+#[test]
 fn search_result_matches_category_includes() {
     let fx = Fixture::new();
     let mut store = fx.open();
@@ -617,7 +656,8 @@ fn previews_carry_what_a_row_shows() {
     store.set_pinned(note.id, true).unwrap();
 
     let previews = store.previews(&Query::default()).unwrap();
-    let [file_row, image_row, text_row] = previews.as_slice() else {
+    // The pinned note comes first.
+    let [text_row, file_row, image_row] = previews.as_slice() else {
         panic!("three previews, got {}", previews.len());
     };
 

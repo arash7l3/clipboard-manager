@@ -37,3 +37,4 @@ Short records of project decisions. Each states the choice, the reason and what 
 | [0031](0031-paste-target-and-screenshots.md) | Pasting into the app that was in front, and screenshots in the history |
 | [0032](0032-windows-popup-keeps-the-focus.md) | Windows: the popup leaves the focus where the user types, and picked images paste into folders |
 | [0033](0033-rename-and-delete-items.md) | Renaming and deleting single items with buttons at the end of each popup row |
+| [0034](0034-pinned-first-and-full-export.md) | Pinned items stay on top; the export carries item names and settings |

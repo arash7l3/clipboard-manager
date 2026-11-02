@@ -328,7 +328,7 @@ public sealed partial class SettingsWindow : Window
             {
                 return;
             }
-            var data = await _extras.ExportAsync();
+            var data = await _extras.ExportAsync(SettingsTransfer.Export(_settings));
             if (data is null)
             {
                 DataStatus.Text = s_strings.GetString("ExportFailed");
@@ -380,6 +380,14 @@ public sealed partial class SettingsWindow : Window
             {
                 await LoadSnippetsAsync();
                 Imported?.Invoke(this, EventArgs.Empty);
+                // The file's settings replace the ones in force, through the
+                // same path as a change made here.
+                var imported = SettingsTransfer.Import(_settings, result.Settings ?? []);
+                if (!imported.Equals(_settings))
+                {
+                    Reflect(imported);
+                    Changed?.Invoke(this, imported);
+                }
             }
         }
         catch (Exception ex) when (ex is COMException or IOException or UnauthorizedAccessException)
